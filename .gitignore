@@ -1,0 +1,11 @@
+*.tt
+*.yaml
+
+entities.json
+typecheck-cache.txt
+
+config
+
+workdir/thingtalk
+workdir/spotify
+workdir/mturk-batches

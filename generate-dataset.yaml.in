@@ -1,0 +1,43 @@
+# -*- mode: yaml -*-
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: @@JOB_NAME@@
+  namespace: research
+  labels:
+    app: genie-toolkit
+    owner: @@OWNER@@
+
+spec:
+  completions: 1
+  parallelism: 1
+  backoffLimit: 0
+
+  template:
+    metadata:
+      namespace: research
+      labels:
+        app: genie-toolkit
+        owner: @@OWNER@@
+      annotations:
+        iam.amazonaws.com/role: @@IAM_ROLE@@
+
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: main
+        image: @@IMAGE@@
+        imagePullPolicy: Always
+        command:
+          - /opt/genie-toolkit/generate-dataset-job.sh
+          - '@@OWNER@@'
+          - '@@experiment@@'
+          - '@@dataset@@'
+        resources:
+          limits:
+            cpu: 8
+            memory: 32G
+          requests:
+            cpu: 7
+            memory: 31G
+      tolerations: []

@@ -1,0 +1,8 @@
+# IAM role to access S3
+IAM_ROLE=
+# image to use
+IMAGE=
+# your username (could be anything - it's just to coordinate access to s3)
+OWNER=
+# the master developer key (to rebuild images)
+THINGPEDIA_DEVELOPER_KEY=
