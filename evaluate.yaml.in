@@ -7,7 +7,7 @@ metadata:
   labels:
     app: genie-toolkit
     owner: @@OWNER@@
-    job_type: generate-dataset
+    job_type: evaluate
 
 spec:
   completions: 1
@@ -20,7 +20,7 @@ spec:
       labels:
         app: genie-toolkit
         owner: @@OWNER@@
-        job_type: generate-dataset
+        job_type: evaluate
       annotations:
         iam.amazonaws.com/role: @@IAM_ROLE@@
 
@@ -31,15 +31,16 @@ spec:
         image: @@IMAGE@@
         imagePullPolicy: Always
         command:
-          - /opt/genie-toolkit/generate-dataset-job.sh
+          - /opt/genie-toolkit/evaluate-job.sh
           - '@@OWNER@@'
           - '@@experiment@@'
           - '@@dataset@@'
+          - '@@model@@'
         resources:
           limits:
-            cpu: 8
-            memory: 32G
+            cpu: 4
+            memory: 10G
           requests:
-            cpu: 7
-            memory: 31G
+            cpu: 3
+            memory: 10G
       tolerations: []

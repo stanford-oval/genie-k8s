@@ -7,6 +7,6 @@ sed \
   -e "s|@@IMAGE@@|${IMAGE}|g" \
   -e "s|@@experiment@@|${experiment}|g" \
   -e "s|@@dataset@@|${dataset}|g" \
-  -e "s|@@model@@|${model}|g"
+  -e "s|@@model@@|${model}|g" \
   "$@"
 }

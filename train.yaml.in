@@ -7,6 +7,7 @@ metadata:
   labels:
     app: genie-toolkit
     owner: @@OWNER@@
+    job_type: train
 
 spec:
   completions: 1
@@ -19,6 +20,7 @@ spec:
       labels:
         app: genie-toolkit
         owner: @@OWNER@@
+        job_type: train
       annotations:
         iam.amazonaws.com/role: @@IAM_ROLE@@
 
@@ -33,6 +35,7 @@ spec:
           - '@@OWNER@@'
           - '@@experiment@@'
           - '@@dataset@@'
+          - '@@model@@'
         volumeMounts:
           - mountPath: /home/genie-toolkit
             name: train-volume

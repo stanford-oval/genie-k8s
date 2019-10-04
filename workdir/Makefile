@@ -7,9 +7,8 @@ thingpedia ?= $(experiment)/thingpedia.tt
 primitives ?= dataset.tt
 paraphrase ?= $(experiment)/paraphrase.tsv
 contextual_paraphrase ?= $(tmpdir)/contextual-paraphrasing1.tsv
-eval_model ?=
 
-modeldir = models/$(eval_model)
+modeldir = model
 tmpdir = tmp
 
 validation_sets = $(experiment)/validation-contextualized.tsv $(experiment)/validation-turnbyturn.tsv $(experiment)/validation.dialog.txt syntethic-contextual-eval.tsv
@@ -27,6 +26,7 @@ all: evaluate
 $(tmpdir)/contexts.txt : $(paraphrase) $(tmpdir)/synthetic.tsv $(thingpedia)
 	$(genie) extract-contexts -l en-US -o $(tmpdir)/contexts.txt.tmp --thingpedia $(thingpedia) $(paraphrase) $(tmpdir)/synthetic.tsv
 	shuf $(tmpdir)/contexts.txt.tmp > $(tmpdir)/contexts.txt
+	rm $(tmpdir)/contexts.txt.tmp
 
 $(tmpdir)/contextualized.tsv : $(tmpdir)/contexts.txt $(paraphrase) $(tmpdir)/synthetic.tsv
 	$(genie) contextualize -l en-US -o $(tmpdir)/contextualized.tsv.tmp --expansion-factor 5 -c $(tmpdir)/contexts.txt $(paraphrase) $(tmpdir)/synthetic.tsv
@@ -37,18 +37,19 @@ $(tmpdir)/synthetic-d%.tsv : $(thingpedia) entities.json $(primitives) $(geniedi
 	  --thingpedia $(thingpedia) --entities entities.json --dataset $(primitives) --template $(geniedir)/languages/en/thingtalk.genie \
 	  --maxdepth $$(echo $* | cut -f1 -d'-') --no-debug $(synthetic_flags) --set-flag bookkeeping --set-flag no_contextual_bookkeeping --random-seed $@
 
-$(tmpdir)/synthetic-resampled-d5.tsv: $(foreach v,1 2 3 4 5,$(tmpdir)/synthetic-d5-$(v).tsv)
-	$(genie) resample -o $@ --fraction 0.2 $^
+$(tmpdir)/synthetic-resampled-d5.tsv: $(foreach v,1 2 3,$(tmpdir)/synthetic-d5-$(v).tsv)
+	$(genie) resample -o $@ --fraction 0.33 $^
 
 $(tmpdir)/synthetic.tsv: $(tmpdir)/synthetic-d3.tsv $(tmpdir)/synthetic-resampled-d5.tsv
 	cat $^ > $@
 
 $(tmpdir)/synthetic-contextual.tsv : $(tmpdir)/contexts.txt $(thingpedia) entities.json dataset.tt $(geniedir)/languages/en/contextual.genie
-	time node --experimental-worker --max_old_space_size=3000 $(geniedir)/tool/genie.js generate-contextual -l en-US -o $(tmpdir)/synthetic-contextual.tsv.tmp \
+	node --experimental-worker --max_old_space_size=3000 $(geniedir)/tool/genie.js generate-contextual -l en-US -o $(tmpdir)/synthetic-contextual.tsv.tmp \
 	  --thingpedia $(thingpedia) --entities entities.json --dataset dataset.tt --template $(geniedir)/languages/en/contextual.genie \
 	  $(tmpdir)/contexts.txt --maxdepth 4 --no-debug --parallelize 8 $(synthetic_flags)
 	# sort the output file to generate a deterministic output
 	sort $(tmpdir)/synthetic-contextual.tsv.tmp -o $(tmpdir)/synthetic-contextual.tsv
+	rm $(tmpdir)/synthetic-contextual.tsv.tmp
 
 $(tmpdir)/easy-hard-functions.tsv: $(tmpdir)/synthetic.tsv
 	cut -f3 $(tmpdir)/synthetic.tsv | tr ' ' '\n' | grep -E '^@' | grep -v -E '^@(com|org|gov|uk|us|rest|thermostat|security-camera|edu\.stanford|me\.omlet|car|ca\.randomfox|edu\.mit|light-bulb)\.' | sort -u | sed 's/@/blacklist\t@/g' | cat $(geniedir)/data/easy-hard-functions.tsv - > $@

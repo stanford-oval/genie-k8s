@@ -3,14 +3,16 @@
 set -e
 set -x
 
-experiment=$1
-dataset=$2
-model=$3
+owner=$1
+experiment=$2
+dataset=$3
+model=$4
+shift
 shift
 shift
 shift
 
-aws s3 sync s3://almond-research/gcampax/dataset/${experiment}${dataset} dataset/
+aws s3 sync s3://almond-research/${owner}/dataset/${experiment}${dataset} dataset/
 
 modeldir="$HOME/models/$model"
 mkdir -p "$modeldir"
@@ -18,12 +20,12 @@ rm -fr "$modeldir/dataset"
 mkdir "$modeldir/dataset"
 rm -fr "$modeldir/cache"
 mkdir -p "$modeldir/cache"
-ln -s /opt/dataset/gcampax/contextual/$dataset "$modeldir/dataset/contextual_almond"
+ln -s /opt/dataset/${owner}/contextual/$dataset "$modeldir/dataset/contextual_almond"
 ln -s $modeldir /home/genie-toolkit/current
 
 decanlp train \
   --data "$modeldir/dataset" \
-  --embeddings /usr/local/share/decanlp/embeddings \
+  --embeddings ${DECANLP_EMBEDDINGS} \
   --save "$modeldir" \
   --cache "$modeldir/cache" \
   --train_tasks contextual_almond  \
@@ -33,8 +35,7 @@ decanlp train \
   --log_every 500 \
   --val_every 1000 \
   --exist_ok \
-  --thingpedia /opt/dataset/thingpedia-8strict.json \
   "$@"
 
 rm -fr "$modeldir/cache"
-aws s3 sync $modeldir/ s3://almond-research/gcampax/models/${experiment}${model}
+aws s3 sync $modeldir/ s3://almond-research/${owner}/models/${experiment}${model}
