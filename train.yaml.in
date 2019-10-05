@@ -38,9 +38,6 @@ spec:
           - '@@experiment@@'
           - '@@dataset@@'
           - '@@model@@'
-        volumeMounts:
-          - mountPath: /home/genie-toolkit
-            name: train-volume
         resources:
           limits:
             cpu: 3
@@ -48,29 +45,6 @@ spec:
             nvidia.com/gpu: 1
           requests:
             cpu: 2
-      - name: tensorboard
-        image: tensorflow/tensorflow:latest
-        imagePullPolicy: IfNotPresent
-        command:
-          - tensorboard
-        args:
-          - --logdir
-          - /home/genie-toolkit/current
-          - --host
-          - 0.0.0.0
-        volumeMounts:
-          - mountPath: /home/genie-toolkit
-            name: train-volume
-        ports:
-          - containerPort: 6006
-            name: tensorboard
-        readinessProbe:
-          httpGet:
-            port: 6006
-            path: /
-      volumes:
-      - name: train-volume
-        emptyDir: {}
       tolerations:
       - key: nvidia.com/gpu
         operator: Exists
