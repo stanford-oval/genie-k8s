@@ -32,12 +32,7 @@ spec:
       - name: main
         image: @@IMAGE@@
         imagePullPolicy: Always
-        command:
-          - /opt/genie-toolkit/train-job.sh
-          - '@@OWNER@@'
-          - '@@experiment@@'
-          - '@@dataset@@'
-          - '@@model@@'
+        command: ['/bin/sh', '-c', '/opt/genie-toolkit/train-job.sh @@cmdline@@']
         resources:
           limits:
             cpu: 3

@@ -1,16 +1,12 @@
 #!/bin/bash
 
+. lib.sh
+
+parse_args "$0" "owner experiment dataset model" "$@"
+shift $n
+
 set -e
 set -x
-
-owner=$1
-experiment=$2
-dataset=$3
-model=$4
-shift
-shift
-shift
-shift
 
 on_error () {
 	# on failure ship everything to s3

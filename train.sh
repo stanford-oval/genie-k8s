@@ -3,15 +3,14 @@
 . config
 . lib.sh
 
-set -e
-set -x
-
-experiment=$1
-dataset=$2
-model=$3
+parse_args "$0" "experiment dataset model" "$@"
+shift $n
 
 JOB_NAME=${OWNER}-train-${experiment}-${dataset}-${model}
+cmdline="--owner ${owner} --experiment $experiment --dataset $dataset --model $model "$(requote "$@")
 
+set -e
+set -x
 replace_config train.yaml.in > train.yaml
 
 kubectl -n research delete job ${JOB_NAME} || true

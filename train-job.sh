@@ -1,16 +1,12 @@
 #!/bin/bash
 
+. lib.sh
+
+parse_args "$0" "owner experiment dataset model" "$@"
+shift $n
+
 set -e
 set -x
-
-owner=$1
-experiment=$2
-dataset=$3
-model=$4
-shift
-shift
-shift
-shift
 
 aws s3 sync s3://almond-research/${owner}/dataset/${experiment}${dataset} dataset/
 

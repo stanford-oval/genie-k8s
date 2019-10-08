@@ -30,11 +30,7 @@ spec:
       - name: main
         image: @@IMAGE@@
         imagePullPolicy: Always
-        command:
-          - /opt/genie-toolkit/generate-dataset-job.sh
-          - '@@OWNER@@'
-          - '@@experiment@@'
-          - '@@dataset@@'
+        command: ['/bin/sh', '-c', '/opt/genie-toolkit/generate-dataset-job.sh @@cmdline@@']
         resources:
           limits:
             cpu: 8

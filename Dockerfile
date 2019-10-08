@@ -47,7 +47,7 @@ WORKDIR /opt/genie-toolkit/
 RUN git checkout ${GENIE_VERSION}
 RUN yarn install
 
-COPY generate-dataset-job.sh train-job.sh evaluate-job.sh .
+COPY lib.sh generate-dataset-job.sh train-job.sh evaluate-job.sh .
 
 # add user genie-toolkit
 RUN useradd -ms /bin/bash -r genie-toolkit
