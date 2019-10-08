@@ -9,6 +9,16 @@ sed \
   "$@"
 }
 
+check_config() {
+  local key
+  for key in $1 ; do
+    if test -z "${!key}" ; then
+      echo "Missing or empty configuration key ${key}" 1>&2
+      exit 1
+    fi
+  done
+}
+
 parse_args() {
   local dollarzero argnames arg argvalue ok
   dollarzero=$1

@@ -6,3 +6,5 @@ IMAGE=
 OWNER=
 # the master developer key (to rebuild images)
 THINGPEDIA_DEVELOPER_KEY=
+# the Genie/decanlp task to train: either `almond` or `contextual_almond`
+train_task_name=almond 
