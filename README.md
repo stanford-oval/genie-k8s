@@ -14,10 +14,11 @@ Copy `config.sample` to `config`, and edit the data in as described in the wiki.
 
 Use:
 ```
-./generate-dataset.sh <experiment> <dataset-name>
-./train.sh <experiment> <dataset-name> <model-name>
-./evaluate.sh <experiment> <dataset-name> <model-name>
+./generate-dataset.sh --experiment <experiment> --dataset <dataset-name>
+./train.sh --experiment <experiment> --dataset <dataset-name> --model <model-name>
+./evaluate.sh --experiment <experiment> --dataset <dataset-name> --model <model-name>
 ```
+(use `--help` to learn all commandline options; all options are required)
 
 Experiment should be one of `thingtalk`, `spotify`, `multiwoz`.
 Dataset and model name should be anything, and will be mapped to subdirectories
