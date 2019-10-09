@@ -40,11 +40,19 @@ RUN thingpedia --url https://thingpedia.stanford.edu/thingpedia --access-token i
 #    mv /opt/pldi19-artifact/parameter-datasets.tsv /opt/parameter-datasets/ &&
 #    rm -fr /opt/pldi19-artifact && rm -fr /tmp/pldi19-artifact.tar.xz
 
-# copy source and install packages
-ARG GENIE_VERSION=wip/contextual
+# install packages
+ARG THINGTALK_VERSION=master
+RUN git clone https://github.com/stanford-oval/thingtalk /opt/thingtalk/
+WORKDIR /opt/thingtalk/
+RUN git checkout ${THINGTALK_VERSION}
+RUN yarn install
+RUN yarn link
+
+ARG GENIE_VERSION=master
 RUN git clone https://github.com/stanford-oval/genie-toolkit /opt/genie-toolkit/
 WORKDIR /opt/genie-toolkit/
 RUN git checkout ${GENIE_VERSION}
+RUN yarn link thingtalk
 RUN yarn install
 
 COPY lib.sh generate-dataset-job.sh train-job.sh evaluate-job.sh .

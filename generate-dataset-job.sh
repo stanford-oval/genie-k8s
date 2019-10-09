@@ -2,7 +2,7 @@
 
 . /opt/genie-toolkit/lib.sh
 
-parse_args "$0" "owner experiment dataset model workdir" "$@"
+parse_args "$0" "owner experiment dataset workdir" "$@"
 shift $n
 
 set -e
