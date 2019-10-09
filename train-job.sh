@@ -8,7 +8,7 @@ shift $n
 set -e
 set -x
 
-aws s3 sync s3://almond-research/${owner}/dataset/${experiment}${dataset} dataset/
+aws s3 sync s3://almond-research/${owner}/dataset/${experiment}/${dataset} dataset/
 
 modeldir="$HOME/models/$model"
 mkdir -p "$modeldir"
@@ -34,4 +34,4 @@ decanlp train \
   "$@"
 
 rm -fr "$modeldir/cache"
-aws s3 sync $modeldir/ s3://almond-research/${owner}/models/${experiment}${model}
+aws s3 sync $modeldir/ s3://almond-research/${owner}/models/${experiment}/${model}

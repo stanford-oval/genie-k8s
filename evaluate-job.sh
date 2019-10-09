@@ -16,7 +16,7 @@ trap on_error ERR
 
 pwd
 aws s3 sync s3://almond-research/${owner}/${workdir} .
-aws s3 sync s3://almond-research/${owner}/models/${experiment}${model} model/
+aws s3 sync s3://almond-research/${owner}/models/${experiment}/${model} model/
 
 ls -al
 mkdir tmp

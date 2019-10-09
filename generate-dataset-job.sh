@@ -25,4 +25,4 @@ aws s3 sync s3://almond-research/${owner}/tmp/ tmp/
 make experiment=${experiment} owner=${owner} "$@" datadir
 
 aws s3 sync tmp/ s3://almond-research/${owner}/tmp/
-aws s3 sync datadir/ s3://almond-research/${owner}/dataset/${experiment}${dataset}/
+aws s3 sync datadir/ s3://almond-research/${owner}/dataset/${experiment}/${dataset}/
