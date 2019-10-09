@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. lib.sh
+. /opt/genie-toolkit/lib.sh
 
 parse_args "$0" "owner task_name experiment dataset model" "$@"
 shift $n
