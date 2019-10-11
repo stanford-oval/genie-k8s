@@ -1,5 +1,7 @@
 # IAM role to access S3
 IAM_ROLE=
+# common image to use
+COMMON_IMAGE=
 # image to use
 IMAGE=
 # your username (could be anything - it's just to coordinate access to s3)
