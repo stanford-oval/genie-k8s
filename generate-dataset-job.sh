@@ -19,10 +19,12 @@ trap on_error ERR
 
 pwd
 aws s3 sync s3://almond-research/${owner}/${workdir}/ .
-mkdir tmp
-aws s3 sync s3://almond-research/${owner}/tmp/ tmp/
+#mkdir -p tmp
+#aws s3 sync s3://almond-research/${owner}/tmp/ tmp/
 
+export GENIE_TOKENIZER_ADDRESS=tokenizer.default.svc.cluster.local:8888
+export TZ=America/Los_Angeles
 make experiment=${experiment} owner=${owner} "$@" datadir
 
-aws s3 sync tmp/ s3://almond-research/${owner}/tmp/
+#aws s3 sync tmp/ s3://almond-research/${owner}/tmp/
 aws s3 sync datadir/ s3://almond-research/${owner}/dataset/${experiment}/${dataset}/
