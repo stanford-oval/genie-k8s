@@ -25,7 +25,6 @@ decanlp train \
   --save "$modeldir" \
   --cache "$modeldir/cache" \
   --train_tasks "${task_name}" \
-  --train_iterations 100000 \
   --preserve_case \
   --save_every 2000 \
   --log_every 500 \

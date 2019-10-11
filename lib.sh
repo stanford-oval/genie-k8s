@@ -30,10 +30,10 @@ parse_args() {
   while test $# -gt 0 ; do
     arg=$1
     shift
+    n=$((n+1))
     if test "$arg" = "--" ; then
       break
     fi
-    n=$((n+1))
     ok=0
     if test "$arg" = "--help" || test "$arg" = "-h" ; then
       echo -n "Usage: $dollarzero" 1>&2

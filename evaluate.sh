@@ -8,7 +8,7 @@ shift $n
 check_config "IAM_ROLE OWNER IMAGE"
 
 JOB_NAME=${OWNER}-evaluate-${experiment}-${dataset}-${model}
-cmdline="--owner ${owner} --experiment $experiment --dataset $dataset --model $model --workdir ${workdir} "$(requote "$@")
+cmdline="--owner ${owner} --experiment $experiment --dataset $dataset --model $model --workdir ${workdir} -- "$(requote "$@")
 
 set -e
 set -x
