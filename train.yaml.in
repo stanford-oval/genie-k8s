@@ -35,11 +35,11 @@ spec:
         command: ['/bin/sh', '-c', '/opt/genie-toolkit/train-job.sh @@cmdline@@']
         resources:
           limits:
-            cpu: 3
-            memory: 10G
+            cpu: 8
+            memory: 30G
             nvidia.com/gpu: 1
           requests:
-            cpu: 2
+            cpu: 4
       tolerations:
       - key: nvidia.com/gpu
         operator: Exists
