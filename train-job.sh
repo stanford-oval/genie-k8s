@@ -2,13 +2,13 @@
 
 . /opt/genie-toolkit/lib.sh
 
-parse_args "$0" "owner task_name experiment dataset model" "$@"
+parse_args "$0" "owner dataset_owner task_name experiment dataset model" "$@"
 shift $n
 
 set -e
 set -x
 
-aws s3 sync s3://almond-research/${owner}/dataset/${experiment}/${dataset} dataset/
+aws s3 sync s3://almond-research/${dataset_owner}/dataset/${experiment}/${dataset} dataset/
 
 modeldir="$HOME/models/$model"
 mkdir -p "$modeldir"
