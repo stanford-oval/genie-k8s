@@ -33,6 +33,9 @@ spec:
         image: @@IMAGE@@
         imagePullPolicy: Always
         command: ['/bin/sh', '-c', '/opt/genie-toolkit/train-job.sh @@cmdline@@']
+        volumeMounts:
+          - name: tensorboard
+            mountPath: /shared/tensorboard
         resources:
           limits:
             cpu: 8
@@ -40,6 +43,10 @@ spec:
             nvidia.com/gpu: 1
           requests:
             cpu: 4
+      volumes:
+      - name: tensorboard
+        persistentVolumeClaim:
+          claimName: tensorboard
       tolerations:
       - key: nvidia.com/gpu
         operator: Exists
