@@ -23,7 +23,7 @@ ls -al
 mkdir -p tmp
 export GENIE_TOKENIZER_ADDRESS=tokenizer.default.svc.cluster.local:8888
 export TZ=America/Los_Angeles
-make experiment=${experiment} owner=${owner} model=${model} "$@" evaluate
+make geniedir=/opt/genie-toolkit experiment=${experiment} owner=${owner} model=${model} "$@" evaluate
 #cat model/*.results > ${experiment}-${dataset}-${model}.results
 #aws s3 cp ${experiment}-${dataset}-${model}.results s3://almond-research/${owner}/${workdir}/
 make syncup

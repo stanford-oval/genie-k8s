@@ -7,7 +7,7 @@ parse_args "$0" "experiment dataset model" "$@"
 shift $n
 check_config "IAM_ROLE OWNER IMAGE train_task_name"
 
-JOB_NAME=${OWNER}-train-${experiment}-${dataset}-${model}
+JOB_NAME=${OWNER}-train-${experiment}-${model}
 cmdline="--owner ${OWNER} --task_name ${train_task_name} --experiment $experiment --dataset $dataset --model $model -- "$(requote "$@")
 
 set -e

@@ -3,9 +3,20 @@ FROM ${BASE_IMAGE}
 
 MAINTAINER Thingpedia Admins <thingpedia-admins@lists.stanford.edu>
 
-# install basic tools
 USER root
-RUN yum -y install make gettext unzip
+
+# install basic tools
+RUN yum -y install make gettext unzip xz python2 gcc-c++
+
+# download word embeddings
+RUN mkdir -p /usr/local/share/decanlp/embeddings
+WORKDIR /usr/local/share/decanlp/embeddings
+RUN curl -L https://oval.cs.stanford.edu/data/glove/embeddings.tar.xz -o embeddings.tar.xz && \
+  tar xvf embeddings.tar.xz && \
+  rm -f embeddings.tar.xz
+RUN decanlp cache-embeddings -d /usr/local/share/decanlp/embeddings --embeddings bert-base-uncased
+ENV DECANLP_EMBEDDINGS=/usr/local/share/decanlp/embeddings
+WORKDIR /home/decanlp
 
 # install nodejs 10.x and yarn
 RUN curl -sL https://rpm.nodesource.com/setup_10.x | bash -
@@ -28,10 +39,9 @@ RUN thingpedia --url https://thingpedia.stanford.edu/thingpedia --access-token i
     -d /opt/parameter-datasets/data --manifest /opt/parameter-datasets/parameter-datasets.tsv --append-manifest
 
 # download PPDB
-RUN wget https://parmesan.stanford.edu/glove/ppdb-2.0-m-lexical.bin -O /usr/local/share/ppdb-2.0-m-lexical.bin && \
+RUN curl https://parmesan.stanford.edu/glove/ppdb-2.0-m-lexical.bin -o /usr/local/share/ppdb-2.0-m-lexical.bin && \
     chmod 755 /usr/local/share/ppdb-2.0-m-lexical.bin
 COPY ppdb-2.0-l-lexical.bin /usr/local/share/ppdb-2.0-l-lexical.bin
 ENV PPDB=/usr/local/share/ppdb-2.0-l-lexical.bin
-ENV DECANLP_EMBEDDINGS=/usr/local/share/decanlp/embeddings
 
 
