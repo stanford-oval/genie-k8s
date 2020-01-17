@@ -2,7 +2,7 @@
 
 . lib.sh
 . config
-check_config "IMAGE COMMON_IMAGE genie_version thingtalk_version"
+check_config "IMAGE COMMON_IMAGE genie_version thingtalk_version decanlp_version"
 
 set -e
 set -x
@@ -14,6 +14,7 @@ set -x
 
 podman build -t ${IMAGE} \
   --build-arg COMMON_IMAGE=${COMMON_IMAGE} \
+  --build-arg DECANLP_VERSION=${decanlp_version} \
   --build-arg THINGTALK_VERSION=${thingtalk_version} \
   --build-arg GENIE_VERSION=${genie_version} \
   .
