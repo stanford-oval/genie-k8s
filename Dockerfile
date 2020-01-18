@@ -6,7 +6,7 @@ MAINTAINER Thingpedia Admins <thingpedia-admins@lists.stanford.edu>
 USER root
 WORKDIR /opt/decanlp/
 ARG DECANLP_VERSION=master
-RUN git fetch https://github.com/stanford-oval/decanlp && git checkout ${DECANLP_VERSION} && pip3 install -e .
+RUN git remote set-url origin https://github.com/stanford-oval/decanlp && git fetch && git checkout ${DECANLP_VERSION} && pip3 install -e .
 
 ARG THINGTALK_VERSION=master
 RUN git clone https://github.com/stanford-oval/thingtalk /opt/thingtalk/
