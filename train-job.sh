@@ -28,8 +28,8 @@ decanlp train \
   --cache "$modeldir/cache" \
   --train_tasks "${task_name}" \
   --preserve_case \
-  --save_every 2000 \
-  --log_every 500 \
+  --save_every 1000 \
+  --log_every 100 \
   --val_every 1000 \
   --exist_ok \
   "$@"
