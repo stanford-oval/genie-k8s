@@ -15,4 +15,4 @@ set -x
 replace_config train.yaml.in > train.yaml
 
 kubectl -n research delete job ${JOB_NAME} || true
-kubectl apply -o yaml -f train.yaml
+kubectl apply -f train.yaml

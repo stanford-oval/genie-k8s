@@ -15,4 +15,4 @@ set -x
 replace_config generate-dataset.yaml.in > generate-dataset.yaml
 
 kubectl -n research delete job ${JOB_NAME} || true
-kubectl apply -o yaml -f generate-dataset.yaml
+kubectl apply -f generate-dataset.yaml

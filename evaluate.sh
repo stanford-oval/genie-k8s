@@ -15,4 +15,4 @@ set -x
 replace_config evaluate.yaml.in > evaluate.yaml
 
 kubectl -n research delete job ${JOB_NAME} || true
-kubectl apply -o yaml -f evaluate.yaml
+kubectl apply -f evaluate.yaml
