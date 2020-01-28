@@ -6,6 +6,9 @@ COMMON_IMAGE=
 IMAGE=
 # your username (could be anything - it's just to coordinate access to s3)
 OWNER=
+# the username of the user that owns the dataset (so one user can generate
+# datasets and many users can try different models)
+DATASET_OWNER=
 # the master developer key (to rebuild images)
 THINGPEDIA_DEVELOPER_KEY=
 # the Genie/decanlp task to train: either `almond` or `contextual_almond`
@@ -13,3 +16,7 @@ train_task_name=almond
 # the working directory to use when generating the dataset/evaluating
 # useful to run multiple projects at the same time
 workdir=workdir 
+# git commits to build (for rebuild-image.sh)
+genie_version=9cdd8093175b610e1335c5b7f728f242e999f6a0
+thingtalk_version=8a7413996d0c714707754ce9f1aded1eab09dad3
+decanlp_version=361e52cb154d8e6cb78112d4cf0df73b70b6bf71
