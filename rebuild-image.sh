@@ -7,9 +7,7 @@ check_config "IMAGE COMMON_IMAGE genie_version thingtalk_version decanlp_version
 set -e
 set -x
 
-#docker build -t ${COMMON_IMAGE} \
-#  --build-arg THINGPEDIA_DEVELOPER_KEY=${THINGPEDIA_DEVELOPER_KEY} \
-#  -f Dockerfile.common .
+#docker build -t ${COMMON_IMAGE} -f Dockerfile.common .
 #docker push ${COMMON_IMAGE}
 
 docker build -t ${IMAGE} \
