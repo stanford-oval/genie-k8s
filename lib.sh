@@ -38,11 +38,22 @@ check_config() {
 }
 
 parse_args() {
-  local dollarzero argnames arg argvalue ok
-  dollarzero=$1
+  local dollarzero argnames argspecs arg argspec argname argdefault argvalue ok
+  dollarzero="$1"
   shift
-  argnames=$1
+  argspecs="$1"
   shift
+  argnames=
+  for argspec in $argspecs ; do
+    case "$argspec" in
+    *=*)
+      argnames="$argnames "$(sed -E -e 's/^([^=]*)=(.*)$/\1/g' <<<"$argspec")
+      ;;
+    *)
+      argnames="$argnames $argspec"
+      ;;
+    esac
+  done
   n=0
 
   while test $# -gt 0 ; do
@@ -67,7 +78,7 @@ parse_args() {
         ok=1
         n=$((n+1))
         shift
-        eval "$argname"="$argvalue"
+        eval "$argname"='"$argvalue"'
         break
       fi
     done
@@ -76,10 +87,25 @@ parse_args() {
       exit 1
     fi
   done
-  for argname in $argnames ; do
+  for argspec in $argspecs ; do
+    case "$argspec" in
+    *=*)
+      argname=$(sed -E -e 's/^([^=]*)=(.*)$/\1/g' <<<"$argspec")
+      argdefault=$(sed -E -e 's/^([^=]*)=(.*)$/\2/g' <<<"$argspec")
+      ;;
+    *)
+      argname="$argspec"
+      argdefault=""
+      ;;
+    esac
+
     if test -z "${!argname}" ; then
-      echo "Missing required command-line argument --${argname}" 1>&2
-      exit 1
+      if test -z "${argdefault}" ; then
+        echo "Missing required command-line argument --${argname}" 1>&2
+        exit 1
+      else
+        eval "$argname"='"$argdefault"'
+      fi
     fi
   done
 }
