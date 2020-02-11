@@ -5,10 +5,10 @@
 
 parse_args "$0" "experiment dataset" "$@"
 shift $n
-check_config "IAM_ROLE OWNER IMAGE"
+check_config "IAM_ROLE OWNER IMAGE project"
 
 JOB_NAME=${OWNER}-gen-dataset-${experiment}-${dataset}
-cmdline="--owner ${OWNER} --experiment $experiment --dataset $dataset --workdir ${workdir} -- "$(requote "$@")
+cmdline="--owner ${OWNER} --project $project --experiment $experiment --dataset $dataset -- "$(requote "$@")
 
 set -e
 set -x

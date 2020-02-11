@@ -2,13 +2,13 @@
 
 . /opt/genie-toolkit/lib.sh
 
-parse_args "$0" "owner dataset_owner task_name experiment dataset model" "$@"
+parse_args "$0" "owner dataset_owner task_name project experiment dataset model" "$@"
 shift $n
 
 set -e
 set -x
 
-aws s3 sync s3://almond-research/${dataset_owner}/dataset/${experiment}/${dataset} dataset/
+aws s3 sync s3://almond-research/${dataset_owner}/dataset/${project}/${experiment}/${dataset} dataset/
 
 modeldir="$HOME/models/$model"
 mkdir -p "$modeldir"
@@ -18,13 +18,13 @@ rm -fr "$modeldir/cache"
 mkdir -p "$modeldir/cache"
 ln -s "$HOME/dataset" "$modeldir/dataset/${task_name}"
 ln -s $modeldir /home/genie-toolkit/current
-mkdir -p "/shared/tensorboard/${experiment}/${owner}/${model}"
+mkdir -p "/shared/tensorboard/${project}/${experiment}/${owner}/${model}"
 
 genienlp train \
   --data "$modeldir/dataset" \
   --embeddings ${DECANLP_EMBEDDINGS} \
   --save "$modeldir" \
-  --tensorboard_dir "/shared/tensorboard/${experiment}/${owner}/${model}" \
+  --tensorboard_dir "/shared/tensorboard/${project}/${experiment}/${owner}/${model}" \
   --cache "$modeldir/cache" \
   --train_tasks "${task_name}" \
   --preserve_case \
@@ -36,4 +36,4 @@ genienlp train \
 
 rm -fr "$modeldir/cache"
 rm -fr "$modeldir/dataset"
-aws s3 sync $modeldir/ s3://almond-research/${owner}/models/${experiment}/${model}
+aws s3 sync $modeldir/ s3://almond-research/${owner}/models/${project}/${experiment}/${model}
