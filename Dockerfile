@@ -8,6 +8,8 @@ WORKDIR /opt/decanlp/
 ARG DECANLP_VERSION=master
 RUN pip3 install --upgrade pip
 RUN git remote set-url origin https://github.com/stanford-oval/decanlp && git fetch && git checkout ${DECANLP_VERSION} && pip3 install -e .
+RUN decanlp cache-embeddings -d /usr/local/share/decanlp/embeddings --embeddings bert-base-uncased && \
+  chmod -R +r /usr/local/share/decanlp/embeddings
 
 ARG THINGTALK_VERSION=master
 RUN git clone https://github.com/stanford-oval/thingtalk /opt/thingtalk/
@@ -29,4 +31,3 @@ COPY lib.sh generate-dataset-job.sh train-job.sh evaluate-job.sh .
 RUN useradd -ms /bin/bash -r genie-toolkit
 USER genie-toolkit
 WORKDIR /home/genie-toolkit
-
