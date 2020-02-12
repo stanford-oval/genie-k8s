@@ -20,9 +20,14 @@ ln -s "$HOME/dataset" "$modeldir/dataset/${task_name}"
 ln -s $modeldir /home/genie-toolkit/current
 mkdir -p "/shared/tensorboard/${experiment}/${owner}/${model}"
 
+echo '****'
+uname
+whoami
+
+
 genienlp train \
   --data "$modeldir/dataset" \
-  --embeddings ${DECANLP_EMBEDDINGS} \
+  --embeddings ${GENIENLP_EMBEDDINGS} \
   --save "$modeldir" \
   --tensorboard_dir "/shared/tensorboard/${experiment}/${owner}/${model}" \
   --cache "$modeldir/cache" \
