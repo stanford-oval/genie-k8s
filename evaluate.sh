@@ -3,12 +3,12 @@
 . config
 . lib.sh
 
-parse_args "$0" "experiment dataset model" "$@"
+parse_args "$0" "experiment eval_set model" "$@"
 shift $n
 check_config "IAM_ROLE OWNER IMAGE"
 
 JOB_NAME=${OWNER}-evaluate-${experiment}-${model}
-cmdline="--owner ${owner} --experiment $experiment --dataset $dataset --model $model --workdir ${workdir} -- "$(requote "$@")
+cmdline="--owner ${OWNER} --experiment $experiment --model $model --workdir ${workdir} --eval_set ${eval_set} -- "$(requote "$@")
 
 set -e
 set -x
