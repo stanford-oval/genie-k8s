@@ -7,7 +7,7 @@ USER root
 WORKDIR /opt/decanlp/
 ARG DECANLP_VERSION=master
 RUN pip3 install --upgrade pip
-RUN git remote set-url origin https://github.com/stanford-oval/decanlp && git fetch && git checkout ${DECANLP_VERSION} && pip3 install -e .
+RUN git remote set-url origin https://github.com/stanford-oval/decanlp && git fetch && git checkout ${DECANLP_VERSION} && pip3 install -e . && rm -fr /root/.cache
 RUN decanlp cache-embeddings -d /usr/local/share/decanlp/embeddings --embeddings bert-base-uncased && \
   chmod -R +r /usr/local/share/decanlp/embeddings
 
