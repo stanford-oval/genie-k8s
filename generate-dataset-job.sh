@@ -24,7 +24,7 @@ aws s3 sync s3://almond-research/${owner}/${workdir}/ .
 
 export GENIE_TOKENIZER_ADDRESS=tokenizer.default.svc.cluster.local:8888
 export TZ=America/Los_Angeles
-make geniedir=/opt/genie-toolkit experiment=${experiment} owner=${owner} process_schemaorg_flags= "$@" datadir
+make geniedir=/opt/genie-toolkit experiment=${experiment} owner=${owner} "$@" datadir
 
 #aws s3 sync tmp/ s3://almond-research/${owner}/tmp/
 aws s3 sync datadir/ s3://almond-research/${owner}/dataset/${experiment}/${dataset}/
