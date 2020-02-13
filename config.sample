@@ -18,4 +18,4 @@ project=
 # git commits to build (for rebuild-image.sh)
 genie_version=9cdd8093175b610e1335c5b7f728f242e999f6a0
 thingtalk_version=8a7413996d0c714707754ce9f1aded1eab09dad3
-decanlp_version=361e52cb154d8e6cb78112d4cf0df73b70b6bf71
+genienlp_version=361e52cb154d8e6cb78112d4cf0df73b70b6bf71

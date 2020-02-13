@@ -22,7 +22,7 @@ mkdir -p "/shared/tensorboard/${project}/${experiment}/${owner}/${model}"
 
 genienlp train \
   --data "$modeldir/dataset" \
-  --embeddings ${DECANLP_EMBEDDINGS} \
+  --embeddings ${GENIENLP_EMBEDDINGS} \
   --save "$modeldir" \
   --tensorboard_dir "/shared/tensorboard/${project}/${experiment}/${owner}/${model}" \
   --cache "$modeldir/cache" \

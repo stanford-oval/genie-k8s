@@ -26,7 +26,7 @@ RUN mkdir -p /usr/local/share/genienlp/embeddings
 WORKDIR /usr/local/share/genienlp/embeddings
 RUN curl -L https://oval.cs.stanford.edu/data/glove/embeddings.tar.xz | tar xJv
 RUN genienlp cache-embeddings -d /usr/local/share/genienlp/embeddings --embeddings bert-base-uncased
-ENV GENIENLP_EMBEDDINGS=/usr/local/share/genielp/embeddings
+ENV GENIENLP_EMBEDDINGS=/usr/local/share/genienlp/embeddings
 
 # install nodejs 10.x and yarn
 RUN dnf -y module enable nodejs:10 && \

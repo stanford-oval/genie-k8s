@@ -5,7 +5,7 @@ MAINTAINER Thingpedia Admins <thingpedia-admins@lists.stanford.edu>
 # install packages
 USER root
 WORKDIR /opt/genienlp/
-ARG DECANLP_VERSION=master
+ARG GENIENLP_VERSION=master
 RUN pip3 install --upgrade pip
 RUN git fetch && git checkout ${DECANLP_VERSION} && pip3 install -e .
 
