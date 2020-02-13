@@ -7,7 +7,7 @@ USER root
 WORKDIR /opt/genienlp/
 ARG GENIENLP_VERSION=master
 RUN pip3 install --upgrade pip
-RUN git fetch && git checkout ${DECANLP_VERSION} && pip3 install -e .
+RUN git fetch && git checkout ${GENIENLP_VERSION} && pip3 install -e .
 
 ARG THINGTALK_VERSION=master
 RUN git clone https://github.com/stanford-oval/thingtalk /opt/thingtalk/
