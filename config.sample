@@ -16,6 +16,6 @@ train_task_name=almond
 # the name of the project (to group all related experiments together)
 project=
 # git commits to build (for rebuild-image.sh)
-genie_version=9cdd8093175b610e1335c5b7f728f242e999f6a0
-thingtalk_version=8a7413996d0c714707754ce9f1aded1eab09dad3
-genienlp_version=361e52cb154d8e6cb78112d4cf0df73b70b6bf71
+genie_version=v0.5.2
+thingtalk_version=v1.9.2
+genienlp_version=v0.1.1
