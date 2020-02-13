@@ -15,7 +15,7 @@ THINGPEDIA_DEVELOPER_KEY=
 train_task_name=almond
 # the working directory to use when generating the dataset/evaluating
 # useful to run multiple projects at the same time
-workdir=workdir 
+WORKDIR=workdir 
 # git commits to build (for rebuild-image.sh)
 genie_version=9cdd8093175b610e1335c5b7f728f242e999f6a0
 thingtalk_version=8a7413996d0c714707754ce9f1aded1eab09dad3

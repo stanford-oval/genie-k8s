@@ -29,8 +29,3 @@ COPY lib.sh generate-dataset-job.sh train-job.sh evaluate-job.sh ./
 RUN useradd -ms /bin/bash -r genie-toolkit
 USER genie-toolkit
 WORKDIR /home/genie-toolkit
-
-USER root
-RUN chmod -R 755 /usr/local/share/genienlp/embeddings
-
-USER genie-toolkit
