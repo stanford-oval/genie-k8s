@@ -9,12 +9,6 @@ ARG GENIENLP_VERSION=master
 RUN pip3 install --upgrade pip
 RUN git fetch && git checkout ${GENIENLP_VERSION} && pip3 install -e .
 
-
-# download additional embeddings
-RUN genienlp cache-embeddings -d /usr/local/share/genienlp/embeddings --embeddings bert-base-multilingual-uncased
-
-
-
 ARG THINGTALK_VERSION=master
 RUN git clone https://github.com/stanford-oval/thingtalk /opt/thingtalk/
 WORKDIR /opt/thingtalk/
@@ -38,7 +32,5 @@ WORKDIR /home/genie-toolkit
 
 USER root
 RUN chmod -R 755 /usr/local/share/genienlp/embeddings
-# RUN ls -R -al /usr/local/share/genienlp/
 
 USER genie-toolkit
-

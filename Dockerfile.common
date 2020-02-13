@@ -25,7 +25,7 @@ RUN git clone https://github.com/stanford-oval/genienlp /opt/genienlp && \
 RUN mkdir -p /usr/local/share/genienlp/embeddings
 WORKDIR /usr/local/share/genienlp/embeddings
 RUN curl -L https://oval.cs.stanford.edu/data/glove/embeddings.tar.xz | tar xJv
-RUN genienlp cache-embeddings -d /usr/local/share/genienlp/embeddings --embeddings bert-base-uncased
+RUN genienlp cache-embeddings -d /usr/local/share/genienlp/embeddings --embeddings bert-base-uncased bert-base-multilingual-uncased
 ENV GENIENLP_EMBEDDINGS=/usr/local/share/genienlp/embeddings
 
 # install nodejs 10.x and yarn
