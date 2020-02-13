@@ -1,10 +1,13 @@
 *.tt
 *.yaml
 
+.idea/
+
 entities.json
 typecheck-cache.txt
 
 config
+config-*
 
 workdir/thingtalk
 workdir/spotify
