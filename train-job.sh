@@ -16,7 +16,7 @@ rm -fr "$modeldir/dataset"
 mkdir "$modeldir/dataset"
 rm -fr "$modeldir/cache"
 mkdir -p "$modeldir/cache"
-ln -s "$HOME/dataset" "$modeldir/dataset/${task_name}"
+ln -s "$HOME/dataset" "$modeldir/dataset/almond"
 ln -s $modeldir /home/genie-toolkit/current
 mkdir -p "/shared/tensorboard/${project}/${experiment}/${owner}/${model}"
 
@@ -26,7 +26,7 @@ genienlp train \
   --save "$modeldir" \
   --tensorboard_dir "/shared/tensorboard/${project}/${experiment}/${owner}/${model}" \
   --cache "$modeldir/cache" \
-  --train_tasks "${task_name}" \
+  --train_tasks ${task_name} \
   --preserve_case \
   --save_every 1000 \
   --log_every 100 \
