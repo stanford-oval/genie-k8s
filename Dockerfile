@@ -5,9 +5,9 @@ MAINTAINER Thingpedia Admins <thingpedia-admins@lists.stanford.edu>
 # install packages
 USER root
 WORKDIR /opt/genienlp/
-ARG DECANLP_VERSION=master
+ARG GENIENLP_VERSION=master
 RUN pip3 install --upgrade pip
-RUN git fetch && git checkout ${DECANLP_VERSION} && pip3 install -e .
+RUN git fetch && git checkout ${GENIENLP_VERSION} && pip3 install -e .
 
 ARG THINGTALK_VERSION=master
 RUN git clone https://github.com/stanford-oval/thingtalk /opt/thingtalk/
@@ -23,10 +23,9 @@ RUN git checkout ${GENIE_VERSION}
 RUN yarn link thingtalk
 RUN yarn install
 
-COPY lib.sh generate-dataset-job.sh train-job.sh evaluate-job.sh .
+COPY lib.sh generate-dataset-job.sh train-job.sh evaluate-job.sh ./
 
 # add user genie-toolkit
 RUN useradd -ms /bin/bash -r genie-toolkit
 USER genie-toolkit
 WORKDIR /home/genie-toolkit
-

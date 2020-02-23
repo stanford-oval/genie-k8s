@@ -25,8 +25,9 @@ RUN git clone https://github.com/stanford-oval/genienlp /opt/genienlp && \
 RUN mkdir -p /usr/local/share/genienlp/embeddings
 WORKDIR /usr/local/share/genienlp/embeddings
 RUN curl -L https://oval.cs.stanford.edu/data/glove/embeddings.tar.xz | tar xJv
-RUN genienlp cache-embeddings -d /usr/local/share/genienlp/embeddings --embeddings bert-base-uncased
-ENV GENIENLP_EMBEDDINGS=/usr/local/share/genielp/embeddings
+RUN genienlp cache-embeddings -d /usr/local/share/genienlp/embeddings --embeddings bert-base-uncased bert-base-multilingual-uncased
+ENV GENIENLP_EMBEDDINGS=/usr/local/share/genienlp/embeddings
+RUN chmod -R 755 /usr/local/share/genienlp/embeddings
 
 # install nodejs 10.x and yarn
 RUN dnf -y module enable nodejs:10 && \
@@ -37,5 +38,4 @@ RUN dnf -y module enable nodejs:10 && \
 # download PPDB
 RUN curl https://parmesan.stanford.edu/glove/ppdb-2.0-m-lexical.bin -o /usr/local/share/ppdb-2.0-m-lexical.bin && \
     chmod 755 /usr/local/share/ppdb-2.0-m-lexical.bin
-COPY ppdb-2.0-l-lexical.bin /usr/local/share/ppdb-2.0-l-lexical.bin
 ENV PPDB=/usr/local/share/ppdb-2.0-l-lexical.bin
