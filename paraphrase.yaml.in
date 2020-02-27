@@ -1,0 +1,53 @@
+# -*- mode: yaml -*-
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: @@JOB_NAME@@
+  namespace: research
+  labels:
+    app: genie-toolkit
+    owner: @@OWNER@@
+    job-type: train
+
+spec:
+  completions: 1
+  parallelism: 1
+  backoffLimit: 0
+
+  template:
+    metadata:
+      namespace: research
+      labels:
+        app: genie-toolkit
+        owner: @@OWNER@@
+        job-type: paraphrase
+      annotations:
+        iam.amazonaws.com/role: @@IAM_ROLE@@
+
+    spec:
+      nodeSelector:
+        beta.kubernetes.io/instance-type: p3.2xlarge
+      restartPolicy: Never
+      containers:
+      - name: main
+        image: @@IMAGE@@
+        imagePullPolicy: Always
+        command: ['/bin/sh', '-c', '/opt/genie-toolkit/paraphrase-job.sh @@cmdline@@']
+        volumeMounts:
+          - name: tensorboard
+            mountPath: /shared/tensorboard
+        resources:
+          limits:
+            cpu: 8
+            memory: 60G
+            nvidia.com/gpu: 1
+          requests:
+            cpu: 4
+      volumes:
+      - name: tensorboard
+        persistentVolumeClaim:
+          claimName: tensorboard
+      tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
