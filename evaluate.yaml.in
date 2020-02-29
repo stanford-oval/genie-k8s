@@ -30,7 +30,7 @@ spec:
       - name: main
         image: @@IMAGE@@
         imagePullPolicy: Always
-        command: ['/bin/sh', '-c', '/opt/genie-toolkit/evaluate.sh @@cmdline@@']
+        command: ['/bin/sh', '-c', '/opt/genie-toolkit/evaluate-job.sh @@cmdline@@']
         resources:
           limits:
             cpu: 4

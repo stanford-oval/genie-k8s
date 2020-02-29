@@ -49,7 +49,7 @@ parse_args() {
         ok=1
         n=$((n+1))
         shift
-        declare -g "$argname"="$argvalue"
+        eval "$argname"="$argvalue"
         break
       fi
     done

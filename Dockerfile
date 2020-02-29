@@ -4,14 +4,12 @@ MAINTAINER Thingpedia Admins <thingpedia-admins@lists.stanford.edu>
 
 # install packages
 USER root
-WORKDIR /opt/decanlp/
-ARG DECANLP_VERSION=master
+WORKDIR /opt/genienlp/
+ARG GENIENLP_VERSION=master
 RUN pip3 install --upgrade pip
-RUN git remote set-url origin https://github.com/stanford-oval/decanlp && git fetch && git checkout ${DECANLP_VERSION} && pip3 install -e .
+RUN git fetch && git checkout ${GENIENLP_VERSION} && pip3 install -e .
 
 # uncomment the models you want to use
-RUN decanlp cache-embeddings --destdir /usr/local/share/decanlp/embeddings --embeddings bert-base-uncased
-# RUN decanlp cache-embeddings --destdir /usr/local/share/decanlp/embeddings --embeddings bert-base-multilingual-cased
 # RUN decanlp cache-embeddings --destdir /usr/local/share/decanlp/embeddings --embeddings bert-large-uncased-whole-word-masking
 # RUN decanlp cache-embeddings --destdir /usr/local/share/decanlp/embeddings --embeddings bert-large-uncased-whole-word-masking-finetuned-squad
 
@@ -48,4 +46,3 @@ COPY lib.sh generate-dataset-job.sh train-job.sh evaluate-job.sh paraphrase-job.
 RUN useradd -ms /bin/bash -r genie-toolkit
 USER genie-toolkit
 WORKDIR /home/genie-toolkit
-

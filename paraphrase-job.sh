@@ -24,7 +24,7 @@ mkdir -p "/shared/tensorboard/${experiment}/${owner}/${model}"
 if [ "$train_or_gen" = "train" ]
 then
   # run paraphrase training script
-  decanlp train-paraphrase \
+  genienlp train-paraphrase \
     --train_data_file dataset/para_freeform_train.txt \
     --eval_data_file dataset/para_freeform_dev.txt \
     --output_dir "$modeldir" \
@@ -45,7 +45,7 @@ else
   workingdir="$HOME/${workdir}"
   mkdir -p ${workingdir}/eval_dir
   aws s3 sync s3://almond-research/${owner}/models/${experiment}/${model} $modeldir/
-  decanlp run-paraphrase \
+  genienlp run-paraphrase \
     --model_type gpt2 \
     --model_name_or_path "$modeldir" \
     --input_file dataset/test.tsv \

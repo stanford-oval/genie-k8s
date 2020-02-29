@@ -9,3 +9,5 @@ config
 workdir/thingtalk
 workdir/spotify
 workdir/mturk-batches
+
+.DS_Store
