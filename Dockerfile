@@ -10,8 +10,6 @@ RUN pip3 install --upgrade pip
 RUN git fetch && git checkout ${GENIENLP_VERSION} && pip3 install -e .
 
 # uncomment the models you want to use
-RUN decanlp cache-embeddings --destdir /usr/local/share/decanlp/embeddings --embeddings bert-base-uncased
-# RUN decanlp cache-embeddings --destdir /usr/local/share/decanlp/embeddings --embeddings bert-base-multilingual-cased
 # RUN decanlp cache-embeddings --destdir /usr/local/share/decanlp/embeddings --embeddings bert-large-uncased-whole-word-masking
 # RUN decanlp cache-embeddings --destdir /usr/local/share/decanlp/embeddings --embeddings bert-large-uncased-whole-word-masking-finetuned-squad
 
