@@ -17,6 +17,7 @@ Use:
 ./generate-dataset.sh --experiment <experiment> --dataset <dataset-name>
 ./train.sh --experiment <experiment> --dataset <dataset-name> --model <model-name>
 ./evaluate.sh --experiment <experiment> --dataset <dataset-name> --model <model-name>
+./paraphrase.sh --train_or_gen train|gen --experiment <experiment> --dataset <dataset-name> --model <model-name>
 ```
 (use `--help` to learn all commandline options; all options are required)
 
