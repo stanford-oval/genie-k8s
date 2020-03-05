@@ -3,8 +3,6 @@
 . config
 . lib.sh
 
-set -e
-set -x
 
 parse_args "$0" "experiment dataset model load_from" "$@"
 shift $n
