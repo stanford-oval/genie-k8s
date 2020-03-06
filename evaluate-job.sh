@@ -2,17 +2,17 @@
 
 . /opt/genie-toolkit/lib.sh
 
-parse_args "$0" "owner project experiment dataset model" "$@"
+parse_args "$0" "owner dataset_owner project experiment dataset model task_name" "$@"
 shift $n
 
 set -e
 set -x
 
-on_error () {
-	# on failure ship everything to s3
-	aws s3 sync . s3://almond-research/${owner}/${workdir}
-}
-trap on_error ERR
+ on_error () {
+ 	# on failure ship everything to s3
+ 	aws s3 sync . s3://almond-research/${owner}/models/${experiment}/${model}/failed_eval/
+ }
+ trap on_error ERR
 
 pwd
 aws s3 sync s3://almond-research/${owner}/workdir/${project} .

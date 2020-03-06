@@ -1,3 +1,4 @@
+#!/bin/bash
 
 replace_config() {
 sed \
@@ -7,6 +8,23 @@ sed \
   -e "s|@@IMAGE@@|${IMAGE}|g" \
   -e "s|@@cmdline@@|${cmdline}|g" \
   "$@"
+}
+
+check_aws() {
+  declare -a array
+  value=$1
+  IFS='/' read -ra array <<< "$value"
+  if ! test "${#array[@]}" = "7" || ! test "${array[0]}" = "s3:" || ! test "${array[2]}" = "almond-research"; then
+  	echo "None"
+  else
+	  if test ${value: -1} = "/"; then
+	    length=${#value}
+		echo ${value:: length-1}
+	  else
+		echo $value
+	  fi
+  fi
+
 }
 
 check_config() {
@@ -49,7 +67,7 @@ parse_args() {
         ok=1
         n=$((n+1))
         shift
-        declare -g "$argname"="$argvalue"
+        eval "$argname"="$argvalue"
         break
       fi
     done
