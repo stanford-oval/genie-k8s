@@ -3,6 +3,7 @@
 
 entities.json
 typecheck-cache.txt
+aws-iam-*
 
 config
 

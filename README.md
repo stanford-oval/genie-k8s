@@ -15,7 +15,7 @@ Copy `config.sample` to `config`, and edit the data in as described in the wiki.
 Use:
 ```
 ./generate-dataset.sh --experiment <experiment> --dataset <dataset-name>
-./train.sh --experiment <experiment> --dataset <dataset-name> --model <model-name>
+./train.sh --experiment <experiment> --dataset <dataset-name> --model <model-name> --load_from <[load_path|None]>
 ./evaluate.sh --experiment <experiment> --dataset <dataset-name> --model <model-name>
 ./paraphrase.sh --train_or_gen train|gen --experiment <experiment> --dataset <dataset-name> --model <model-name>
 ```
