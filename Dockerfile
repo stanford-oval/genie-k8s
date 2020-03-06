@@ -4,10 +4,12 @@ MAINTAINER Thingpedia Admins <thingpedia-admins@lists.stanford.edu>
 
 # install packages
 USER root
+RUN dnf -y install procps-ng && dnf clean all
+
 WORKDIR /opt/genienlp/
 ARG GENIENLP_VERSION=master
 RUN pip3 install --upgrade pip
-RUN git fetch && git checkout ${GENIENLP_VERSION} && pip3 install -e .
+RUN git fetch && git checkout ${GENIENLP_VERSION} && pip3 install -e . && pip3 install 'git+https://github.com/LiyuanLucasLiu/RAdam#egg=radam'
 
 ARG THINGTALK_VERSION=master
 RUN git clone https://github.com/stanford-oval/thingtalk /opt/thingtalk/

@@ -26,7 +26,7 @@ spec:
 
     spec:
       nodeSelector:
-        beta.kubernetes.io/instance-type: m5.2xlarge
+        beta.kubernetes.io/instance-type: m5.4xlarge
       restartPolicy: Never
       containers:
       - name: main
@@ -35,9 +35,9 @@ spec:
         command: ['/bin/sh', '-c', '/opt/genie-toolkit/generate-dataset-job.sh @@cmdline@@']
         resources:
           limits:
-            cpu: 8
-            memory: 32G
+            cpu: 15.5
+            memory: 60Gi
           requests:
-            cpu: 7
-            memory: 31G
+            cpu: 15.5
+            memory: 60Gi
       tolerations: []
