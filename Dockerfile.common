@@ -30,7 +30,7 @@ RUN genienlp cache-embeddings -d /usr/local/share/genienlp/embeddings --embeddin
 RUN genienlp cache-embeddings -d /usr/local/share/genienlp/embeddings --embeddings xlm-roberta-base
 RUN genienlp cache-embeddings -d /usr/local/share/genienlp/embeddings --embeddings bert-base-chinese
 ENV GENIENLP_EMBEDDINGS=/usr/local/share/genienlp/embeddings
-RUN chmod -R 755 /usr/local/share/genienlp/embeddings
+RUN chmod 0755 /usr/local/share/genienlp/embeddings/[0-9a-f]*
 
 # install nodejs 10.x and yarn
 RUN dnf -y module enable nodejs:10 && \

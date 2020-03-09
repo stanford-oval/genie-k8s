@@ -2,7 +2,7 @@
 
 . /opt/genie-toolkit/lib.sh
 
-parse_args "$0" "owner dataset_owner experiment dataset model workdir task_name" "$@"
+parse_args "$0" "owner dataset_owner project experiment dataset model task_name" "$@"
 shift $n
 
 set -e
@@ -15,30 +15,15 @@ set -x
  trap on_error ERR
 
 pwd
-aws s3 sync s3://almond-research/${dataset_owner}/dataset/${experiment}/${dataset} dataset/ --exclude "*eval/*"
-
-
+aws s3 sync s3://almond-research/${owner}/workdir/${project} .
 mkdir -p ${experiment}/models
-aws s3 sync s3://almond-research/${owner}/models/${experiment}/${model}/ ${experiment}/models/${model}/ --exclude "iteration_*.pth"
+aws s3 sync s3://almond-research/${owner}/models/${project}/${experiment}/${model}/ ${experiment}/models/${model}/
 
-workingdir="$HOME/${workdir}"
-mkdir -p ${workingdir}/cache
-mkdir -p ${workingdir}/eval_dir
-
-
-ln -s "$HOME/dataset" "$HOME/dataset/${task_name}"
-
-ls -R
-
-genienlp predict \
-  --data "$HOME/dataset" \
-  --embeddings ${GENIENLP_EMBEDDINGS} \
-  --cache "${workingdir}/cache" \
-  --path "$HOME/${experiment}/models/${model}/" \
-  --eval_dir ${workingdir}/eval_dir \
-  --skip_cache \
-  --tasks ${task_name} \
-  "$@"
-
-ls -R
-aws s3 sync ${workingdir}/eval_dir s3://almond-research/${owner}/models/${experiment}/${model}/${dataset}/eval/
+ls -al
+mkdir -p tmp
+export GENIE_TOKENIZER_ADDRESS=tokenizer.default.svc.cluster.local:8888
+export TZ=America/Los_Angeles
+make geniedir=/opt/genie-toolkit "project=${project}" "experiment=${experiment}" "owner=${owner}" "model=${model}" "$@" evaluate
+#cat model/*.results > ${experiment}-${dataset}-${model}.results
+#aws s3 cp ${experiment}-${dataset}-${model}.results s3://almond-research/${owner}/${workdir}/
+make syncup
