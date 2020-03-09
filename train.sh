@@ -3,12 +3,19 @@
 . config
 . lib.sh
 
-parse_args "$0" "experiment dataset model task" "$@"
+parse_args "$0" "experiment dataset model task load_from" "$@"
 shift $n
-check_config "IAM_ROLE OWNER DATASET_OWNER IMAGE project"
+check_config "IAM_ROLE OWNER DATASET_OWNER IMAGE PROJECT"
+
+load_from=$(check_aws $load_from)
+
+if test  ${load_from} = 'None'; then
+	echo "** Wrong aws link"
+	echo "** The pre-trained model won't be loaded**"
+fi
 
 JOB_NAME=${OWNER}-train-${experiment}-${model}
-cmdline="--owner ${OWNER} --dataset_owner ${DATASET_OWNER} --task_name \"${task}\" --project ${project} --experiment $experiment --dataset $dataset --model $model -- "$(requote "$@")
+cmdline="--owner ${OWNER} --dataset_owner ${DATASET_OWNER} --task_name \"${task}\" --project ${PROJECT} --experiment $experiment --dataset $dataset --model $model --load_from $load_from -- "$(requote "$@")
 
 set -e
 set -x
