@@ -34,8 +34,8 @@ spec:
         resources:
           limits:
             cpu: 8
-            memory: 62G
+            memory: 55G
           requests:
             cpu: 7
-            memory: 62G
+            memory: 55G
       tolerations: []
