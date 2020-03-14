@@ -1,11 +1,14 @@
 *.tt
 *.yaml
 
+.idea/
+
 entities.json
 typecheck-cache.txt
 aws-iam-*
 
 config
+config-*
 
 workdir/thingtalk
 workdir/spotify
