@@ -44,3 +44,6 @@ COPY lib.sh generate-dataset-job.sh train-job.sh evaluate-job.sh paraphrase-job.
 RUN useradd -ms /bin/bash -r genie-toolkit
 USER genie-toolkit
 WORKDIR /home/genie-toolkit
+
+# ensures python sys.std* encoding is always utf-8
+ENV PYTHONIOENCODING=UTF-8

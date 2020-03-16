@@ -45,4 +45,4 @@ RUN dnf -y module enable nodejs:10 && \
 # download PPDB
 RUN curl https://parmesan.stanford.edu/glove/ppdb-2.0-m-lexical.bin -o /usr/local/share/ppdb-2.0-m-lexical.bin && \
     chmod 755 /usr/local/share/ppdb-2.0-m-lexical.bin
-ENV PPDB=/usr/local/share/ppdb-2.0-l-lexical.bin
+ENV PPDB=/usr/local/share/ppdb-2.0-m-lexical.bin
