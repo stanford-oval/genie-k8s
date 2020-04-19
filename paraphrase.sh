@@ -3,13 +3,16 @@
 . config
 . lib.sh
 
-parse_args "$0" "train_or_gen experiment dataset model" "$@"
+
+parse_args "$0" "skip_generation=false experiment input_dataset output_dataset filtering_model paraphrasing_model_full_path=None" "$@"
 shift $n
-check_config "IAM_ROLE OWNER DATASET_OWNER IMAGE train_task_name"
+check_config "IAM_ROLE OWNER DATASET_OWNER IMAGE PROJECT TRAIN_TASK_NAME"
 
 
-JOB_NAME=${OWNER}-paraphrase-${experiment}-${model}
-cmdline="--train_or_gen ${train_or_gen} --owner ${OWNER} --dataset_owner ${DATASET_OWNER} --task_name ${train_task_name} --experiment $experiment --dataset $dataset --model $model -- "$(requote "$@")
+JOB_NAME=${OWNER}-paraphrase-${output_dataset}
+cmdline="--owner ${OWNER} --dataset_owner ${DATASET_OWNER} --project ${PROJECT} --experiment $experiment \
+         --input_dataset $input_dataset --output_dataset $output_dataset --filtering_model $filtering_model \
+         --paraphrasing_model_full_path $paraphrasing_model_full_path --skip_generation $skip_generation -- "$(requote "$@")
 
 set -e
 set -x

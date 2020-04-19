@@ -26,23 +26,23 @@ spec:
 
     spec:
       nodeSelector:
-        beta.kubernetes.io/instance-type: p3.8xlarge
+        beta.kubernetes.io/instance-type: p3.2xlarge
       restartPolicy: Never
       containers:
       - name: main
         image: @@IMAGE@@
         imagePullPolicy: Always
-        command: ['/bin/sh', '-c', '/opt/genie-toolkit/paraphrase-job.sh @@cmdline@@']
+        command: ['/bin/sh', '-c', '/opt/genie-toolkit/train-paraphrase-job.sh @@cmdline@@']
         volumeMounts:
           - name: tensorboard
             mountPath: /shared/tensorboard
         resources:
           limits:
-            cpu: 32
-            memory: 220G
-            nvidia.com/gpu: 4
+            cpu: 8
+            memory: 55G
+            nvidia.com/gpu: 1
           requests:
-            cpu: 16
+            cpu: 4
       volumes:
       - name: tensorboard
         persistentVolumeClaim:
