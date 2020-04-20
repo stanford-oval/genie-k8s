@@ -8,8 +8,8 @@ RUN pip3 install --upgrade pip
 RUN git fetch && git checkout ${GENIENLP_VERSION} && pip3 install -e . && pip3 install 'git+https://github.com/LiyuanLucasLiu/RAdam#egg=radam'
 
 # uncomment the models you want to use
-# RUN decanlp cache-embeddings --destdir /usr/local/share/decanlp/embeddings --embeddings bert-large-uncased-whole-word-masking
-# RUN decanlp cache-embeddings --destdir /usr/local/share/decanlp/embeddings --embeddings bert-large-uncased-whole-word-masking-finetuned-squad
+# RUN genienlp cache-embeddings --destdir /usr/local/share/genienlp/embeddings --embeddings bert-large-uncased-whole-word-masking
+# RUN genienlp cache-embeddings --destdir /usr/local/share/genienlp/embeddings --embeddings bert-large-uncased-whole-word-masking-finetuned-squad
 
 # uncomment it you need Apex (for mixed precision training)
 # RUN yum install -y \
@@ -38,7 +38,7 @@ RUN git checkout ${GENIE_VERSION}
 RUN yarn link thingtalk
 RUN yarn install
 
-COPY lib.sh generate-dataset-job.sh train-job.sh evaluate-job.sh paraphrase-job.sh ./
+COPY lib.sh generate-dataset-job.sh train-job.sh evaluate-job.sh paraphrase-job.sh train-paraphrase-job.sh ./
 
 # add user genie-toolkit
 RUN useradd -ms /bin/bash -r genie-toolkit
