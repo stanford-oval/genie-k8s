@@ -6,11 +6,11 @@
 
 parse_args "$0" "experiment=paraphrase dataset model" "$@"
 shift $n
-check_config "IAM_ROLE OWNER DATASET_OWNER IMAGE PROJECT TRAIN_TASK_NAME"
+check_config "IAM_ROLE OWNER DATASET_OWNER IMAGE PROJECT"
 
 
 JOB_NAME=${OWNER}-paraphrase-${model}
-cmdline="--owner ${OWNER} --dataset_owner ${DATASET_OWNER} --task_name ${TRAIN_TASK_NAME} --project ${PROJECT} --experiment $experiment --dataset $dataset --model $model -- "$(requote "$@")
+cmdline="--owner ${OWNER} --dataset_owner ${DATASET_OWNER} --project ${PROJECT} --experiment $experiment --dataset $dataset --model $model -- "$(requote "$@")
 
 set -e
 set -x

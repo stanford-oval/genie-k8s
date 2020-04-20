@@ -20,7 +20,7 @@ spec:
       labels:
         app: genie-toolkit
         owner: @@OWNER@@
-        job-type: paraphrase
+        job-type: train
       annotations:
         iam.amazonaws.com/role: @@IAM_ROLE@@
 

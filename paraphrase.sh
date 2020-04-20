@@ -6,7 +6,7 @@
 
 parse_args "$0" "skip_generation=false experiment input_dataset output_dataset filtering_model paraphrasing_model_full_path=None" "$@"
 shift $n
-check_config "IAM_ROLE OWNER DATASET_OWNER IMAGE PROJECT TRAIN_TASK_NAME"
+check_config "IAM_ROLE OWNER DATASET_OWNER IMAGE PROJECT"
 
 
 JOB_NAME=${OWNER}-paraphrase-${output_dataset}
