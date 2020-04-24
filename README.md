@@ -17,7 +17,7 @@ Use:
 ./generate-dataset.sh --experiment <experiment> --dataset <dataset-name>
 ./train.sh --experiment <experiment> --dataset <dataset-name> --model <model-name> --load_from <[load_path|None]>
 ./evaluate.sh --experiment <experiment> --dataset <dataset-name> --model <model-name>
-./paraphrase.sh --train_or_gen train|gen --experiment <experiment> --dataset <dataset-name> --model <model-name>
+./paraphrase.sh --experiment <experiment> --input_dataset <input-dataset-name> --output_dataset <output-dataset-name> --filtering_model <parser-name> --paraphrasing_model_full_path <path-to-paraphrasing-model>
 ```
 (use `--help` to learn all commandline options; all options are required)
 
