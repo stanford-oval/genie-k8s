@@ -6,7 +6,7 @@ USER root
 
 # install basic tools
 RUN dnf -y install make gettext unzip xz python2 gcc-c++ \
-	git gcc gcc-c++ \
+	git gcc gcc-c++ procps-ng \
 	python3 \
 	python3-numpy \
 	python3-scipy \
@@ -24,9 +24,9 @@ RUN git clone https://github.com/stanford-oval/genienlp /opt/genienlp && \
 # download word embeddings
 RUN mkdir -p /usr/local/share/genienlp/embeddings
 WORKDIR /usr/local/share/genienlp/embeddings
-RUN curl -L https://oval.cs.stanford.edu/data/glove/embeddings.tar.xz | tar xJv
 RUN genienlp cache-embeddings -d /usr/local/share/genienlp/embeddings --embeddings bert-base-uncased
 RUN genienlp cache-embeddings -d /usr/local/share/genienlp/embeddings --embeddings bert-base-multilingual-uncased
+RUN curl -L https://oval.cs.stanford.edu/data/glove/embeddings.tar.xz | tar xJv
 RUN genienlp cache-embeddings -d /usr/local/share/genienlp/embeddings --embeddings xlm-roberta-base
 RUN genienlp cache-embeddings -d /usr/local/share/genienlp/embeddings --embeddings bert-base-chinese
 ENV GENIENLP_EMBEDDINGS=/usr/local/share/genienlp/embeddings

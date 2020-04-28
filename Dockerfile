@@ -2,12 +2,10 @@ ARG COMMON_IMAGE=
 FROM ${COMMON_IMAGE}
 MAINTAINER Thingpedia Admins <thingpedia-admins@lists.stanford.edu>
 
-# install packages
-USER root
 WORKDIR /opt/genienlp/
 ARG GENIENLP_VERSION=master
 RUN pip3 install --upgrade pip
-RUN git fetch && git checkout ${GENIENLP_VERSION} && pip3 install -e .
+RUN git fetch && git checkout ${GENIENLP_VERSION} && pip3 install -e . && pip3 install 'git+https://github.com/LiyuanLucasLiu/RAdam#egg=radam'
 
 # uncomment the models you want to use
 # RUN genienlp cache-embeddings --destdir /usr/local/share/genienlp/embeddings --embeddings bert-large-uncased-whole-word-masking

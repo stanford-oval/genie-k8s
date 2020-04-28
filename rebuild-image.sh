@@ -9,7 +9,6 @@ check_config "IMAGE COMMON_IMAGE genie_version thingtalk_version genienlp_versio
 set -e
 set -x
 
-
 docker pull ${COMMON_IMAGE}
 docker build -t ${IMAGE} \
   --build-arg COMMON_IMAGE=${COMMON_IMAGE} \

@@ -25,6 +25,8 @@ spec:
         iam.amazonaws.com/role: @@IAM_ROLE@@
 
     spec:
+      nodeSelector:
+        beta.kubernetes.io/instance-type: m5.4xlarge
       restartPolicy: Never
       containers:
       - name: main
@@ -33,9 +35,9 @@ spec:
         command: ['/bin/sh', '-c', '/opt/genie-toolkit/generate-dataset-job.sh @@cmdline@@']
         resources:
           limits:
-            cpu: 8
-            memory: 55G
+            cpu: 15.5
+            memory: 55Gi
           requests:
-            cpu: 7
-            memory: 55G
+            cpu: 15.5
+            memory: 55Gi
       tolerations: []
