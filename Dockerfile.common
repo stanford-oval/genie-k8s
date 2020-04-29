@@ -24,13 +24,14 @@ RUN git clone https://github.com/stanford-oval/genienlp /opt/genienlp && \
 # download word embeddings
 RUN mkdir -p /usr/local/share/genienlp/embeddings
 WORKDIR /usr/local/share/genienlp/embeddings
-RUN genienlp cache-embeddings -d /usr/local/share/genienlp/embeddings --embeddings bert-base-uncased
-RUN genienlp cache-embeddings -d /usr/local/share/genienlp/embeddings --embeddings bert-base-multilingual-uncased
-RUN curl -L https://oval.cs.stanford.edu/data/glove/embeddings.tar.xz | tar xJv
-RUN genienlp cache-embeddings -d /usr/local/share/genienlp/embeddings --embeddings xlm-roberta-base
-RUN genienlp cache-embeddings -d /usr/local/share/genienlp/embeddings --embeddings bert-base-chinese
-ENV GENIENLP_EMBEDDINGS=/usr/local/share/genienlp/embeddings
+#RUN curl -L https://oval.cs.stanford.edu/data/glove/embeddings.tar.xz | tar xJv
+RUN true 1 && genienlp cache-embeddings -d /usr/local/share/genienlp/embeddings --embeddings bert-base-multilingual-uncased
+RUN true 1 && genienlp cache-embeddings -d /usr/local/share/genienlp/embeddings --embeddings bert-base-uncased
+RUN true 1 && genienlp cache-embeddings -d /usr/local/share/genienlp/embeddings --embeddings bert-base-cased
+RUN true 1 && genienlp cache-embeddings -d /usr/local/share/genienlp/embeddings --embeddings xlm-roberta-base
+RUN true 1 && genienlp cache-embeddings -d /usr/local/share/genienlp/embeddings --embeddings bert-base-chinese
 RUN chmod 0755 /usr/local/share/genienlp/embeddings/[0-9a-f]*
+ENV GENIENLP_EMBEDDINGS=/usr/local/share/genienlp/embeddings
 
 # install nodejs 10.x and yarn
 RUN dnf -y module enable nodejs:10 && \
