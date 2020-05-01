@@ -11,11 +11,11 @@ set -x
 mkdir workdir
 cd workdir
 
-on_error () {
-	# on failure ship everything to s3
-	aws s3 sync ./ s3://almond-research/${owner}/tmp/${project}/
-}
-trap on_error ERR
+#on_error () {
+#	# on failure ship everything to s3
+#	aws s3 sync ./ s3://almond-research/${owner}/tmp/${project}/
+#}
+#trap on_error ERR
 
 pwd
 aws s3 sync s3://almond-research/${owner}/workdir/${project}/ .
