@@ -13,7 +13,6 @@ DATASET_OWNER=
 THINGPEDIA_DEVELOPER_KEY=
 # the Genie/decanlp task to train: either `almond` or `contextual_almond` or `almond_dialogue_nlu`
 TRAIN_TASK_NAME=almond
-EVAL_TASK_NAME=almond
 # the name of the project (to group all related experiments together)
 PROJECT=
 # git commits to build (for rebuild-image.sh); can be branch name or commit hash
