@@ -16,6 +16,7 @@ aws s3 sync s3://almond-research/${paraphrasing_model_full_path} paraphraser/
 mkdir -p output_dataset
 cp -r input_dataset/* output_dataset
 
+
 export paraphrasing_arguments=$@
 if [ "$task_name" = "almond_dialogue_nlu" ] ; then
   export is_dialogue=true
@@ -33,6 +34,14 @@ else
 fi
 
 make_input_ready(){
+    # remove duplicates before paraphrasing to avoid wasting effort
+    python3 /opt/genienlp/genienlp/data_manipulation_scripts/transform_dataset.py \
+      ${input_dir}/train.tsv \
+      ${input_dir}/train_no_duplicate.tsv \
+      --remove_duplicates \
+      --task ${task_name}
+      cp ${input_dir}/train_no_duplicate.tsv ${input_dir}/train.tsv
+
     if [ "$is_dialogue" = true ] ; then
     # add previous agent utterance; this additional context helps the paraphraser
     python3 /opt/genienlp/genienlp/data_manipulation_scripts/dialog_to_tsv.py \
@@ -113,7 +122,7 @@ filter(){
 append_to_original(){
   # append paraphrases to the end of the original training file and remove duplicates
   cp ./eval_dir/valid/${task_name}.results.json ${output_dir}/
-  cp ${output_dir}/train.tsv ${output_dir}/temp.tsv
+  cp ${input_dir}/train.tsv ${output_dir}/temp.tsv
   cat ${output_dir}/filtered.tsv >> ${output_dir}/temp.tsv
   python3 /opt/genienlp/genienlp/data_manipulation_scripts/transform_dataset.py \
     ${output_dir}/temp.tsv \
