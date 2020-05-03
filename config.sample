@@ -11,11 +11,11 @@ OWNER=
 DATASET_OWNER=
 # the master developer key (to rebuild images)
 THINGPEDIA_DEVELOPER_KEY=
-# the Genie/decanlp task to train: either `almond` or `contextual_almond`
+# the Genie/decanlp task to train: either `almond` or `contextual_almond` or `almond_dialogue_nlu`
 TRAIN_TASK_NAME=almond
 # the name of the project (to group all related experiments together)
 PROJECT=
-# git commits to build (for rebuild-image.sh)
-genie_version=9cdd8093175b610e1335c5b7f728f242e999f6a0
-thingtalk_version=8a7413996d0c714707754ce9f1aded1eab09dad3
-genienlp_version=b39fe2ea6aa6fa4f5f1274bb589fbedc953797d9
+# git commits to build (for rebuild-image.sh); can be branch name or commit hash
+genie_version=master
+thingtalk_version=master
+genienlp_version=master
