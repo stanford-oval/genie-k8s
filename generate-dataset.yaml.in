@@ -37,7 +37,9 @@ spec:
           limits:
             cpu: 15.5
             memory: 55Gi
+            ephemeral-storage: 75G
           requests:
             cpu: 15.5
             memory: 55Gi
+            ephemeral-storage: 75G
       tolerations: []

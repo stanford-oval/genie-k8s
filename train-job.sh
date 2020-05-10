@@ -15,7 +15,7 @@ if ! test  ${load_from} = 'None' ; then
 	aws s3 sync ${load_from}/ "$modeldir"/ --exclude "iteration_*.pth" --exclude "*eval/*"  --exclude "*.log"
 fi
 
-aws s3 sync s3://almond-research/${dataset_owner}/dataset/${project}/${experiment}/${dataset} dataset/
+aws s3 sync --exclude "synthetic*.txt" s3://almond-research/${dataset_owner}/dataset/${project}/${experiment}/${dataset} dataset/
 
 rm -fr "$modeldir/dataset"
 mkdir "$modeldir/dataset"

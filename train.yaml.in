@@ -38,11 +38,15 @@ spec:
             mountPath: /shared/tensorboard
         resources:
           limits:
-            cpu: 8
+            cpu: 7.5
             memory: 55G
             nvidia.com/gpu: 1
+            ephemeral-storage: 30G
           requests:
-            cpu: 4
+            cpu: 7.5
+            memory: 55G
+            nvidia.com/gpu: 1
+            ephemeral-storage: 30G
       volumes:
       - name: tensorboard
         persistentVolumeClaim:
