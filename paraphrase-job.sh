@@ -35,7 +35,7 @@ fi
 
 make_input_ready(){
     # remove duplicates before paraphrasing to avoid wasting effort
-    python3 /opt/genienlp/genienlp/data_manipulation_scripts/transform_dataset.py \
+    python3 /opt/genienlp/genienlp/paraphrase/scripts/transform_dataset.py \
       ${input_dir}/train.tsv \
       ${input_dir}/train_no_duplicate.tsv \
       --remove_duplicates \
@@ -44,7 +44,7 @@ make_input_ready(){
 
     if [ "$is_dialogue" = true ] ; then
     # add previous agent utterance; this additional context helps the paraphraser
-    python3 /opt/genienlp/genienlp/data_manipulation_scripts/dialog_to_tsv.py \
+    python3 /opt/genienlp/genienlp/paraphrase/scripts/dialog_to_tsv.py \
       ${input_dir}/train.tsv \
       --dialog_file input_dataset/synthetic.txt \
       ${output_dir}/with_context.tsv
@@ -80,7 +80,7 @@ run_paraphrase(){
 join(){
   # join the original file and the paraphrasing output
   export num_new_queries=$((`wc -l ${output_dir}/paraphrased.tsv | cut -d " " -f1` / `wc -l ${input_dir}/train.tsv | cut -d " " -f1`))
-  python3 /opt/genienlp/genienlp/data_manipulation_scripts/transform_dataset.py \
+  python3 /opt/genienlp/genienlp/paraphrase/scripts/transform_dataset.py \
     ${input_dir}/train.tsv \
     ${output_dir}/unfiltered.tsv \
     --query_file ${output_dir}/paraphrased.tsv \
@@ -110,7 +110,7 @@ run_parser(){
 
 filter(){
   # remove paraphrases that do not preserve the meaning according to the parser
-  python3 /opt/genienlp/genienlp/data_manipulation_scripts/transform_dataset.py \
+  python3 /opt/genienlp/genienlp/paraphrase/scripts/transform_dataset.py \
     ${output_dir}/unfiltered.tsv \
     ${output_dir}/filtered.tsv \
     --thingtalk_gold_file eval_dir/valid/${task_name}.tsv \
@@ -124,7 +124,7 @@ append_to_original(){
   cp ./eval_dir/valid/${task_name}.results.json ${output_dir}/
   cp ${input_dir}/train.tsv ${output_dir}/temp.tsv
   cat ${output_dir}/filtered.tsv >> ${output_dir}/temp.tsv
-  python3 /opt/genienlp/genienlp/data_manipulation_scripts/transform_dataset.py \
+  python3 /opt/genienlp/genienlp/paraphrase/scripts/transform_dataset.py \
     ${output_dir}/temp.tsv \
     ${output_dir}/train.tsv \
     --remove_duplicates \
