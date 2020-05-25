@@ -3,8 +3,12 @@
 . /opt/genie-toolkit/lib.sh
 
 parse_args "$0" "owner dataset_owner project experiment \
-            input_dataset output_dataset filtering_model paraphrasing_model_full_path skip_generation task_name" "$@"
+            input_dataset output_dataset filtering_model paraphrasing_model_full_path skip_generation skip_filtering task_name ignore_context" "$@"
 shift $n
+
+if [ "$ignore_context" = true ] ; then
+  echo "ignoring context"
+fi
 
 set -e
 set -x
@@ -23,7 +27,7 @@ if [ "$task_name" = "almond_dialogue_nlu" ] ; then
   export input_dir="input_dataset/user"
   export output_dir="output_dataset/user"
   export filtering_dir="almond/user"
-  export filtering_batch_size="600"
+  export filtering_batch_size="300"
 elif [ "$task_name" = "almond" ] ; then
   export input_dir="input_dataset"
   export output_dir="output_dataset"
@@ -57,7 +61,17 @@ run_paraphrase(){
   echo $paraphrasing_arguments
   # run paraphrase generation
   if [ "$is_dialogue" = true ] ; then
-    genienlp run-paraphrase \
+    if [ "$ignore_context" = true ] ; then
+      genienlp run-paraphrase \
+      --model_name_or_path paraphraser \
+      --input_file ${output_dir}/with_context.tsv \
+      --output_file ${output_dir}/paraphrased.tsv \
+      --input_column 3 \
+      --thingtalk_column 2 \
+      --gold_column 3 \
+      $paraphrasing_arguments
+    else
+      genienlp run-paraphrase \
       --model_name_or_path paraphraser \
       --input_file ${output_dir}/with_context.tsv \
       --output_file ${output_dir}/paraphrased.tsv \
@@ -66,6 +80,7 @@ run_paraphrase(){
       --thingtalk_column 2 \
       --gold_column 3 \
       $paraphrasing_arguments
+    fi
   else
     genienlp run-paraphrase \
       --model_name_or_path paraphraser \
@@ -106,6 +121,7 @@ run_parser(){
     --main_metric_only \
     --skip_cache \
     --val_batch_size ${filtering_batch_size}
+  cp ./eval_dir/valid/${task_name}.results.json ${output_dir}/
 }
 
 filter(){
@@ -121,7 +137,6 @@ filter(){
 
 append_to_original(){
   # append paraphrases to the end of the original training file and remove duplicates
-  cp ./eval_dir/valid/${task_name}.results.json ${output_dir}/
   cp ${input_dir}/train.tsv ${output_dir}/temp.tsv
   cat ${output_dir}/filtered.tsv >> ${output_dir}/temp.tsv
   python3 /opt/genienlp/genienlp/paraphrase/scripts/transform_dataset.py \
@@ -147,8 +162,14 @@ else
   aws s3 sync output_dataset s3://almond-research/${dataset_owner}/dataset/${project}/${experiment}/${output_dataset}
 fi
 
-run_parser
-filter
+if [ "$skip_filtering" = true ] ; then
+  echo "Skipping filtering."
+  cp ${output_dir}/unfiltered.tsv ${output_dir}/filtered.tsv
+else
+  run_parser
+  filter
+fi
+
 append_to_original
 
 # upload the new dataset to S3

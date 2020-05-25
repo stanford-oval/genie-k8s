@@ -14,7 +14,7 @@ cmdline="--owner ${OWNER} --dataset_owner ${DATASET_OWNER} --project ${PROJECT} 
 
 set -e
 set -x
-replace_config paraphrase.yaml.in > paraphrase.yaml
+replace_config train-paraphrase.yaml.in > train-paraphrase.yaml
 
 kubectl -n research delete job ${JOB_NAME} || true
-kubectl apply -f paraphrase.yaml
+kubectl apply -f train-paraphrase.yaml
