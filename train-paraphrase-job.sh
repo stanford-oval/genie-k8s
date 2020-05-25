@@ -24,8 +24,8 @@ genienlp train-paraphrase \
   --do_eval \
   --evaluate_during_training \
   --overwrite_output_dir \
-  --logging_steps 200 \
-  --save_steps 200 \
+  --logging_steps 2000 \
+  --save_steps 2000 \
   --max_steps -1 \
   --save_total_limit 1 \
   "$@"
