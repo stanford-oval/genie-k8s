@@ -36,6 +36,6 @@ spec:
             cpu: 4
             memory: 15G
           requests:
-            cpu: 3
+            cpu: 4
             memory: 15G
       tolerations: []

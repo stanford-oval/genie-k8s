@@ -25,11 +25,11 @@ ln -s "$HOME/dataset" "$modeldir/dataset/almond"
 ln -s $modeldir /home/genie-toolkit/current
 mkdir -p "/shared/tensorboard/${project}/${experiment}/${owner}/${model}"
 
-on_error () {
-  # on failure ship everything to s3
-  aws s3 sync $modeldir/ s3://almond-research/${owner}/models/${experiment}/${model}/failed_train/
-}
-trap on_error ERR
+#on_error () {
+#  # on failure ship everything to s3
+#  aws s3 sync $modeldir/ s3://almond-research/${owner}/models/${experiment}/${model}/failed_train/
+#}
+#trap on_error ERR
 
 
 genienlp train \
