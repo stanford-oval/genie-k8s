@@ -25,8 +25,6 @@ spec:
       serviceAccountName: research-pod
       securityContext:
         fsGroup: 1000
-      nodeSelector:
-        beta.kubernetes.io/instance-type: p3.2xlarge
       restartPolicy: Never
       containers:
       - name: main
@@ -40,13 +38,15 @@ spec:
           limits:
             cpu: 7.5
             memory: 56G
-            nvidia.com/gpu: 1
+            nvidia.com/gpu: @@GPU_NUM@@
             ephemeral-storage: 40G
           requests:
             cpu: 7.5
             memory: 56G
-            nvidia.com/gpu: 1
+            nvidia.com/gpu: @@GPU_NUM@@
             ephemeral-storage: 40G
+      nodeSelector:
+        beta.kubernetes.io/instance-type: @@GPU_TYPE@@
       volumes:
       - name: tensorboard
         persistentVolumeClaim:
