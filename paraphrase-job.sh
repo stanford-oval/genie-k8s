@@ -2,7 +2,7 @@
 
 . /opt/genie-toolkit/lib.sh
 
-parse_args "$0" "owner dataset_owner project experiment \
+parse_args "$0" "s3_bucket owner dataset_owner project experiment \
             input_dataset output_dataset filtering_model paraphrasing_model_full_path skip_generation skip_filtering task_name ignore_context" "$@"
 shift $n
 
@@ -13,9 +13,9 @@ fi
 set -e
 set -x
 
-aws s3 sync s3://almond-research/${dataset_owner}/dataset/${project}/${experiment}/${input_dataset} input_dataset/
-aws s3 sync --exclude '*/dataset/*' --exclude '*/cache/*' --exclude 'iteration_*.pth' --exclude '*_optim.pth' s3://almond-research/${owner}/models/${project}/${experiment}/${filtering_model} filtering_model/
-aws s3 sync s3://almond-research/${paraphrasing_model_full_path} paraphraser/
+aws s3 sync s3://${s3_bucket}/${dataset_owner}/dataset/${project}/${experiment}/${input_dataset} input_dataset/
+aws s3 sync --exclude '*/dataset/*' --exclude '*/cache/*' --exclude 'iteration_*.pth' --exclude '*_optim.pth' s3://${s3_bucket}/${owner}/models/${project}/${experiment}/${filtering_model} filtering_model/
+aws s3 sync s3://${s3_bucket}/${paraphrasing_model_full_path} paraphraser/
 
 mkdir -p output_dataset
 cp -r input_dataset/* output_dataset
@@ -159,7 +159,7 @@ else
   join
 
   # paraphrasing was successful, so upload the intermediate files
-  aws s3 sync output_dataset s3://almond-research/${dataset_owner}/dataset/${project}/${experiment}/${output_dataset}
+  aws s3 sync output_dataset s3://${s3_bucket}/${dataset_owner}/dataset/${project}/${experiment}/${output_dataset}
 fi
 
 if [ "$skip_filtering" = true ] ; then
@@ -173,7 +173,7 @@ fi
 append_to_original
 
 # upload the new dataset to S3
-aws s3 sync output_dataset s3://almond-research/${dataset_owner}/dataset/${project}/${experiment}/${output_dataset}
+aws s3 sync output_dataset s3://${s3_bucket}/${dataset_owner}/dataset/${project}/${experiment}/${output_dataset}
 
 
 

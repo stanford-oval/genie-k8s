@@ -2,7 +2,7 @@
 
 . /opt/genie-toolkit/lib.sh
 
-parse_args "$0" "owner project experiment model model_owner eval_set" "$@"
+parse_args "$0" "s3_bucket owner project experiment model model_owner eval_set" "$@"
 shift $n
 
 set -e
@@ -15,7 +15,7 @@ set -x
 # trap on_error ERR
 
 pwd
-aws s3 sync s3://almond-research/${owner}/workdir/${project} .
+aws s3 sync s3://${s3_bucket}/${owner}/workdir/${project} .
 #mkdir -p ${experiment}/models
 #aws s3 sync --exclude 'iteration_*.pth' --exclude '*_optim.pth' s3://almond-research/${owner}/models/${project}/${experiment}/${model}/ ${experiment}/models/${model}/
 
@@ -26,5 +26,5 @@ export TZ=America/Los_Angeles
 make geniedir=/opt/genie-toolkit experiment=$experiment eval_set=${eval_set} ${experiment}/${eval_set}/${model_owner}/${model}.{nlu,dialogue}.results
 
 for f in $experiment/${eval_set}/${model_owner}/${model}.{nlu,dialogue}.{results,debug} ; do
-	aws s3 cp $f s3://almond-research/${owner}/workdir/${project}/${experiment}/${eval_set}/${model_owner}/
+	aws s3 cp $f s3://${s3_bucket}/${owner}/workdir/${project}/${experiment}/${eval_set}/${model_owner}/
 done

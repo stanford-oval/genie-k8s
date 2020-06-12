@@ -2,7 +2,7 @@
 
 . /opt/genie-toolkit/lib.sh
 
-parse_args "$0" "owner dataset_owner task_name project experiment dataset model load_from" "$@"
+parse_args "$0" "s3_bucket owner dataset_owner task_name project experiment dataset model load_from" "$@"
 shift $n
 
 set -e
@@ -15,7 +15,7 @@ if ! test  ${load_from} = 'None' ; then
 	aws s3 sync ${load_from}/ "$modeldir"/ --exclude "iteration_*.pth" --exclude "*eval/*"  --exclude "*.log"
 fi
 
-aws s3 sync --exclude "synthetic*.txt" s3://almond-research/${dataset_owner}/dataset/${project}/${experiment}/${dataset} dataset/
+aws s3 sync --exclude "synthetic*.txt" s3://${s3_bucket}/${dataset_owner}/dataset/${project}/${experiment}/${dataset} dataset/
 
 rm -fr "$modeldir/dataset"
 mkdir "$modeldir/dataset"
@@ -49,4 +49,4 @@ genienlp train \
   
 rm -fr "$modeldir/cache"
 rm -fr "$modeldir/dataset"
-aws s3 sync ${modeldir}/ s3://almond-research/${owner}/models/${project}/${experiment}/${model}
+aws s3 sync ${modeldir}/ s3://${s3_bucket}/${owner}/models/${project}/${experiment}/${model}
