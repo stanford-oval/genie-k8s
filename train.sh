@@ -8,15 +8,10 @@ parse_args "$0" "experiment dataset dataset_owner=${DATASET_OWNER} model task=${
 
 shift $n
 
-if [ "$num_gpus" = "1" ]; then
-  GPU_NUM=1
-	GPU_TYPE="p3.2xlarge"
-else
-  GPU_NUM=$num_gpus
-	GPU_TYPE="p3.8xlarge"
-fi
+GPU_NUM=$num_gpus
+GPU_TYPE="p3.$((2*$num_gpus))xlarge"
 
-check_config "IAM_ROLE OWNER DATASET_OWNER IMAGE PROJECT GPU_NUM GPU_TYPE"
+check_config "IAM_ROLE OWNER DATASET_OWNER IMAGE PROJECT"
 
 
 JOB_NAME=${OWNER}-train-${experiment}-${model}
