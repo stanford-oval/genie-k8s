@@ -21,10 +21,10 @@ spec:
         app: genie-toolkit
         owner: @@OWNER@@
         job-type: paraphrase
-      annotations:
-        iam.amazonaws.com/role: @@IAM_ROLE@@
-
     spec:
+      serviceAccountName: research-pod
+      securityContext:
+        fsGroup: 1000
       nodeSelector:
         beta.kubernetes.io/instance-type: p3.8xlarge
       restartPolicy: Never
@@ -35,11 +35,15 @@ spec:
         command: ['/bin/sh', '-c', '/opt/genie-toolkit/paraphrase-job.sh @@cmdline@@']
         resources:
           limits:
-            cpu: 32
+            cpu: 31
             memory: 220G
             nvidia.com/gpu: 4
+            ephemeral-storage: 80G
           requests:
-            cpu: 16
+            cpu: 31
+            memory: 220G
+            nvidia.com/gpu: 4
+            ephemeral-storage: 80G
       tolerations:
       - key: nvidia.com/gpu
         operator: Exists

@@ -21,10 +21,10 @@ spec:
         app: genie-toolkit
         owner: @@OWNER@@
         job-type: train
-      annotations:
-        iam.amazonaws.com/role: @@IAM_ROLE@@
-
     spec:
+      serviceAccountName: research-pod
+      securityContext:
+        fsGroup: 1000
       nodeSelector:
         beta.kubernetes.io/instance-type: p3.2xlarge
       restartPolicy: Never
@@ -39,14 +39,14 @@ spec:
         resources:
           limits:
             cpu: 7.5
-            memory: 55G
+            memory: 56G
             nvidia.com/gpu: 1
-            ephemeral-storage: 30G
+            ephemeral-storage: 40G
           requests:
             cpu: 7.5
-            memory: 55G
+            memory: 56G
             nvidia.com/gpu: 1
-            ephemeral-storage: 30G
+            ephemeral-storage: 40G
       volumes:
       - name: tensorboard
         persistentVolumeClaim:

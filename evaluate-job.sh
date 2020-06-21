@@ -2,7 +2,7 @@
 
 . /opt/genie-toolkit/lib.sh
 
-parse_args "$0" "owner project experiment model" "$@"
+parse_args "$0" "s3_bucket owner project experiment model model_owner eval_set" "$@"
 shift $n
 
 set -e
@@ -15,14 +15,16 @@ set -x
 # trap on_error ERR
 
 pwd
-aws s3 sync --include '${project}/' s3://almond-research/${owner}/workdir/${project} .
-mkdir -p ${experiment}/models
-aws s3 sync --exclude 'iteration_*.pth' --exclude '*_optim.pth' s3://almond-research/${owner}/models/${project}/${experiment}/${model}/ ${experiment}/models/${model}/
+aws s3 sync s3://${s3_bucket}/${owner}/workdir/${project} .
+#mkdir -p ${experiment}/models
+#aws s3 sync --exclude 'iteration_*.pth' --exclude '*_optim.pth' s3://almond-research/${owner}/models/${project}/${experiment}/${model}/ ${experiment}/models/${model}/
 
 ls -al
 mkdir -p tmp
 export GENIE_TOKENIZER_ADDRESS=tokenizer.default.svc.cluster.local:8888
 export TZ=America/Los_Angeles
-make geniedir=/opt/genie-toolkit experiment=$experiment owner=$owner $experiment/eval/$model.results
-cat $experiment/eval/$model.results
-aws s3 sync $experiment/eval/ s3://almond-research/${owner}/workdir/${project}/$experiment/eval/
+make geniedir=/opt/genie-toolkit experiment=$experiment eval_set=${eval_set} ${experiment}/${eval_set}/${model_owner}/${model}.{nlu,dialogue}.results
+
+for f in $experiment/${eval_set}/${model_owner}/${model}.{nlu,dialogue}.{results,debug} ; do
+	aws s3 cp $f s3://${s3_bucket}/${owner}/workdir/${project}/${experiment}/${eval_set}/${model_owner}/
+done
