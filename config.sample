@@ -1,21 +1,9 @@
-# IAM role to access S3
-IAM_ROLE=
-# common image to use
+S3_BUCKET=
 COMMON_IMAGE=
-# image to use
 IMAGE=
-# your username (could be anything - it's just to coordinate access to s3)
-OWNER=
-# the username of the user that owns the dataset (so one user can generate
-# datasets and many users can try different models)
-DATASET_OWNER=
-# the master developer key (to rebuild images)
-THINGPEDIA_DEVELOPER_KEY=
-# the Genie/decanlp task to train: either `almond` or `contextual_almond` or `almond_dialogue_nlu`
-TRAIN_TASK_NAME=almond
-# the name of the project (to group all related experiments together)
-PROJECT=
-# git commits to build (for rebuild-image.sh); can be branch name or commit hash
+OWNER=${user}
+DATASET_OWNER=${user}
+PROJECT=${project}
+genienlp_version=master
 genie_version=master
 thingtalk_version=master
-genienlp_version=master
