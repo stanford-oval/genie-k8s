@@ -7,6 +7,8 @@ sed \
   -e "s|@@IAM_ROLE@@|${IAM_ROLE}|g" \
   -e "s|@@IMAGE@@|${IMAGE}|g" \
   -e "s|@@cmdline@@|${cmdline}|g" \
+  -e "s|@@GPU_NUM@@|${GPU_NUM}|g" \
+  -e "s|@@GPU_TYPE@@|${GPU_TYPE}|g" \
   "$@"
 }
 
