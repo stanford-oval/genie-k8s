@@ -1,9 +1,15 @@
 S3_BUCKET=
+
 COMMON_IMAGE=
 IMAGE=
+
 OWNER=${user}
 DATASET_OWNER=${user}
+
 PROJECT=${project}
+
+TRAIN_TASK_NAME=
+
 genienlp_version=master
 genie_version=master
 thingtalk_version=master
