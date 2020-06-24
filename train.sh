@@ -3,13 +3,19 @@
 . config
 . lib.sh
 
+check_config "S3_BUCKET OWNER DATASET_OWNER IMAGE PROJECT"
+parse_args "$0" "experiment dataset dataset_owner=${DATASET_OWNER} model task=${TRAIN_TASK_NAME} load_from=None num_gpus=1" "$@"
 
-parse_args "$0" "experiment dataset model load_from=None" "$@"
 shift $n
-check_config "IAM_ROLE OWNER DATASET_OWNER IMAGE PROJECT TRAIN_TASK_NAME"
+
+GPU_NUM=$num_gpus
+GPU_TYPE="p3.$((2*$num_gpus))xlarge"
+
+check_config "IAM_ROLE OWNER DATASET_OWNER IMAGE PROJECT"
+
 
 JOB_NAME=${OWNER}-train-${experiment}-${model}
-cmdline="--owner ${OWNER} --dataset_owner ${DATASET_OWNER} --task_name \"${TRAIN_TASK_NAME}\" --project ${PROJECT} --experiment $experiment --dataset $dataset --model $model --load_from \"${load_from}\" -- "$(requote "$@")
+cmdline="--s3_bucket ${S3_BUCKET} --owner ${OWNER} --dataset_owner ${dataset_owner} --task_name \"${task}\" --project ${PROJECT} --experiment $experiment --dataset $dataset --model $model --load_from \"${load_from}\" -- "$(requote "$@")
 
 set -e
 set -x

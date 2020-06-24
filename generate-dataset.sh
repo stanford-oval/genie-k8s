@@ -3,12 +3,12 @@
 . config
 . lib.sh
 
-parse_args "$0" "experiment dataset" "$@"
+parse_args "$0" "experiment dataset parallel=6" "$@"
 shift $n
-check_config "IAM_ROLE OWNER IMAGE PROJECT"
+check_config "S3_BUCKET OWNER IMAGE PROJECT"
 
 JOB_NAME=${OWNER}-gen-dataset-${experiment}-${dataset}
-cmdline="--owner ${OWNER} --project ${PROJECT} --experiment $experiment --dataset $dataset -- "$(requote "$@")
+cmdline="--s3_bucket ${S3_BUCKET} --owner ${OWNER} --project ${PROJECT} --experiment $experiment --dataset $dataset --parallel $parallel -- "$(requote "$@")
 
 set -e
 set -x

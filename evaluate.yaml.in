@@ -21,10 +21,10 @@ spec:
         app: genie-toolkit
         owner: @@OWNER@@
         job-type: evaluate
-      annotations:
-        iam.amazonaws.com/role: @@IAM_ROLE@@
-
     spec:
+      serviceAccountName: research-pod
+      securityContext:
+        fsGroup: 1000
       restartPolicy: Never
       containers:
       - name: main
@@ -36,6 +36,6 @@ spec:
             cpu: 4
             memory: 15G
           requests:
-            cpu: 3
+            cpu: 4
             memory: 15G
       tolerations: []

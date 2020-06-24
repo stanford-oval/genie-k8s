@@ -2,13 +2,13 @@
 
 . /opt/genie-toolkit/lib.sh
 
-parse_args "$0" "owner dataset_owner project experiment dataset model" "$@"
+parse_args "$0" "s3_bucket owner dataset_owner project experiment dataset model" "$@"
 shift $n
 
 set -e
 set -x
 
-aws s3 sync s3://almond-research/${dataset_owner}/dataset/${project}/${experiment}/${dataset} dataset/
+aws s3 sync s3://${s3_bucket}/${dataset_owner}/dataset/${project}/${experiment}/${dataset} dataset/
 
 modeldir="$HOME/$model"
 mkdir -p "$modeldir"
@@ -30,7 +30,7 @@ genienlp train-paraphrase \
   --save_total_limit 1 \
   "$@"
 
-aws s3 sync $modeldir/ s3://almond-research/${owner}/models/${project}/${experiment}/${model}
+aws s3 sync $modeldir/ s3://${s3_bucket}/${owner}/models/${project}/${experiment}/${model}
 
 
 
