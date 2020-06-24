@@ -2,7 +2,7 @@
 
 . /opt/genie-toolkit/lib.sh
 
-parse_args "$0" "owner project experiment model" "$@"
+parse_args "$0" "owner project experiment model eval_test" "$@"
 shift $n
 
 set -e
@@ -23,6 +23,6 @@ ls -al
 mkdir -p tmp
 export GENIE_TOKENIZER_ADDRESS=tokenizer.default.svc.cluster.local:8888
 export TZ=America/Los_Angeles
-make geniedir=/opt/genie-toolkit experiment=$experiment owner=$owner $experiment/eval/$model.results
-cat $experiment/eval/$model.results
-aws s3 sync $experiment/eval/ s3://almond-research/${owner}/workdir/${project}/$experiment/eval/
+make geniedir=/opt/genie-toolkit experiment=$experiment owner=$owner eval_set=$eval_test $experiment/$eval_test/$model.results
+cat $experiment/$eval_test/$model.results
+aws s3 sync $experiment/$eval_test/ s3://almond-research/${owner}/workdir/${project}/$experiment/$eval_test/
