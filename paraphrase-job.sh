@@ -3,7 +3,8 @@
 . /opt/genie-toolkit/lib.sh
 
 parse_args "$0" "owner dataset_owner project experiment \
-            input_dataset output_dataset filtering_model paraphrasing_model_full_path skip_generation skip_filtering task_name ignore_context" "$@"
+            input_dataset output_dataset filtering_model paraphrasing_model_full_path \
+            skip_generation skip_filtering keep_original_duplicates task_name ignore_context" "$@"
 shift $n
 
 if [ "$ignore_context" = true ] ; then
@@ -27,7 +28,7 @@ if [ "$task_name" = "almond_dialogue_nlu" ] ; then
   export input_dir="input_dataset/user"
   export output_dir="output_dataset/user"
   export filtering_dir="almond/user"
-  export filtering_batch_size="300"
+  export filtering_batch_size="128"
 elif [ "$task_name" = "almond" ] ; then
   export input_dir="input_dataset"
   export output_dir="output_dataset"
@@ -38,13 +39,15 @@ else
 fi
 
 make_input_ready(){
-    # remove duplicates before paraphrasing to avoid wasting effort
-    python3 /opt/genienlp/genienlp/paraphrase/scripts/transform_dataset.py \
-      ${input_dir}/train.tsv \
-      ${input_dir}/train_no_duplicate.tsv \
-      --remove_duplicates \
-      --task ${task_name}
-      cp ${input_dir}/train_no_duplicate.tsv ${input_dir}/train.tsv
+    if [ "$keep_original_duplicates" = false ] ; then
+      # remove duplicates before paraphrasing to avoid wasting effort
+      python3 /opt/genienlp/genienlp/paraphrase/scripts/transform_dataset.py \
+        ${input_dir}/train.tsv \
+        ${input_dir}/train_no_duplicate.tsv \
+        --remove_duplicates \
+        --task ${task_name}
+        cp ${input_dir}/train_no_duplicate.tsv ${input_dir}/train.tsv
+    fi
 
     if [ "$is_dialogue" = true ] ; then
     # add previous agent utterance; this additional context helps the paraphraser
@@ -101,7 +104,6 @@ join(){
     --query_file ${output_dir}/paraphrased.tsv \
     --num_new_queries ${num_new_queries} \
     --transformation replace_queries \
-    --remove_duplicates \
     --remove_with_heuristics \
     --task ${task_name}
 }
@@ -129,22 +131,23 @@ filter(){
   python3 /opt/genienlp/genienlp/paraphrase/scripts/transform_dataset.py \
     ${output_dir}/unfiltered.tsv \
     ${output_dir}/filtered.tsv \
+    --thrown_away ${output_dir}/thrown_away.tsv \
     --thingtalk_gold_file eval_dir/valid/${task_name}.tsv \
     --transformation remove_wrong_thingtalk \
-    --remove_duplicates \
     --task ${task_name}
 }
 
 append_to_original(){
   # append paraphrases to the end of the original training file and remove duplicates
-  cp ${input_dir}/train.tsv ${output_dir}/temp.tsv
-  cat ${output_dir}/filtered.tsv >> ${output_dir}/temp.tsv
+  cp ${input_dir}/train.tsv ${output_dir}/train.tsv
+  cp ${output_dir}/filtered.tsv ${output_dir}/temp.tsv
   python3 /opt/genienlp/genienlp/paraphrase/scripts/transform_dataset.py \
     ${output_dir}/temp.tsv \
-    ${output_dir}/train.tsv \
+    ${output_dir}/filtered.tsv \
     --remove_duplicates \
     --task ${task_name}
   rm ${output_dir}/temp.tsv
+  cat ${output_dir}/filtered.tsv >> ${output_dir}/train.tsv
 }
 
 
