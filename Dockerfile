@@ -38,7 +38,7 @@ RUN git checkout ${GENIE_VERSION}
 RUN yarn link thingtalk
 RUN yarn install
 
-COPY lib.sh generate-dataset-job.sh train-job.sh evaluate-job.sh paraphrase-job.sh train-paraphrase-job.sh ./
+COPY lib.sh generate-dataset-job.sh train-job.sh evaluate-job.sh paraphrase-job.sh train-paraphrase-job.sh translate-job.sh ./
 
 # add user genie-toolkit
 RUN useradd -ms /bin/bash -r genie-toolkit

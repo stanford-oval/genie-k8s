@@ -11,9 +11,6 @@ shift $n
 GPU_NUM=$num_gpus
 GPU_TYPE="p3.$((2*$num_gpus))xlarge"
 
-check_config "IAM_ROLE OWNER DATASET_OWNER IMAGE PROJECT"
-
-
 JOB_NAME=${OWNER}-train-${experiment}-${model}
 cmdline="--s3_bucket ${S3_BUCKET} --owner ${OWNER} --dataset_owner ${dataset_owner} --task_name \"${task}\" --project ${PROJECT} --experiment $experiment --dataset $dataset --model $model --load_from \"${load_from}\" -- "$(requote "$@")
 
