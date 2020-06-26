@@ -35,15 +35,15 @@ spec:
         command: ['/bin/sh', '-c', '/opt/genie-toolkit/paraphrase-job.sh @@cmdline@@']
         resources:
           limits:
-            cpu: 31
+            cpu: 16
             memory: 220G
             nvidia.com/gpu: 4
-            ephemeral-storage: 80G
+            ephemeral-storage: 75G
           requests:
-            cpu: 31
+            cpu: 16
             memory: 220G
             nvidia.com/gpu: 4
-            ephemeral-storage: 80G
+            ephemeral-storage: 75G
       tolerations:
       - key: nvidia.com/gpu
         operator: Exists

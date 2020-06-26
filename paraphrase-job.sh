@@ -66,6 +66,7 @@ run_paraphrase(){
   if [ "$is_dialogue" = true ] ; then
     if [ "$ignore_context" = true ] ; then
       genienlp run-paraphrase \
+      --task paraphrase \
       --model_name_or_path paraphraser \
       --input_file ${output_dir}/with_context.tsv \
       --output_file ${output_dir}/paraphrased.tsv \
@@ -75,6 +76,7 @@ run_paraphrase(){
       $paraphrasing_arguments
     else
       genienlp run-paraphrase \
+      --task paraphrase \
       --model_name_or_path paraphraser \
       --input_file ${output_dir}/with_context.tsv \
       --output_file ${output_dir}/paraphrased.tsv \
@@ -86,6 +88,7 @@ run_paraphrase(){
     fi
   else
     genienlp run-paraphrase \
+      --task paraphrase \
       --model_name_or_path paraphraser \
       --input_file ${input_dir}/train.tsv \
       --output_file ${output_dir}/paraphrased.tsv \
