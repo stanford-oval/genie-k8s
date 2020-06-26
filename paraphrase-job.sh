@@ -180,6 +180,3 @@ append_to_original
 
 # upload the new dataset to S3
 aws s3 sync output_dataset s3://${s3_bucket}/${dataset_owner}/dataset/${project}/${experiment}/${output_dataset}
-
-
-
