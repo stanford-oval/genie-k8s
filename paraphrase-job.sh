@@ -166,6 +166,8 @@ else
 
   # paraphrasing was successful, so upload the intermediate files
   aws s3 sync output_dataset s3://${s3_bucket}/${dataset_owner}/dataset/${project}/${experiment}/${output_dataset}
+  echo "Uploaded intermediate files to s3. Deleting synthetic.txt from pod..."
+  rm output_dataset/synthetic.txt
 fi
 
 if [ "$skip_filtering" = true ] ; then
