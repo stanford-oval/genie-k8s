@@ -24,6 +24,6 @@ aws s3 sync s3://${s3_bucket}/${owner}/workdir/${project}/ .
 
 export GENIE_TOKENIZER_ADDRESS=tokenizer.default.svc.cluster.local:8888
 export TZ=America/Los_Angeles
-make "-j${parallel}" geniedir=/opt/genie-toolkit "experiment=${experiment}" "owner=${owner}" "$@" datadir
+make "-j${parallel}" geniedir=/opt/genie-toolkit thingpedia_cli=thingpedia "experiment=${experiment}" "owner=${owner}" "$@" datadir
 
 aws s3 sync datadir/ s3://${s3_bucket}/${owner}/dataset/${project}/${experiment}/${dataset}/

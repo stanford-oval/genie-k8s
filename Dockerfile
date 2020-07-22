@@ -2,6 +2,8 @@ ARG COMMON_IMAGE=
 FROM ${COMMON_IMAGE}
 MAINTAINER Thingpedia Admins <thingpedia-admins@lists.stanford.edu>
 
+RUN npm install -g thingpedia-cli
+
 WORKDIR /opt/genienlp/
 ARG GENIENLP_VERSION=master
 RUN pip3 install --upgrade pip
