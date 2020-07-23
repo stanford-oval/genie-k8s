@@ -3,7 +3,7 @@
 . config
 . lib.sh
 
-parse_args "$0" "experiment model model_owner eval_set=eval eval_version" "$@"
+parse_args "$0" "experiment model model_owner eval_set=eval eval_version=v2" "$@"
 shift $n
 check_config "S3_BUCKET OWNER IMAGE PROJECT"
 
