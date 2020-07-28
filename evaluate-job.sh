@@ -35,5 +35,3 @@ else
 		aws s3 cp $f s3://${s3_bucket}/${owner}/workdir/${project}/${experiment}/${eval_set}/${eval_version}/${model_owner}/
 	done
 fi
-
-done
