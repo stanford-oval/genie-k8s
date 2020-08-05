@@ -4,7 +4,7 @@
 . lib.sh
 
 
-parse_args "$0" "skip_generation=false skip_filtering=false keep_original_duplicates=false ignore_context=false experiment input_dataset output_dataset filtering_model paraphrasing_model_full_path=None" "$@"
+parse_args "$0" "skip_generation=false skip_filtering=false keep_original_duplicates=false ignore_context=false experiment input_dataset output_dataset filtering_model=null paraphrasing_model_full_path=None" "$@"
 shift $n
 check_config "S3_BUCKET OWNER DATASET_OWNER IMAGE PROJECT TRAIN_TASK_NAME"
 
