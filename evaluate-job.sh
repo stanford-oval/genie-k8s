@@ -30,7 +30,7 @@ if [ "$eval_version" = "None" ] ; then
 	done
 else
 	echo "evaluation sets are versioned"
-	make geniedir=/opt/genie-toolkit thingpedia_cli=thingpedia experiment=$experiment eval_set=${eval_set} ${experiment}/${eval_set}/${eval_version}/${model_owner}/${model}.{nlu,dialogue}.results
+	make geniedir=/opt/genie-toolkit thingpedia_cli=thingpedia experiment=$experiment eval_set=${eval_set} eval_version=${eval_version} ${experiment}/${eval_set}/${eval_version}/${model_owner}/${model}.dialogue.results
 	for f in $experiment/${eval_set}/${eval_version}/${model_owner}/${model}.{nlu,dialogue}.{results,debug} ; do
 		aws s3 cp $f s3://${s3_bucket}/${owner}/workdir/${project}/${experiment}/${eval_set}/${eval_version}/${model_owner}/
 	done
