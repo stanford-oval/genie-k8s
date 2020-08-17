@@ -7,7 +7,9 @@ parse_args "$0" "experiment dataset parallel=6" "$@"
 shift $n
 check_config "S3_BUCKET OWNER IMAGE PROJECT"
 
-JOB_NAME=${OWNER}-gen-dataset-${experiment}-${dataset}
+mod_experiment=$(echo ${experiment} | tr '_' '-' | tr A-Z a-z)
+
+JOB_NAME=${OWNER}-gen-dataset-${mod_experiment}-${dataset}
 cmdline="--s3_bucket ${S3_BUCKET} --owner ${OWNER} --project ${PROJECT} --experiment $experiment --dataset $dataset --parallel $parallel -- "$(requote "$@")
 
 set -e
