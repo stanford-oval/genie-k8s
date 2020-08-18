@@ -11,7 +11,9 @@ shift $n
 GPU_NUM=$num_gpus
 GPU_TYPE="p3.$((2*$num_gpus))xlarge"
 
-JOB_NAME=${OWNER}-train-${experiment}-${model}
+mod_experiment=$(echo ${experiment} | tr '_' '-' | tr A-Z a-z)
+
+JOB_NAME=${OWNER}-train-${mod_experiment}-${model}
 cmdline="--s3_bucket ${S3_BUCKET} --owner ${OWNER} --dataset_owner ${dataset_owner} --task_name \"${task}\" --project ${PROJECT} --experiment $experiment --dataset $dataset --model $model --load_from \"${load_from}\" -- "$(requote "$@")
 
 set -e
