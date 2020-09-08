@@ -23,15 +23,5 @@ ls -al
 mkdir -p tmp
 export GENIE_TOKENIZER_ADDRESS=tokenizer.default.svc.cluster.local:8888
 export TZ=America/Los_Angeles
-if [ "$eval_version" = "None" ] ; then
-	make geniedir=/opt/genie-toolkit thingpedia_cli=thingpedia experiment=$experiment eval_set=${eval_set} ${experiment}/${eval_set}/${model_owner}/${model}.{nlu,dialogue}.results
-	for f in $experiment/${eval_set}/${model_owner}/${model}.{nlu,dialogue}.{results,debug} ; do
-		aws s3 cp $f s3://${s3_bucket}/${owner}/workdir/${project}/${experiment}/${eval_set}/${model_owner}/
-	done
-else
-	echo "evaluation sets are versioned"
-	make geniedir=/opt/genie-toolkit thingpedia_cli=thingpedia experiment=$experiment eval_set=${eval_set} eval_version=${eval_version} ${experiment}/${eval_set}/${eval_version}/${model_owner}/${model}.dialogue.results
-	for f in $experiment/${eval_set}/${eval_version}/${model_owner}/${model}.{nlu,dialogue}.{results,debug} ; do
-		aws s3 cp $f s3://${s3_bucket}/${owner}/workdir/${project}/${experiment}/${eval_set}/${eval_version}/${model_owner}/
-	done
-fi
+make geniedir=/opt/genie-toolkit thingpedia_cli=thingpedia experiment=$experiment eval_set=${eval_set} eval_version=${eval_version} model=${model_owner}/${model} evaluate
+make geniedir=/opt/genie-toolkit thingpedia_cli=thingpedia experiment=$experiment eval_set=${eval_set} eval_version=${eval_version} model=${model_owner}/${model} evaluate-upload
