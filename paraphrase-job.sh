@@ -16,7 +16,7 @@ set -x
 
 aws s3 sync s3://${s3_bucket}/${dataset_owner}/dataset/${project}/${experiment}/${input_dataset} input_dataset/
 aws s3 sync --exclude '*/dataset/*' --exclude '*/cache/*' --exclude 'iteration_*.pth' --exclude '*_optim.pth' s3://${s3_bucket}/${owner}/models/${project}/${experiment}/${filtering_model} filtering_model/
-aws s3 sync s3://${s3_bucket}/${paraphrasing_model_full_path} paraphraser/
+aws s3 sync --exclude '*checkpoint*' s3://${s3_bucket}/${paraphrasing_model_full_path} paraphraser/
 
 mkdir -p output_dataset
 cp -r input_dataset/* output_dataset
@@ -127,6 +127,7 @@ run_parser(){
     --skip_cache \
     --val_batch_size ${filtering_batch_size}
   cp ./eval_dir/valid/${task_name}.results.json ${output_dir}/
+  # cp ./eval_dir/valid/${task_name}.tsv ${output_dir}/ # useful for debugging the paraphraser
 }
 
 filter(){
