@@ -10,7 +10,7 @@ set -x
 
 # on_error () {
  	# on failure ship everything to s3
-# 	aws s3 sync . s3://${s3_bucket}/models/${project}/${experiment}/${model}/failed_eval/
+# 	aws s3 sync . s3://${s3_bucket}/${owner}/models/${project}/${experiment}/${model}/failed_eval/
 # }
 # trap on_error ERR
 
