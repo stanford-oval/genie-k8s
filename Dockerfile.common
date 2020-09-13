@@ -5,7 +5,7 @@ MAINTAINER Thingpedia Admins <thingpedia-admins@lists.stanford.edu>
 USER root
 
 # install basic tools
-RUN dnf -y install make gettext unzip xz python2 gcc-c++ \
+RUN dnf -y install make gettext unzip xz gcc-c++ diffutils \
 	git gcc gcc-c++ procps-ng \
 	python3 \
 	python3-numpy \
