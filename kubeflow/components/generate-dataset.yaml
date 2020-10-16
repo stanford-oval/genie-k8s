@@ -1,0 +1,48 @@
+name: Generate dataset
+description: |
+  Generate dataset
+inputs:
+  - {name: image, description: '', default: ''}
+  - {name: s3_bucket, description: '', default: ''}
+  - {name: owner, description: '', default: ''}
+  - {name: project, description: '', default: ''}
+  - {name: experiment, description: '', default: ''}
+  - {name: dataset, description: '', default: ''}
+  - {name: parallel, description: '', default: ''}
+  - {name: additional_args, description: '', default: ''}
+outputs:
+  - {name: dataset_path}
+implementation: 
+  container:
+    image: '{{inputs.parameters.image}}'
+    command:
+    - /bin/bash
+    - -ex
+    - -c
+    - |
+      . /opt/genie-toolkit/lib.sh
+      parse_args "$0" "image s3_bucket owner project experiment dataset parallel dataset_path" "$@"
+      shift $n
+      mkdir workdir 
+      cd workdir
+      aws s3 sync s3://${s3_bucket}/${owner}/workdir/${project}/ .
+      
+      export GENIE_TOKENIZER_ADDRESS=tokenizer.default.svc.cluster.local:8888
+      export TZ=America/Los_Angeles
+      make "-j${parallel}" geniedir=/opt/genie-toolkit thingpedia_cli=thingpedia "experiment=${experiment}" "owner=${owner}" $@ datadir
+      aws s3 sync datadir/ s3://${s3_bucket}/${owner}/dataset/${project}/${experiment}/${dataset}/
+      mkdir -p `dirname $dataset_path`
+      echo "s3://${s3_bucket}/${owner}/dataset/${project}/${experiment}/${dataset}/" > $dataset_path
+    
+    args: [
+      'cmd',
+      --image, {inputValue: image},
+      --s3_bucket, {inputValue: s3_bucket},
+      --owner, {inputValue: owner},
+      --project, {inputValue: project},
+      --experiment, {inputValue: experiment},
+      --dataset, {inputValue: dataset},
+      --parallel, {inputValue: parallel},
+      --dataset_path, {outputPath: dataset_path},
+      --, {inputValue: additional_args}
+    ]
