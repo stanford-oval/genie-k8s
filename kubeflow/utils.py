@@ -1,6 +1,7 @@
 from datetime import datetime
 import os
 
+from kubernetes.client.models import V1EnvVar
 import kfp
 
 def disable_caching(op):
@@ -10,6 +11,12 @@ def disable_caching(op):
     """
     op.execution_options.caching_strategy.max_cache_staleness = 'P0D'
     return op
+
+def add_env(op, envs):
+  """Add a dict of environments to container"""
+  for k, v in envs.items():
+    op.container.add_env_variable(V1EnvVar(name=k, value=v))
+  return op
 
 def upload_pipeline(name, pipeline):
     """Upload pipeline to kubeflow"""
@@ -35,3 +42,5 @@ def upload_pipeline(name, pipeline):
 
     os.remove(compiled_pipeline_path)
     return resp
+
+

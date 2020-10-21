@@ -3,14 +3,13 @@ description: |
   Evaluate
 inputs:
   - {name: image, description: '', default: ''}
-  - {name: s3_bucket, description: '', default: ''}
-  - {name: owner, description: '', default: ''}
   - {name: project, description: '', default: ''}
   - {name: experiment, description: '', default: ''}
   - {name: model, description: '', default: ''}
   - {name: model_owner, description: '', default: ''}
   - {name: eval_set, description: '', default: ''}
   - {name: eval_version, description: '', default: ''}
+  - {name: s3_model_dir, description: '', default: ''}
   - {name: additional_args, description: '', default: ''}
 outputs:
   - {name: MLPipeline UI metadata, type: UI metadata}
@@ -24,69 +23,78 @@ implementation:
     - -c 
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image s3_bucket owner project experiment model model_owner eval_set eval_version" "$@"
+      parse_args "$0" "image project experiment model model_owner eval_set eval_version s3_model_dir" "$@"
       shift $n
+      cd $HOME
       pwd
-      aws s3 sync s3://${s3_bucket}/${owner}/workdir/${project} .
+      /opt/genie-toolkit/sync-repos.sh
+      MAKEDIR=`get_make_dir ${project}`
+      cd workdir/${MAKEDIR}
+
       ls -al 
-      mkdir -p tmp
-      export GENIE_TOKENIZER_ADDRESS=tokenizer.default.svc.cluster.local:8888
+      mkdir tmp
+      MODEL_DIR=${model_owner}/${model}
+      mkdir -p $MODEL_DIR
+      aws s3 sync ${s3_model_dir} ${MODEL_DIR}/
+
       export TZ=America/Los_Angeles
-      make geniedir=/opt/genie-toolkit thingpedia_cli=thingpedia experiment=$experiment eval_set=${eval_set} eval_version=${eval_version} model=${model_owner}/${model} evaluate
-      make geniedir=/opt/genie-toolkit thingpedia_cli=thingpedia experiment=$experiment eval_set=${eval_set} eval_version=${eval_version} model=${model_owner}/${model} evaluate-upload
+      make geniedir=/opt/genie-toolkit thingpedia_cli=thingpedia experiment=$experiment eval_set=${eval_set} eval_version=${eval_version} model=${MODEL_DIR} evaluate
+      # TODO: upload eval outputs as artificats instead of s3 in the Makefile
+      make geniedir=/opt/genie-toolkit thingpedia_cli=thingpedia experiment=$experiment eval_set=${eval_set} eval_version=${eval_version} model=${MODEL_DIR} evaluate-upload
+      # Below is an example of UI and metrics outputs.
+      # TODO: Move this code to the Makefile of the project.
       # write ui outputs
-      RESULTS_FILE="eval/${experiment}/${eval_set}/${model_owner}/model.nlu.results"
-      python3 - ${RESULTS_FILE} << EOF
-      import json
-      import sys
-      results = open(sys.argv[1]).read()
-      metadata = {"outputs" : [
-        {
-          "storage": "inline",
-          "source": results,
-          "format": 'csv',
-          "type": "table",
-          "header": ["Eval Set", "Device", "Turn Number", "# turns","Accuracy", 
-                     "W/o params", "Function", "Device", "Num Function", "Syntax"]
-        }
-      ]} 
-      with open('/tmp/mlpipeline-ui-metadata.json', 'w') as f:
-        json.dump(metadata, f)
-      EOF
+      # RESULTS_FILE="eval/${experiment}/${eval_set}/${model_owner}/model.nlu.results"
+      # python3 - ${RESULTS_FILE} << EOF
+      # import json
+      # import sys
+      # results = open(sys.argv[1]).read()
+      # metadata = {"outputs" : [
+      #   {
+      #     "storage": "inline",
+      #     "source": results,
+      #     "format": 'csv',
+      #     "type": "table",
+      #     "header": ["Eval Set", "Device", "Turn Number", "# turns","Accuracy", 
+      #                "W/o params", "Function", "Device", "Num Function", "Syntax"]
+      #   }
+      # ]} 
+      # with open('/tmp/mlpipeline-ui-metadata.json', 'w') as f:
+      #   json.dump(metadata, f)
+      # EOF
       # write metrics output
-      python3 - ${RESULTS_FILE} << EOF
-      import json
-      import sys
-      import csv
-      metrics = []
-      sum = 0
-      cnt = 0
-      for row in csv.reader(open(sys.argv[1])):
-        sum += float(row[4])
-        cnt += 1
-      accuracy = sum/cnt
-      metrics = {
-        'metrics': [{
-          'name': 'average-accuracy',
-          'numberValue':  accuracy, 
-          'format': "PERCENTAGE",
-        }]
-      }       
-      with open('/tmp/mlpipeline-metrics.json', 'w') as f:
-        json.dump(metrics, f)
-      EOF
+      # python3 - ${RESULTS_FILE} << EOF
+      # import json
+      # import sys
+      # import csv
+      # metrics = []
+      # sum = 0
+      # cnt = 0
+      # for row in csv.reader(open(sys.argv[1])):
+      #   sum += float(row[4])
+      #   cnt += 1
+      # accuracy = sum/cnt
+      # metrics = {
+      #   'metrics': [{
+      #     'name': 'average-accuracy',
+      #     'numberValue':  accuracy, 
+      #     'format': "PERCENTAGE",
+      #   }]
+      # }       
+      # with open('/tmp/mlpipeline-metrics.json', 'w') as f:
+      #   json.dump(metrics, f)
+      # EOF
 
     args: [
       'cmd',
       --image, {inputValue: image},
-      --s3_bucket, {inputValue: s3_bucket},
-      --owner, {inputValue: owner},
       --project, {inputValue: project},
       --experiment, {inputValue: experiment},
       --model, {inputValue: model},
       --model_owner, {inputValue: model_owner},      
       --eval_set, {inputValue: eval_set},
       --eval_version, {inputValue: eval_version},
+      --s3_model_dir, {inputValue: s3_model_dir},
       --, {inputValue: additional_args}
     ]
     
