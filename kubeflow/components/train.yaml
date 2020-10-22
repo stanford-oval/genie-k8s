@@ -63,7 +63,7 @@ implementation:
 
       rm -fr "$modeldir/cache"
       rm -fr "$modeldir/dataset"
-      S3_MODEL_DIR=s3://${s3_bucket}/${owner}/models/${project}/${experiment}/${model}/
+      S3_MODEL_DIR=s3://${s3_bucket}/${owner}/models/${project}/${experiment}/${model}/`date +%s`/
       aws s3 sync ${modeldir}/ ${S3_MODEL_DIR}
             
       mkdir -p `dirname $s3_model_dir`

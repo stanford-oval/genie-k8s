@@ -9,7 +9,6 @@ from kubernetes.client import V1Toleration, V1Affinity
 from kubernetes.client.models import V1VolumeMount, V1Volume, V1PersistentVolumeClaimVolumeSource
 from kubernetes import client as k8s_client
 
-from utils import disable_caching
 from utils import upload_pipeline
 from utils import add_env
 
@@ -68,7 +67,7 @@ def train_pipeline(
         .set_cpu_limit('15.5')
         .set_cpu_request('15.5')
     )
-    (add_env(disable_caching(generate_dataset_op), repo_versions)
+    (add_env(generate_dataset_op, repo_versions)
         .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'm5.4xlarge')
     )
    
@@ -97,7 +96,7 @@ def train_pipeline(
         .set_gpu_limit(str(train_num_gpus))
         .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
     )
-    (add_env(disable_caching(train_op), train_repos)
+    (add_env(train_op, train_repos)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
         .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*train_num_gpus}xlarge')
         .add_volume(V1Volume(name='tensorboard',
@@ -120,7 +119,7 @@ def train_pipeline(
         .set_memory_request('15Gi')
         .set_cpu_limit('4')
         .set_cpu_request('4'))  
-    (add_env(disable_caching(eval_op), repo_versions)
+    (add_env(eval_op, repo_versions)
         .after(train_op)
     )
 
