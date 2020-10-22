@@ -29,6 +29,7 @@ implementation:
       parse_args "$0" "image s3_bucket owner dataset_owner task_name project experiment dataset model load_from s3_datadir s3_model_dir" "$@"
       shift $n 
       cd $HOME
+      s3_datadir=`cat $s3_datadir`
 
       /opt/genie-toolkit/sync-repos.sh 
 
@@ -81,7 +82,7 @@ implementation:
       --dataset, {inputValue: dataset},
       --model, {inputValue: model},
       --load_from, {inputValue: load_from},
-      --s3_datadir, {inputValue: s3_datadir},
+      --s3_datadir, {inputPath: s3_datadir},
       --s3_model_dir, {outputPath: s3_model_dir},
       --, {inputValue: additional_args}, 
     ]

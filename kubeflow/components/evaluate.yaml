@@ -26,8 +26,9 @@ implementation:
       . /opt/genie-toolkit/lib.sh
       parse_args "$0" "image project experiment model model_owner eval_set eval_version s3_model_dir output_file" "$@"
       shift $n
+      s3_model_dir=`cat $s3_model_dir`
       cd $HOME
-      pwd
+
       /opt/genie-toolkit/sync-repos.sh
       MAKEDIR=`get_make_dir ${project}`
       cd workdir/${MAKEDIR}
@@ -36,7 +37,7 @@ implementation:
       mkdir tmp
       MODEL_DIR=${model_owner}/${model}
       mkdir -p $MODEL_DIR
-      echo aws s3 sync ${s3_model_dir} ${MODEL_DIR}/
+      aws s3 sync ${s3_model_dir} ${MODEL_DIR}/
 
       export TZ=America/Los_Angeles
 
@@ -52,14 +53,14 @@ implementation:
       --project, {inputValue: project},
       --experiment, {inputValue: experiment},
       --model, {inputValue: model},
-      --model_owner, {inputValue: model_owner},      
+      --model_owner, {inputValue: model_owner},
       --eval_set, {inputValue: eval_set},
       --eval_version, {inputValue: eval_version},
-      --s3_model_dir, {inputValue: s3_model_dir},
+      --s3_model_dir, {inputPath: s3_model_dir},
       --output_file, {outputPath: output_file},
       --, {inputValue: additional_args}
     ]
-    
+
     fileOutputs:
       MLPipeline UI metadata: /tmp/mlpipeline-ui-metadata.json
       MLPipeline Metrics: /tmp/mlpipeline-metrics.json

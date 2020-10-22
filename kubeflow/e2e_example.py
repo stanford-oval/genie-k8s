@@ -112,7 +112,7 @@ def train_pipeline(
             model_owner=owner,
             eval_set=eval_set,
             eval_version=eval_version,
-            s3_model_dir="train_op.outputs['s3_model_dir']",
+            s3_model_dir=train_op.outputs['s3_model_dir'],
             additional_args=eval_additional_args)  
     (eval_op.container
         .set_memory_limit('15Gi')
