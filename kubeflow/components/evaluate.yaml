@@ -39,10 +39,10 @@ implementation:
       echo aws s3 sync ${s3_model_dir} ${MODEL_DIR}/
 
       export TZ=America/Los_Angeles
-      # make geniedir=/opt/genie-toolkit thingpedia_cli=thingpedia experiment=$experiment eval_set=${eval_set} eval_version=${eval_version} model=${MODEL_DIR} evaluate
-      mkdir -p eval/main/dev/jgd5
-      mkdir -p /tmp/a
-      aws s3 cp --recursive s3://geniehai/jgd5/workdir/almond/eval/main/dev/jgd5  eval/main/dev/jgd5
+
+      make geniedir=/opt/genie-toolkit thingpedia_cli=thingpedia experiment=$experiment eval_set=${eval_set} \
+        eval_version=${eval_version} model=${MODEL_DIR} evaluate
+
       make geniedir=/opt/genie-toolkit thingpedia_cli=thingpedia experiment=$experiment eval_set=${eval_set} \
         eval_version=${eval_version} model=${MODEL_DIR} artifacts_path=${output_file} evaluate-output-artifacts
 

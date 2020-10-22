@@ -30,18 +30,18 @@ def train_pipeline(
     genie_version='cf078a09ca5e891562f22fc6e12eca111c5d103e',
     thingtalk_version='0a8688a20ccc292f26e49247c0dad810103e6c78',
     workdir_repo='git@github.com:stanford-oval/thingpedia-common-devices.git',
-    workdir_version='5056c61c6b75f786569291118985cd7d4638e66a',
+    workdir_version='07e690fade3576b17d721b54fe4df8720e358903',
     workdir_s3_config_dir='s3://geniehai/jgd5/config/almond',
     experiment='main',
     model='model',
     dataset='e2e_test_dataset',
     generate_dataset_parallel='6',
-    generate_dataset_additional_args='--subdatasets 1 --target_pruning_size 25 --max_turns 2 --debug_level 2',
+    generate_dataset_additional_args='subdatasets=1 target_pruning_size=25 max_turns=2 debug_level=2',
     train_task_name='almond_dialogue_nlu',
     train_load_from='None',
     train_additional_args='--train_iterations 3 --save_every 1 --log_every 1 --val_every 1',
     eval_set='dev',
-    eval_version='',
+    eval_version='None',
     eval_additional_args=''
 ):
 
