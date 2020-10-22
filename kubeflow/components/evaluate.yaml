@@ -12,6 +12,7 @@ inputs:
   - {name: s3_model_dir, description: '', default: ''}
   - {name: additional_args, description: '', default: ''}
 outputs:
+  - {name: output_file}
   - {name: MLPipeline UI metadata, type: UI metadata}
   - {name: MLPipeline Metrics, type: Metrics}
 implementation:
@@ -23,7 +24,7 @@ implementation:
     - -c 
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image project experiment model model_owner eval_set eval_version s3_model_dir" "$@"
+      parse_args "$0" "image project experiment model model_owner eval_set eval_version s3_model_dir output_file" "$@"
       shift $n
       cd $HOME
       pwd
@@ -35,55 +36,15 @@ implementation:
       mkdir tmp
       MODEL_DIR=${model_owner}/${model}
       mkdir -p $MODEL_DIR
-      aws s3 sync ${s3_model_dir} ${MODEL_DIR}/
+      echo aws s3 sync ${s3_model_dir} ${MODEL_DIR}/
 
       export TZ=America/Los_Angeles
-      make geniedir=/opt/genie-toolkit thingpedia_cli=thingpedia experiment=$experiment eval_set=${eval_set} eval_version=${eval_version} model=${MODEL_DIR} evaluate
-      # TODO: upload eval outputs as artificats instead of s3 in the Makefile
-      make geniedir=/opt/genie-toolkit thingpedia_cli=thingpedia experiment=$experiment eval_set=${eval_set} eval_version=${eval_version} model=${MODEL_DIR} evaluate-upload
-      # Below is an example of UI and metrics outputs.
-      # TODO: Move this code to the Makefile of the project.
-      # write ui outputs
-      # RESULTS_FILE="eval/${experiment}/${eval_set}/${model_owner}/model.nlu.results"
-      # python3 - ${RESULTS_FILE} << EOF
-      # import json
-      # import sys
-      # results = open(sys.argv[1]).read()
-      # metadata = {"outputs" : [
-      #   {
-      #     "storage": "inline",
-      #     "source": results,
-      #     "format": 'csv',
-      #     "type": "table",
-      #     "header": ["Eval Set", "Device", "Turn Number", "# turns","Accuracy", 
-      #                "W/o params", "Function", "Device", "Num Function", "Syntax"]
-      #   }
-      # ]} 
-      # with open('/tmp/mlpipeline-ui-metadata.json', 'w') as f:
-      #   json.dump(metadata, f)
-      # EOF
-      # write metrics output
-      # python3 - ${RESULTS_FILE} << EOF
-      # import json
-      # import sys
-      # import csv
-      # metrics = []
-      # sum = 0
-      # cnt = 0
-      # for row in csv.reader(open(sys.argv[1])):
-      #   sum += float(row[4])
-      #   cnt += 1
-      # accuracy = sum/cnt
-      # metrics = {
-      #   'metrics': [{
-      #     'name': 'average-accuracy',
-      #     'numberValue':  accuracy, 
-      #     'format': "PERCENTAGE",
-      #   }]
-      # }       
-      # with open('/tmp/mlpipeline-metrics.json', 'w') as f:
-      #   json.dump(metrics, f)
-      # EOF
+      # make geniedir=/opt/genie-toolkit thingpedia_cli=thingpedia experiment=$experiment eval_set=${eval_set} eval_version=${eval_version} model=${MODEL_DIR} evaluate
+      mkdir -p eval/main/dev/jgd5
+      mkdir -p /tmp/a
+      aws s3 cp --recursive s3://geniehai/jgd5/workdir/almond/eval/main/dev/jgd5  eval/main/dev/jgd5
+      make geniedir=/opt/genie-toolkit thingpedia_cli=thingpedia experiment=$experiment eval_set=${eval_set} \
+        eval_version=${eval_version} model=${MODEL_DIR} artifacts_path=${output_file} evaluate-output-artifacts
 
     args: [
       'cmd',
@@ -95,6 +56,7 @@ implementation:
       --eval_set, {inputValue: eval_set},
       --eval_version, {inputValue: eval_version},
       --s3_model_dir, {inputValue: s3_model_dir},
+      --output_file, {outputPath: output_file},
       --, {inputValue: additional_args}
     ]
     

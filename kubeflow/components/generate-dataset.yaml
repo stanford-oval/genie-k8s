@@ -9,10 +9,6 @@ inputs:
   - {name: experiment, description: '', default: ''}
   - {name: dataset, description: '', default: ''}
   - {name: parallel, description: '', default: ''}
-  - {name: subdatasets, description: '', default: ''}
-  - {name: target_pruning_size, description: '', default: ''}
-  - {name: max_turns, description: '', default: ''}
-  - {name: debug_level, description: '', default: ''}
   - {name: additional_args, description: '', default: ''}
 outputs:
   - {name: s3_datadir}
@@ -25,10 +21,10 @@ implementation:
     - -c
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image s3_bucket owner project experiment dataset parallel subdatasets target_pruning_size max_turns debug_level s3_datadir" "$@"
+      parse_args "$0" "image s3_bucket owner project experiment dataset parallel s3_datadir" "$@"
       shift $n
       cd $HOME
-      pwd
+
       /opt/genie-toolkit/sync-repos.sh 
       MAKEDIR=`get_make_dir ${project}`
       cd workdir/${MAKEDIR}
@@ -39,14 +35,10 @@ implementation:
           thingpedia_cli=thingpedia \
           "experiment=${experiment}" \
           "owner=${owner}" \
-          "subdatasets=${subdatasets}" \
-          "target_pruning_size=${target_pruning_size}" \
-          "max_turns=${max_turns}" \
-          "debug_level=${debug_level}" \
           $@ \
           datadir
 
-      S3_DATADIR=s3://${s3_bucket}/${owner}/dataset/${project}/${experiment}/${dataset}/`date +%s`/
+      S3_DATADIR=s3://${s3_bucket}/${owner}/dataset/${project}/${experiment}/${dataset}/
       aws s3 sync datadir/ ${S3_DATADIR}
       mkdir -p `dirname $s3_datadir`
       echo ${S3_DATADIR}  > $s3_datadir
@@ -60,10 +52,6 @@ implementation:
       --experiment, {inputValue: experiment},
       --dataset, {inputValue: dataset},
       --parallel, {inputValue: parallel},
-      --subdatasets, {inputValue: subdatasets},
-      --target_pruning_size, {inputValue: target_pruning_size},
-      --max_turns, {inputValue: max_turns},
-      --debug_level, {inputValue: debug_level},
       --s3_datadir, {outputPath: s3_datadir},
       --, {inputValue: additional_args}
     ]

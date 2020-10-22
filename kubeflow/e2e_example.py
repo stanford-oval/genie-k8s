@@ -30,26 +30,18 @@ def train_pipeline(
     genie_version='cf078a09ca5e891562f22fc6e12eca111c5d103e',
     thingtalk_version='0a8688a20ccc292f26e49247c0dad810103e6c78',
     workdir_repo='git@github.com:stanford-oval/thingpedia-common-devices.git',
-    workdir_version='d2e22f0aa7da01a77311670d0a289a400e9b9bd9',
+    workdir_version='5056c61c6b75f786569291118985cd7d4638e66a',
     workdir_s3_config_dir='s3://geniehai/jgd5/config/almond',
     experiment='main',
     model='model',
     dataset='e2e_test_dataset',
-    generate_dataset_parallel='15',
-    generate_dataset_subdatasets='1',
-    generate_dataset_target_pruning_size='25',
-    generate_dataset_max_turns='2',
-    generate_dataset_debug_level='2',
-    generate_dataset_additional_args='',
+    generate_dataset_parallel='6',
+    generate_dataset_additional_args='--subdatasets 1 --target_pruning_size 25 --max_turns 2 --debug_level 2',
     train_task_name='almond_dialogue_nlu',
     train_load_from='None',
-    train_iterations='3',
-    train_save_every='1',
-    train_log_every='1',
-    train_val_every='1',
-    train_additional_args='',
+    train_additional_args='--train_iterations 3 --save_every 1 --log_every 1 --val_every 1',
     eval_set='dev',
-    eval_version='eval_version',
+    eval_version='',
     eval_additional_args=''
 ):
 
@@ -69,10 +61,6 @@ def train_pipeline(
             experiment=experiment,
             dataset=dataset,
             parallel=generate_dataset_parallel,
-            subdatasets=generate_dataset_subdatasets,
-            target_pruning_size=generate_dataset_target_pruning_size,
-            max_turns=generate_dataset_max_turns,
-            debug_level=generate_dataset_debug_level,
             additional_args=generate_dataset_additional_args)
     (generate_dataset_op.container
         .set_memory_limit('55Gi')
@@ -100,10 +88,6 @@ def train_pipeline(
             model=model,
             load_from=train_load_from,
             s3_datadir=generate_dataset_op.outputs['s3_datadir'],
-            train_iterations=train_iterations,
-            save_every=train_save_every,
-            log_every=train_log_every,
-            val_every=train_val_every,
             additional_args=train_additional_args) 
     (train_op.container
         .set_memory_request('56Gi')
@@ -129,7 +113,7 @@ def train_pipeline(
             model_owner=owner,
             eval_set=eval_set,
             eval_version=eval_version,
-            s3_model_dir=train_op.outputs['s3_model_dir'],
+            s3_model_dir="train_op.outputs['s3_model_dir']",
             additional_args=eval_additional_args)  
     (eval_op.container
         .set_memory_limit('15Gi')
@@ -141,5 +125,5 @@ def train_pipeline(
     )
 
 if __name__ == '__main__':
-    resp = upload_pipeline('genie_train', train_pipeline)
+    resp = upload_pipeline('generate-train-eval', train_pipeline)
     print(resp)

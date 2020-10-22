@@ -39,6 +39,7 @@ WORKDIR /opt/genie-toolkit/
 RUN git checkout ${GENIE_VERSION}
 RUN yarn link thingtalk
 RUN yarn install
+RUN yarn link
 
 COPY lib.sh sync-repos.sh ./
 

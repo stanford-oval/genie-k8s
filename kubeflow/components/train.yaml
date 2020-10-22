@@ -13,10 +13,6 @@ inputs:
   - {name: model, description: '', default: ''}
   - {name: load_from, description: '', default: ''}
   - {name: s3_datadir, description: '', default: ''}
-  - {name: save_every, description: '', default: ''}
-  - {name: log_every, description: '', default: ''}
-  - {name: val_every, description: '', default: ''}
-  - {name: train_iterations, description: '', default: ''}
   - {name: additional_args, description: '', default: ''}
 outputs:
   - {name: s3_model_dir}
@@ -30,7 +26,7 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image s3_bucket owner dataset_owner task_name project experiment dataset model load_from s3_model_dir s3_datadir train_iterations save_every log_every val_every" "$@"
+      parse_args "$0" "image s3_bucket owner dataset_owner task_name project experiment dataset model load_from s3_datadir s3_model_dir" "$@"
       shift $n 
       cd $HOME
 
@@ -61,17 +57,13 @@ implementation:
           --cache "$modeldir/cache" \
           --train_tasks ${task_name} \
           --preserve_case \
-          --save_every ${save_every} \
-          --log_every ${log_every} \
-          --val_every ${val_every} \
-          --train_iterations ${train_iterations} \
           --exist_ok \
           --skip_cache \
           $@ 
 
       rm -fr "$modeldir/cache"
       rm -fr "$modeldir/dataset"
-      S3_MODEL_DIR=s3://${s3_bucket}/${owner}/models/${project}/${experiment}/${model}/`date +%s`/
+      S3_MODEL_DIR=s3://${s3_bucket}/${owner}/models/${project}/${experiment}/${model}/
       aws s3 sync ${modeldir}/ ${S3_MODEL_DIR}
             
       mkdir -p `dirname $s3_model_dir`
@@ -90,10 +82,6 @@ implementation:
       --model, {inputValue: model},
       --load_from, {inputValue: load_from},
       --s3_datadir, {inputValue: s3_datadir},
-      --save_every, {inputValue: save_every},
-      --log_every, {inputValue: log_every},
-      --val_every, {inputValue: val_every},
-      --train_iterations, {inputValue: train_iterations},
       --s3_model_dir, {outputPath: s3_model_dir},
       --, {inputValue: additional_args}, 
     ]
