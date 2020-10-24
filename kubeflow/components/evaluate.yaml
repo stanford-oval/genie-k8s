@@ -12,7 +12,8 @@ inputs:
   - {name: s3_model_dir, description: '', default: ''}
   - {name: additional_args, description: '', default: ''}
 outputs:
-  - {name: output_file}
+  - {name: metrics_output}
+  - {name: s3_metrics_output}
   - {name: MLPipeline UI metadata, type: UI metadata}
   - {name: MLPipeline Metrics, type: Metrics}
 implementation:
@@ -24,12 +25,13 @@ implementation:
     - -c 
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image project experiment model model_owner eval_set eval_version s3_model_dir output_file" "$@"
+      parse_args "$0" "image project experiment model model_owner eval_set eval_version s3_model_dir s3_metrics_output metrics_output" "$@"
       shift $n
       s3_model_dir=`cat $s3_model_dir`
       cd $HOME
 
       /opt/genie-toolkit/sync-repos.sh
+
       MAKEDIR=`get_make_dir ${project}`
       cd workdir/${MAKEDIR}
 
@@ -43,7 +45,8 @@ implementation:
         eval_version=${eval_version} model=${MODEL_DIR} s3_model_dir=${s3_model_dir} evaluate
 
       make geniedir=/opt/genie-toolkit thingpedia_cli=thingpedia experiment=$experiment eval_set=${eval_set} \
-        eval_version=${eval_version} model=${MODEL_DIR} artifacts_path=${output_file} evaluate-output-artifacts
+        eval_version=${eval_version} model=${MODEL_DIR} \
+        s3_metrics_output=${s3_metrics_output} metrics_output=${metrics_output} evaluate-output-artifacts
 
     args: [
       'cmd',
@@ -55,7 +58,8 @@ implementation:
       --eval_set, {inputValue: eval_set},
       --eval_version, {inputValue: eval_version},
       --s3_model_dir, {inputPath: s3_model_dir},
-      --output_file, {outputPath: output_file},
+      --s3_metrics_output, {outputPath: s3_metrics_output},
+      --metrics_output, {outputPath: metrics_output},
       --, {inputValue: additional_args}
     ]
 
