@@ -40,7 +40,7 @@ def train_pipeline(
     genie_version='cf078a09ca5e891562f22fc6e12eca111c5d103e',
     thingtalk_version='0a8688a20ccc292f26e49247c0dad810103e6c78',
     workdir_repo='git@github.com:stanford-oval/thingpedia-common-devices.git',
-    workdir_version='8ff3987b6dc6b9b5015c97abc25d3d3fcbc4fbba',
+    workdir_version='0db4d113bd2436e85f7dfa7542f800106485f7a8',
     workdir_s3_config_dir='s3://geniehai/jgd5/config/almond',
     experiment='main',
     model='model',
