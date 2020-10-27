@@ -12,6 +12,8 @@ inputs:
   - {name: model, description: '', default: ''}
   - {name: load_from, description: '', default: ''}
   - {name: s3_datadir, description: '', default: ''}
+  - {name: train_iterations, description: '', default: ''}
+  - {name: skip_tensorboard, description: '', default: 'false'}
   - {name: additional_args, description: '', default: ''}
 outputs:
   - {name: s3_model_dir}
@@ -25,7 +27,7 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image s3_bucket owner dataset_owner task_name project experiment model load_from s3_datadir s3_model_dir" "$@"
+      parse_args "$0" "image s3_bucket owner dataset_owner task_name project experiment model load_from s3_datadir s3_model_dir skip_tensorboard" "$@"
       shift $n 
       cd $HOME
       s3_datadir=`cat $s3_datadir`
@@ -49,11 +51,16 @@ implementation:
       ln -s $modeldir /home/genie-toolkit/current
       mkdir -p "/shared/tensorboard/${project}/${experiment}/${owner}/${model}"
      
+      tensorboard_args=
+      if test "$skip_tensorboard" != "true" ; then
+        tensorboard_args="--tensorboard_dir /shared/tensorboard/${project}/${experiment}/${owner}/${model}"
+      fi
+     
       genienlp train \
           --data "$modeldir/dataset" \
           --embeddings ${GENIENLP_EMBEDDINGS} \
           --save "$modeldir" \
-          --tensorboard_dir "/shared/tensorboard/${project}/${experiment}/${owner}/${model}" \
+          ${tensorboard_args} \
           --cache "$modeldir/cache" \
           --train_tasks ${task_name} \
           --preserve_case \
@@ -82,6 +89,9 @@ implementation:
       --load_from, {inputValue: load_from},
       --s3_datadir, {inputPath: s3_datadir},
       --s3_model_dir, {outputPath: s3_model_dir},
-      --, {inputValue: additional_args}, 
+      --skip_tensorboard, {inputValue: skip_tensorboard},
+      --,
+      --train_iterations, {inputValue: train_iterations},
+      {inputValue: additional_args}, 
     ]
     
