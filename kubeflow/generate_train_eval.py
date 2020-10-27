@@ -18,7 +18,8 @@ from utils import upload_pipeline
 from utils import add_env
 
 # Get the default container image from environment variable
-default_image = os.environ.get('CONTAINER_IMAGE', '')
+default_image = os.environ['CONTAINER_IMAGE']
+default_developer_key = os.environ['THINGPEDIA_DEVELOPER_KEY']
 
 def add_ssh_volume(op):
     op.add_volume(V1Volume(name='ssh-v',
@@ -31,27 +32,26 @@ def add_ssh_volume(op):
     description='Runs the whole training pipeline'
 )
 def train_pipeline(
+    owner,
+    dataset_owner,
+    project,
+    experiment,
+    model,
+    dataset,
     s3_bucket='geniehai',
     image=default_image,
-    owner='jgd5',
-    dataset_owner='jgd5',
-    project='almond',
-    genienlp_version='0d291829b94bef6287c30d592b83412aaf0b0d86',
-    genie_version='cf078a09ca5e891562f22fc6e12eca111c5d103e',
-    thingtalk_version='0a8688a20ccc292f26e49247c0dad810103e6c78',
+    genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
+    genie_version='84877f2488a0d0dea1e81f3e1f0b92dc6c05c568',
+    thingtalk_version='755c3d23951abad9ea92cb6329ca5250489a9897',
     workdir_repo='git@github.com:stanford-oval/thingpedia-common-devices.git',
     workdir_version='0db4d113bd2436e85f7dfa7542f800106485f7a8',
-    workdir_s3_config_dir='s3://geniehai/jgd5/config/almond',
-    experiment='main',
-    model='model',
-    dataset='test_dataset',
+    thingpedia_developer_key=default_developer_key,
     generate_dataset_parallel='6',
-    generate_dataset_additional_args='subdatasets=1 target_pruning_size=25 max_turns=2 debug_level=2',
+    generate_dataset_additional_args='',
     train_task_name='almond_dialogue_nlu',
     train_load_from='None',
-    train_additional_args='--train_iterations 3 --save_every 1 --log_every 1 --val_every 1',
+    train_additional_args='',
     eval_set='dev',
-    eval_version='None',
     eval_additional_args=''
 ):
 
@@ -61,14 +61,14 @@ def train_pipeline(
         'THINGTALK_VERSION': thingtalk_version,
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
-        'WORKDIR_S3_CONFIG_DIR': workdir_s3_config_dir,
+        'THINGPEDIA_DEVELOPER_KEY': thingpedia_developer_key,
         'RUN_ID': kfp.dsl.RUN_ID_PLACEHOLDER,
         'EXECUTION_ID': kfp.dsl.EXECUTION_ID_PLACEHOLDER,
     }
     generate_dataset_op = components.load_component_from_file('components/generate-dataset.yaml')(
             image=image,
             s3_bucket=s3_bucket,
-            owner=owner,
+            owner=dataset_owner,
             project=project,
             experiment=experiment,
             dataset=dataset,
@@ -124,7 +124,6 @@ def train_pipeline(
             model=model,
             model_owner=owner,
             eval_set=eval_set,
-            eval_version=eval_version,
             s3_model_dir=train_op.outputs['s3_model_dir'],
             additional_args=eval_additional_args)
     (eval_op.container

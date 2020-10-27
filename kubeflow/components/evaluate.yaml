@@ -8,7 +8,6 @@ inputs:
   - {name: model, description: '', default: ''}
   - {name: model_owner, description: '', default: ''}
   - {name: eval_set, description: '', default: ''}
-  - {name: eval_version, description: '', default: ''}
   - {name: s3_model_dir, description: '', default: ''}
   - {name: additional_args, description: '', default: ''}
 outputs:
@@ -25,7 +24,7 @@ implementation:
     - -c 
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image project experiment model model_owner eval_set eval_version s3_model_dir s3_metrics_output metrics_output" "$@"
+      parse_args "$0" "image project experiment model model_owner eval_set s3_model_dir s3_metrics_output metrics_output" "$@"
       shift $n
       s3_model_dir=`cat $s3_model_dir`
       cd $HOME
@@ -41,12 +40,20 @@ implementation:
 
       export TZ=America/Los_Angeles
 
-      make geniedir=/opt/genie-toolkit thingpedia_cli=thingpedia experiment=$experiment eval_set=${eval_set} \
-        eval_version=${eval_version} model=${MODEL_DIR} s3_model_dir=${s3_model_dir} evaluate
-
-      make geniedir=/opt/genie-toolkit thingpedia_cli=thingpedia experiment=$experiment eval_set=${eval_set} \
-        eval_version=${eval_version} model=${MODEL_DIR} \
-        s3_metrics_output=${s3_metrics_output} metrics_output=${metrics_output} evaluate-output-artifacts
+      make \
+        geniedir=/opt/genie-toolkit \
+        "owner=${owner}" \
+        "genie_k8s_owner=${owner}" \
+        "genie_k8s_project=${project}" \
+        "s3_bucket=${s3_bucket}" \
+        thingpedia_cli=thingpedia \
+        "experiment=$experiment" \
+        "eval_set=${eval_set}" \
+        "model=${MODEL_DIR}" \
+        "s3_model_dir=${s3_model_dir}" \
+        "metrics_output=${metrics_output}" \
+        evaluate \
+        evaluate-output-artifacts
 
     args: [
       'cmd',
@@ -56,7 +63,6 @@ implementation:
       --model, {inputValue: model},
       --model_owner, {inputValue: model_owner},
       --eval_set, {inputValue: eval_set},
-      --eval_version, {inputValue: eval_version},
       --s3_model_dir, {inputPath: s3_model_dir},
       --s3_metrics_output, {outputPath: s3_metrics_output},
       --metrics_output, {outputPath: metrics_output},

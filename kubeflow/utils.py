@@ -13,10 +13,10 @@ def disable_caching(op):
     return op
 
 def add_env(op, envs):
-  """Add a dict of environments to container"""
-  for k, v in envs.items():
-    op.container.add_env_variable(V1EnvVar(name=k, value=v))
-  return op
+    """Add a dict of environments to container"""
+    for k, v in envs.items():
+        op.container.add_env_variable(V1EnvVar(name=k, value=v))
+    return op
 
 def upload_pipeline(name, pipeline):
     """Upload pipeline to kubeflow"""

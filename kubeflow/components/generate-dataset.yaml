@@ -27,14 +27,21 @@ implementation:
 
       /opt/genie-toolkit/sync-repos.sh 
       MAKEDIR=`get_make_dir ${project}`
+      
+      cat >> workdir/config.mk <<EOF
+      developer_key = ${THINGPEDIA_DEVELOPER_KEY}
+      EOF
       cd workdir/${MAKEDIR}
 
       export TZ=America/Los_Angeles
       make "-j${parallel}" \
           geniedir=/opt/genie-toolkit \
+          "owner=${owner}" \
+          "genie_k8s_owner=${owner}" \
+          "genie_k8s_project=${project}" \
+          "s3_bucket=${s3_bucket}" \
           thingpedia_cli=thingpedia \
           "experiment=${experiment}" \
-          "owner=${owner}" \
           $@ \
           datadir
 
