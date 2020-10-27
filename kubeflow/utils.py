@@ -31,14 +31,14 @@ def upload_pipeline(name, pipeline):
     # use upload_pipeline_version if an existing pipeline is found
     pid = None
     for p in pipelines:
-      if p.name == name:
-        pid = p.id
-        break
+        if p.name == name:
+          pid = p.id
+          break
 
     if pid:
-      resp = client.pipeline_uploads.upload_pipeline_version(compiled_pipeline_path, name=version, pipelineid=pid)
+        resp = client.pipeline_uploads.upload_pipeline_version(compiled_pipeline_path, name=version, pipelineid=pid)
     else:
-      resp = client.pipeline_uploads.upload_pipeline(compiled_pipeline_path, name=name)
+        resp = client.pipeline_uploads.upload_pipeline(compiled_pipeline_path, name=name)
 
     os.remove(compiled_pipeline_path)
     return resp
