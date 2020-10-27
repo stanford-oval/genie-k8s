@@ -27,7 +27,7 @@ def add_ssh_volume(op):
     return op
 
 @dsl.pipeline(
-    name='E2E Training pipeline',
+    name='Generate,train and eval',
     description='Runs the whole training pipeline'
 )
 def train_pipeline(
@@ -44,7 +44,7 @@ def train_pipeline(
     workdir_s3_config_dir='s3://geniehai/jgd5/config/almond',
     experiment='main',
     model='model',
-    dataset='e2e_test_dataset',
+    dataset='test_dataset',
     generate_dataset_parallel='6',
     generate_dataset_additional_args='subdatasets=1 target_pruning_size=25 max_turns=2 debug_level=2',
     train_task_name='almond_dialogue_nlu',
