@@ -2,11 +2,8 @@ ARG COMMON_IMAGE=
 FROM ${COMMON_IMAGE}
 MAINTAINER Thingpedia Admins <thingpedia-admins@lists.stanford.edu>
 
-RUN npm install -g thingpedia-cli
-
 WORKDIR /opt/genienlp/
 ARG GENIENLP_VERSION=master
-RUN pip3 install --upgrade pip
 RUN git fetch && git checkout ${GENIENLP_VERSION} && pip3 install --use-feature=2020-resolver -e .
 
 # uncomment the models you want to use
@@ -30,26 +27,28 @@ ARG THINGTALK_VERSION=master
 RUN git clone https://github.com/stanford-oval/thingtalk /opt/thingtalk/
 WORKDIR /opt/thingtalk/
 RUN git checkout ${THINGTALK_VERSION}
-RUN yarn install
-RUN yarn link
+RUN if test -f yarn.lock ; then \
+   yarn install && yarn link ; \
+   else \
+   npm install ; \
+   fi
 
 ARG GENIE_VERSION=master
 RUN git clone https://github.com/stanford-oval/genie-toolkit /opt/genie-toolkit/
 WORKDIR /opt/genie-toolkit/
 RUN git checkout ${GENIE_VERSION}
-RUN yarn link thingtalk
-RUN yarn install
-RUN yarn link
+RUN if test -f yarn.lock ; then \
+   yarn link thingtalk && yarn install && yarn link ; \
+   else \
+   npm link ../thingtalk && npm install && npm link ; \
+   fi
 
 COPY lib.sh sync-repos.sh ./
 
 # add user genie-toolkit
-RUN useradd -ms /bin/bash -r genie-toolkit
+RUN useradd -ms /bin/bash genie-toolkit
 
 # Use root for now until https://github.com/aws/amazon-eks-pod-identity-webhook/issues/8 is fixed.
 # There is a workaround by changing pod fsgroup but kubeflow does not provide to api to modify pod securityContext.
 # USER genie-toolkit
 WORKDIR /home/genie-toolkit
-
-# ensures python sys.std* encoding is always utf-8
-ENV PYTHONIOENCODING=UTF-8

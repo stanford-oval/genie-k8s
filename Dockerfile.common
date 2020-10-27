@@ -4,34 +4,29 @@ MAINTAINER Thingpedia Admins <thingpedia-admins@lists.stanford.edu>
 
 USER root
 
-# install basic tools
+# install basic tools, nodejs 10.x and yarn
 RUN dnf -y install make gettext unzip xz gcc-c++ diffutils \
 	git gcc gcc-c++ procps-ng \
 	python3 \
-	python3-numpy \
-	python3-scipy \
 	python3-pip \
 	python3-devel \
-	&& pip3 install awscli \
+	python3-wheel \
+	&& pip3 install --upgrade pip \
+	&& pip3 install --use-feature=2020-resolver awscli \
+	&& dnf -y module enable nodejs:10 \
+	&& curl -sL https://dl.yarnpkg.com/rpm/yarn.repo | tee /etc/yum.repos.d/yarn.repo \
+	&& dnf -y install nodejs yarn \
 	&& dnf clean all \
 	&& rm -fr /root/.cache
 
-# install genienlp
+# install genienlp (this will install genienlp's dependencies, we'll override
+# the installation again in the non-common image)
 RUN git clone https://github.com/stanford-oval/genienlp /opt/genienlp && \
-	pip3 install -e /opt/genienlp \
+	pip3 install --use-feature=2020-resolver -e /opt/genienlp \
 	&& rm -fr /root/.cache
 
-# download word embeddings
-RUN mkdir -p /usr/local/share/genienlp/embeddings && chmod 0777 /usr/local/share/genienlp/embeddings
-ENV GENIENLP_EMBEDDINGS=/usr/local/share/genienlp/embeddings
+# install thingpedia-cli
+RUN npm install -g thingpedia-cli
 
-# install nodejs 10.x and yarn
-RUN dnf -y module enable nodejs:10 && \
-	curl -sL https://dl.yarnpkg.com/rpm/yarn.repo | tee /etc/yum.repos.d/yarn.repo && \
-	dnf -y install nodejs yarn && \
-	dnf clean all
-
-# download PPDB
-RUN curl https://parmesan.stanford.edu/glove/ppdb-2.0-m-lexical.bin -o /usr/local/share/ppdb-2.0-m-lexical.bin && \
-    chmod 755 /usr/local/share/ppdb-2.0-m-lexical.bin
-ENV PPDB=/usr/local/share/ppdb-2.0-m-lexical.bin
+# ensures python sys.std* encoding is always utf-8
+ENV PYTHONIOENCODING=UTF-8

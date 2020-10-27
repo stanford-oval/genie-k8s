@@ -8,6 +8,7 @@ set -ex
 
 COMMON_IMAGE=$1
 IMAGE=$2
+JUPYTER_IMAGE=$3
 
 genienlp_version=${genienlp_version:-master}
 thingtalk_version=${thingtalk_version:-master}
@@ -23,5 +24,11 @@ docker build -t ${IMAGE} \
   --build-arg GENIE_VERSION=${genie_version} \
   .
 docker push ${IMAGE}
+
+docker build -t ${JUPYTER_IMAGE} \
+  --build-arg BASE_IMAGE=${IMAGE} \
+  -f Dockerfile.jupyter \
+  .
+docker push ${JUPYTER_IMAGE}
 
 rm lib.sh
