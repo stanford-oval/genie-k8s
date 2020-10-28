@@ -18,7 +18,13 @@ if [ -n "${THINGTALK_VERSION}" ] && [ "${THINGTALK_VERSION}" != "${THINGTALK_HEA
     yarn install
     yarn link
   else
-    npm install
+    # we cannot run npm as root, it will not run the build steps correctly
+    # (https://github.com/npm/cli/issues/2062)
+    if test `id -u` = 0 ; then
+      su genie-toolkit -c "npm install"
+    else
+      npm install
+    fi
   fi
 fi
 
@@ -32,9 +38,18 @@ if [ -n "${GENIE_VERSION}" ] && [ "${GENIE_VERSION}" != "${GENIE_HEAD}" ]; then
     yarn install
     yarn link
   else
-    npm link ../thingtalk
-    npm install
-    npm link
+    # we cannot run npm as root, it will not run the build steps correctly
+    # (https://github.com/npm/cli/issues/2062)
+    if test `id -u` = 0 ; then
+      # also, it looks like npm will corrupt the installation of thingtalk
+      # when doing "npm install" if the package was linked already so remove
+      # the link first
+      rm -f node_modules/thingtalk
+      su genie-toolkit -c "npm install && npm link thingtalk"
+    else
+      npm install
+      npm link thingtalk
+    fi
   fi
 fi
 
@@ -48,8 +63,16 @@ if [ -n "${WORKDIR_REPO}" ] && [ -n "${WORKDIR_VERSION}" ]; then
     yarn link genie-toolkit
     yarn install
   elif test -f package-lock.json ; then
-    npm link ../thingtalk
-    npm link ../genie-toolkit
-    npm install
+    # we cannot run npm as root, it will not run the build steps correctly
+    # (https://github.com/npm/cli/issues/2062)
+    if test `id -u` = 0 ; then
+      rm -f node_modules/thingtalk
+      rm -f node_modules/genie-toolkit
+      su genie-toolkit -c "npm install && npm link thingtalk && npm link genie-toolkit"
+    else
+      npm install
+      npm link thingtalk
+      npm link genie-toolkit
+    fi
   fi
 fi
