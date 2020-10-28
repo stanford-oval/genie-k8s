@@ -25,17 +25,17 @@ implementation:
     image: '{{inputs.parameters.image}}'
     command:
     - /bin/bash
-    - -ex
     - -c
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image s3_bucket owner dataset_owner task_name project experiment dataset s3_input_datadir s3_output_datadir \
-          filtering_model paraphrasing_model \
-          skip_generation skip_filtering keep_original_duplicates task_name ignore_context" "$@"
+      parse_args "$0" "image s3_bucket owner dataset_owner task_name project experiment dataset s3_input_datadir s3_output_datadir filtering_model paraphrasing_model skip_generation skip_filtering keep_original_duplicates task_name ignore_context" "$@"
       shift $n
       #s3_datadir=`cat $s3_datadir`
       #filtering_model=`cat $filtering_model`
+      
+      set -e
+      set -x
       
       /opt/genie-toolkit/sync-repos.sh 
 
@@ -43,12 +43,9 @@ implementation:
         echo "ignoring context"
       fi
 
-      set -e
-      set -x
-
       aws s3 sync "${s3_input_datadir}" input_dataset/
       aws s3 sync --exclude '*/dataset/*' --exclude '*/cache/*' --exclude 'iteration_*.pth' --exclude '*_optim.pth' "${filtering_model}" filtering_model/
-      aws s3 sync --exclude '*checkpoint*' s3://${s3_bucket}/${paraphrasing_model_full_path} paraphraser/
+      aws s3 sync --exclude '*checkpoint*' "${paraphrasing_model}" paraphraser/
 
       mkdir -p output_dataset
       cp -r input_dataset/* output_dataset
@@ -235,14 +232,13 @@ implementation:
       --experiment, {inputValue: experiment},
       --dataset, {inputValue: dataset},
       --s3_input_datadir, {inputValue: s3_input_datadir},
+      --s3_output_datadir, {outputPath: s3_output_datadir},
       --filtering_model, {inputValue: filtering_model},
       --paraphrasing_model, {inputValue: paraphrasing_model},
       --skip_generation, {inputValue: skip_generation},
       --skip_filtering, {inputValue: skip_filtering},
       --keep_original_duplicates, {inputValue: keep_original_duplicates},
       --ignore_context, {inputValue: ignore_context},
-      --additional_args, {inputValue: additional_args},
-      --s3_output_datadir, {outputPath: s3_output_datadir},
       --, {inputValue: additional_args}, 
     ]
     

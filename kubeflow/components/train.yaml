@@ -58,7 +58,6 @@ implementation:
      
       genienlp train \
           --data "$modeldir/dataset" \
-          --embeddings ${GENIENLP_EMBEDDINGS} \
           --save "$modeldir" \
           ${tensorboard_args} \
           --cache "$modeldir/cache" \
