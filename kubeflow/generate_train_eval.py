@@ -63,8 +63,6 @@ def generate_train_eval_pipeline(
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
         'THINGPEDIA_DEVELOPER_KEY': thingpedia_developer_key,
-        'RUN_ID': kfp.dsl.RUN_ID_PLACEHOLDER,
-        'EXECUTION_ID': kfp.dsl.EXECUTION_ID_PLACEHOLDER,
     }
     generate_dataset_op = components.load_component_from_file('components/generate-dataset.yaml')(
             image=image,
@@ -168,8 +166,6 @@ def train_eval_only_pipeline(
         'THINGTALK_VERSION': thingtalk_version,
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
-        'RUN_ID': kfp.dsl.RUN_ID_PLACEHOLDER,
-        'EXECUTION_ID': kfp.dsl.EXECUTION_ID_PLACEHOLDER,
     }
 
     train_repos = repo_versions.copy()
@@ -263,8 +259,6 @@ def generate_paraphrase_train_eval_pipeline(
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
         'THINGPEDIA_DEVELOPER_KEY': thingpedia_developer_key,
-        'RUN_ID': kfp.dsl.RUN_ID_PLACEHOLDER,
-        'EXECUTION_ID': kfp.dsl.EXECUTION_ID_PLACEHOLDER,
     }
     generate_dataset_op = components.load_component_from_file('components/generate-dataset.yaml')(
         image=image,
