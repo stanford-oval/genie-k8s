@@ -33,7 +33,6 @@ def add_ssh_volume(op):
 )
 def generate_train_eval_pipeline(
     owner,
-    dataset_owner,
     project,
     experiment,
     model,
@@ -66,7 +65,7 @@ def generate_train_eval_pipeline(
     generate_dataset_op = components.load_component_from_file('components/generate-dataset.yaml')(
             image=image,
             s3_bucket=s3_bucket,
-            owner=dataset_owner,
+            owner=owner,
             project=project,
             experiment=experiment,
             dataset=dataset,
@@ -88,7 +87,6 @@ def generate_train_eval_pipeline(
             image=image,
             s3_bucket=s3_bucket,
             owner=owner,
-            dataset_owner=dataset_owner,
             task_name=train_task_name,
             project=project,
             experiment=experiment,
@@ -146,7 +144,6 @@ def generate_train_eval_pipeline(
 )
 def train_eval_only_pipeline(
     owner,
-    dataset_owner,
     project,
     experiment,
     model,
@@ -175,7 +172,6 @@ def train_eval_only_pipeline(
             image=image,
             s3_bucket=s3_bucket,
             owner=owner,
-            dataset_owner=dataset_owner,
             task_name=train_task_name,
             project=project,
             experiment=experiment,
@@ -232,7 +228,6 @@ def train_eval_only_pipeline(
 )
 def generate_paraphrase_train_eval_pipeline(
     owner,
-    dataset_owner,
     project,
     experiment,
     model,
@@ -270,7 +265,7 @@ def generate_paraphrase_train_eval_pipeline(
     generate_dataset_op = components.load_component_from_file('components/generate-dataset.yaml')(
         image=image,
         s3_bucket=s3_bucket,
-        owner=dataset_owner,
+        owner=owner,
         project=project,
         experiment=experiment,
         dataset=dataset,
@@ -295,7 +290,6 @@ def generate_paraphrase_train_eval_pipeline(
         image=image,
         s3_bucket=s3_bucket,
         owner=owner,
-        dataset_owner=dataset_owner,
         task_name=train_task_name,
         project=project,
         experiment=experiment,
@@ -326,7 +320,6 @@ def generate_paraphrase_train_eval_pipeline(
         image=image,
         s3_bucket=s3_bucket,
         owner=owner,
-        dataset_owner=dataset_owner,
         task_name=train_task_name,
         project=project,
         experiment=experiment,
@@ -360,7 +353,6 @@ def generate_paraphrase_train_eval_pipeline(
         image=image,
         s3_bucket=s3_bucket,
         owner=owner,
-        dataset_owner=dataset_owner,
         task_name=train_task_name,
         project=project,
         experiment=experiment,
