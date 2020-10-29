@@ -30,9 +30,12 @@ implementation:
       cd $HOME
 
       /opt/genie-toolkit/sync-repos.sh
-
       MAKEDIR=`get_make_dir ${project}`
+      cat >> workdir/config.mk <<EOF
+      developer_key = ${THINGPEDIA_DEVELOPER_KEY}
+      EOF
       cd workdir/${MAKEDIR}
+      
 
       ls -al 
       mkdir tmp

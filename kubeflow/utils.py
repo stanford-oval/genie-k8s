@@ -32,8 +32,8 @@ def upload_pipeline(name, pipeline):
     pid = None
     for p in pipelines:
         if p.name == name:
-          pid = p.id
-          break
+            pid = p.id
+            break
 
     if pid:
         resp = client.pipeline_uploads.upload_pipeline_version(compiled_pipeline_path, name=version, pipelineid=pid)
