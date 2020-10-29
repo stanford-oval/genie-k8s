@@ -1,0 +1,28 @@
+ARG BASE_IMAGE=
+FROM ${BASE_IMAGE}
+MAINTAINER Thingpedia Admins <thingpedia-admins@lists.stanford.edu>
+
+USER root
+RUN dnf -y install file wget && dnf clean all
+
+RUN pip3 install --use-feature=2020-resolver \
+   jupyter jupyterlab jupyterlab-git matplotlib \
+   kfp kubeflow-metadata
+RUN npm install -g tslab
+
+# add user jovyan (jupyter notebook hardcoded user)
+RUN useradd -ms /bin/bash -u 1001 jovyan && id jovyan
+
+ENV NB_USER=jovyan
+ENV NB_UID=1001
+ENV HOME=/home/jovyan
+ENV NB_PREFIX /
+ENV PATH=$HOME/.local/bin:$HOME/.yarn/bin:$PATH
+ENV MINIO_ENDPOINT=minio-service.kubeflow:9000
+
+RUN python3 -m ipykernel.kernelspec
+RUN tslab install --python=python3
+RUN jupyter lab build
+
+USER jovyan
+CMD ["bash", "-l", "-c", "jupyter lab --notebook-dir=/home/jovyan --ip=0.0.0.0 --no-browser --allow-root --port=8888 --NotebookApp.token='' --NotebookApp.password='' --NotebookApp.allow_origin='*' --NotebookApp.base_url=${NB_PREFIX}"]
