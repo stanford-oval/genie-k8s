@@ -40,7 +40,7 @@ def generate_train_eval_pipeline(
     dataset,
     s3_bucket='geniehai',
     image=default_image,
-    genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
+    genienlp_version='00905bd4c1f67f8ba2577a7f8a09f093d024d061',
     genie_version='84877f2488a0d0dea1e81f3e1f0b92dc6c05c568',
     thingtalk_version='2338ef36c76c90a84ef0942d021f909e47c6307f',
     workdir_repo='git@github.com:stanford-oval/thingpedia-common-devices.git',
@@ -51,13 +51,12 @@ def generate_train_eval_pipeline(
     train_task_name='almond_dialogue_nlu',
     train_load_from='None',
     train_additional_args='',
-    train_iterations='60000',
+    train_iterations='80000',
     eval_set='dev',
     eval_additional_args=''
 ):
 
-    repo_versions = {
-        'GENIENLP_VERSION': genienlp_version,
+    gen_dataset_env = {
         'GENIE_VERSION': genie_version,
         'THINGTALK_VERSION': thingtalk_version,
         'WORKDIR_REPO': workdir_repo,
@@ -79,13 +78,11 @@ def generate_train_eval_pipeline(
         .set_cpu_limit('15.5')
         .set_cpu_request('15.5')
     )
-    (add_env(add_ssh_volume(generate_dataset_op), repo_versions)
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'm5.4xlarge')
-    )
+    (add_env(add_ssh_volume(generate_dataset_op), gen_dataset_env))
 
-    train_repos = repo_versions.copy()
-    train_repos.pop('WORKDIR_REPO')
-    train_repos.pop('WORKDIR_VERSION')
+    train_env = {
+        'GENIENLP_VERSION': genienlp_version,
+    }
     train_num_gpus=1
     train_op = components.load_component_from_file('components/train.yaml')(
             image=image,
@@ -108,13 +105,22 @@ def generate_train_eval_pipeline(
         .set_gpu_limit(str(train_num_gpus))
         .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
     )
-    (add_env(add_ssh_volume(train_op), train_repos)
+    (add_env(add_ssh_volume(train_op), train_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
         .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*train_num_gpus}xlarge')
         .add_volume(V1Volume(name='tensorboard',
             persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf')))
         .after(generate_dataset_op)
     )
+    
+    eval_env = {
+        'GENIENLP_VERSION': genienlp_version,
+        'GENIE_VERSION': genie_version,
+        'THINGTALK_VERSION': thingtalk_version,
+        'WORKDIR_REPO': workdir_repo,
+        'WORKDIR_VERSION': workdir_version,
+        'THINGPEDIA_DEVELOPER_KEY': thingpedia_developer_key,
+    }
 
     eval_op = components.load_component_from_file('components/evaluate.yaml')(
             image=image,
@@ -130,7 +136,7 @@ def generate_train_eval_pipeline(
         .set_memory_request('15Gi')
         .set_cpu_limit('4')
         .set_cpu_request('4'))
-    (add_env(add_ssh_volume(eval_op), repo_versions)
+    (add_env(add_ssh_volume(eval_op), eval_env)
         .after(train_op)
     )
 
@@ -159,13 +165,8 @@ def train_eval_only_pipeline(
     eval_set='dev',
     eval_additional_args=''
 ):
-
-    repo_versions = {
+    train_env = {
         'GENIENLP_VERSION': genienlp_version,
-        'GENIE_VERSION': genie_version,
-        'THINGTALK_VERSION': thingtalk_version,
-        'WORKDIR_REPO': workdir_repo,
-        'WORKDIR_VERSION': workdir_version,
     }
 
     train_repos = repo_versions.copy()
@@ -199,6 +200,15 @@ def train_eval_only_pipeline(
         .add_volume(V1Volume(name='tensorboard',
             persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf')))
     )
+    
+    eval_env = {
+        'GENIENLP_VERSION': genienlp_version,
+        'GENIE_VERSION': genie_version,
+        'THINGTALK_VERSION': thingtalk_version,
+        'WORKDIR_REPO': workdir_repo,
+        'WORKDIR_VERSION': workdir_version,
+        'THINGPEDIA_DEVELOPER_KEY': thingpedia_developer_key,
+    }
 
     eval_op = components.load_component_from_file('components/evaluate.yaml')(
             image=image,
@@ -214,7 +224,7 @@ def train_eval_only_pipeline(
         .set_memory_request('15Gi')
         .set_cpu_limit('4')
         .set_cpu_request('4'))
-    (add_env(add_ssh_volume(eval_op), repo_versions)
+    (add_env(add_ssh_volume(eval_op), eval_env)
         .after(train_op)
     )
 
@@ -252,8 +262,7 @@ def generate_paraphrase_train_eval_pipeline(
     eval_additional_args=''
 ):
 
-    repo_versions = {
-        'GENIENLP_VERSION': genienlp_version,
+    gen_dataset_env = {
         'GENIE_VERSION': genie_version,
         'THINGTALK_VERSION': thingtalk_version,
         'WORKDIR_REPO': workdir_repo,
@@ -275,13 +284,13 @@ def generate_paraphrase_train_eval_pipeline(
         .set_cpu_limit('15.5')
         .set_cpu_request('15.5')
     )
-    (add_env(add_ssh_volume(generate_dataset_op), repo_versions)
+    (add_env(add_ssh_volume(generate_dataset_op), gen_dataset_env)
         .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'm5.4xlarge')
     )
 
-    train_repos = repo_versions.copy()
-    train_repos.pop('WORKDIR_REPO')
-    train_repos.pop('WORKDIR_VERSION')
+    train_env = {
+        'GENIENLP_VERSION': genienlp_version,
+    }
     train_num_gpus=1
     
     pretrain_op = components.load_component_from_file('components/train.yaml')(
@@ -306,7 +315,7 @@ def generate_paraphrase_train_eval_pipeline(
         .set_gpu_limit(str(train_num_gpus))
         .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
     )
-    (add_env(add_ssh_volume(pretrain_op), train_repos)
+    (add_env(add_ssh_volume(pretrain_op), train_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
         .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*train_num_gpus}xlarge')
         .add_volume(V1Volume(name='tensorboard',
@@ -342,7 +351,7 @@ def generate_paraphrase_train_eval_pipeline(
         #.set_ephemeral_storage_limit('75G')
         .set_gpu_limit(str(paraphrase_num_gpus))
     )
-    (add_env(add_ssh_volume(paraphrase_op), train_repos)
+    (add_env(add_ssh_volume(paraphrase_op), train_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
         .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*paraphrase_num_gpus}xlarge')
         .after(generate_dataset_op)
@@ -370,13 +379,22 @@ def generate_paraphrase_train_eval_pipeline(
         .set_gpu_limit(str(train_num_gpus))
         .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
     )
-    (add_env(add_ssh_volume(train_op), train_repos)
+    (add_env(add_ssh_volume(train_op), train_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
         .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*train_num_gpus}xlarge')
         .add_volume(V1Volume(name='tensorboard',
             persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf')))
         .after(paraphrase_op)
     )
+    
+    eval_env = {
+        'GENIENLP_VERSION': genienlp_version,
+        'GENIE_VERSION': genie_version,
+        'THINGTALK_VERSION': thingtalk_version,
+        'WORKDIR_REPO': workdir_repo,
+        'WORKDIR_VERSION': workdir_version,
+        'THINGPEDIA_DEVELOPER_KEY': thingpedia_developer_key,
+    }
 
     eval_op = components.load_component_from_file('components/evaluate.yaml')(
             image=image,
@@ -392,6 +410,6 @@ def generate_paraphrase_train_eval_pipeline(
         .set_memory_request('15Gi')
         .set_cpu_limit('4')
         .set_cpu_request('4'))
-    (add_env(add_ssh_volume(eval_op), repo_versions)
+    (add_env(add_ssh_volume(eval_op), eval_env)
         .after(train_op)
     )

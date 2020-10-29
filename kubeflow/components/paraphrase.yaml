@@ -43,9 +43,9 @@ implementation:
         echo "ignoring context"
       fi
 
-      aws s3 sync "${s3_input_datadir}" input_dataset/
-      aws s3 sync --exclude '*/dataset/*' --exclude '*/cache/*' --exclude 'iteration_*.pth' --exclude '*_optim.pth' "${filtering_model}" filtering_model/
-      aws s3 sync --exclude '*checkpoint*' "${paraphrasing_model}" paraphraser/
+      aws s3 sync --no-progress "${s3_input_datadir}" input_dataset/
+      aws s3 sync --no-progress --exclude '*/dataset/*' --exclude '*/cache/*' --exclude 'iteration_*.pth' --exclude '*_optim.pth' "${filtering_model}" filtering_model/
+      aws s3 sync --no-progress --exclude '*checkpoint*' "${paraphrasing_model}" paraphraser/
 
       mkdir -p output_dataset
       cp -r input_dataset/* output_dataset
@@ -199,7 +199,7 @@ implementation:
         join
 
         # paraphrasing was successful, so upload the intermediate files
-        aws s3 sync output_dataset/ "${s3_output_dir}"
+        aws s3 sync --no-progress output_dataset/ "${s3_output_dir}"
         echo "Uploaded intermediate files to s3."
         if test -f output_dataset/synthetic.txt ; then
           echo "Deleting synthetic.txt from pod to save disk space..."
@@ -219,7 +219,7 @@ implementation:
       append_to_original
       
       # upload the new dataset to S3
-      aws s3 sync output_dataset/ "${s3_output_dir}"
+      aws s3 sync --no-progress output_dataset/ "${s3_output_dir}"
     
     args: [
       'cmd',

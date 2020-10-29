@@ -38,10 +38,10 @@ implementation:
       mkdir -p "$modeldir"
 
       if ! test  ${load_from} = 'None' ; then
-          aws s3 sync ${load_from}/ "$modeldir"/ --exclude "iteration_*.pth" --exclude "*eval/*"  --exclude "*.log"
+          aws s3 sync --no-progress ${load_from}/ "$modeldir"/ --exclude "iteration_*.pth" --exclude "*eval/*"  --exclude "*.log"
       fi
 
-      aws s3 sync --exclude "synthetic*.txt" ${s3_datadir} dataset/
+      aws s3 sync --no-progress --exclude "synthetic*.txt" ${s3_datadir} dataset/
 
       rm -fr "$modeldir/dataset"
       mkdir "$modeldir/dataset"
@@ -70,7 +70,7 @@ implementation:
       rm -fr "$modeldir/cache"
       rm -fr "$modeldir/dataset"
       S3_MODEL_DIR=s3://${s3_bucket}/${owner}/models/${project}/${experiment}/${model}/`date +%s`/
-      aws s3 sync ${modeldir}/ ${S3_MODEL_DIR}
+      aws s3 sync --no-progress ${modeldir}/ ${S3_MODEL_DIR}
             
       mkdir -p `dirname $s3_model_dir`
       echo ${S3_MODEL_DIR} > $s3_model_dir
