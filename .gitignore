@@ -15,3 +15,7 @@ workdir/spotify
 workdir/mturk-batches
 
 .DS_Store
+
+# IDEs
+.idea/
+.vscode/
