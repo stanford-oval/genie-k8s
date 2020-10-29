@@ -12,6 +12,7 @@ inputs:
   - {name: additional_args, description: '', default: ''}
 outputs:
   - {name: s3_datadir}
+  - {name: MLPipeline UI metadata, type: UI metadata}
 implementation: 
   container:
     image: '{{inputs.parameters.image}}'
@@ -49,6 +50,25 @@ implementation:
       aws s3 sync --no-progress datadir/ ${S3_DATADIR}
       mkdir -p `dirname $s3_datadir`
       echo ${S3_DATADIR}  > $s3_datadir
+      
+      if test -f datadir/stats ; then
+        cat > /tmp/mlpipeline-ui-metadata.json <<EOF
+      {"outputs" : [
+          {
+            "storage": "inline",
+            "source": "$(cat datadir/stats | tr '\t' ',')",
+            "format": "csv",
+            "type": "table",
+            "header": [ "set", "# dlgs", "# synthetic turns",
+              "# training turns", "entropy (ctx)", "entropy (utt)",
+              "entropy (tgt)", "turns / dialogues", "# unique ctxs"
+            ]
+          }
+      ]}
+      EOF
+      else
+        echo '{"outputs":[]}' > /tmp/mlpipeline-ui-metadata.json 
+      fi
     
     args: [
       'cmd',
@@ -62,3 +82,6 @@ implementation:
       --s3_datadir, {outputPath: s3_datadir},
       --, {inputValue: additional_args}
     ]
+
+    fileOutputs:
+      MLPipeline UI metadata: /tmp/mlpipeline-ui-metadata.json
