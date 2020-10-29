@@ -158,6 +158,7 @@ def train_eval_only_pipeline(
     thingtalk_version='2338ef36c76c90a84ef0942d021f909e47c6307f',
     workdir_repo='git@github.com:stanford-oval/thingpedia-common-devices.git',
     workdir_version='0db4d113bd2436e85f7dfa7542f800106485f7a8',
+    thingpedia_developer_key=default_developer_key,
     train_task_name='almond_dialogue_nlu',
     train_load_from='None',
     train_iterations='60000',
@@ -169,9 +170,6 @@ def train_eval_only_pipeline(
         'GENIENLP_VERSION': genienlp_version,
     }
 
-    train_repos = repo_versions.copy()
-    train_repos.pop('WORKDIR_REPO')
-    train_repos.pop('WORKDIR_VERSION')
     train_num_gpus=1
     train_op = components.load_component_from_file('components/train.yaml')(
             image=image,
@@ -194,7 +192,7 @@ def train_eval_only_pipeline(
         .set_gpu_limit(str(train_num_gpus))
         .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
     )
-    (add_env(add_ssh_volume(train_op), train_repos)
+    (add_env(add_ssh_volume(train_op), train_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
         .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*train_num_gpus}xlarge')
         .add_volume(V1Volume(name='tensorboard',
