@@ -48,13 +48,14 @@ implementation:
         "owner=${owner}" \
         "genie_k8s_owner=${owner}" \
         "genie_k8s_project=${project}" \
-        "s3_bucket=${s3_bucket}" \
+        "s3_bucket=geniehai" \
         thingpedia_cli=thingpedia \
         "experiment=$experiment" \
         "eval_set=${eval_set}" \
         "model=${MODEL_DIR}" \
         "s3_model_dir=${s3_model_dir}" \
         "metrics_output=${metrics_output}" \
+        "s3_metrics_output=${s3_metrics_output}" \
         evaluate \
         evaluate-output-artifacts
 
