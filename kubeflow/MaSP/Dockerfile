@@ -1,0 +1,35 @@
+FROM nvidia/cuda:10.2-runtime-ubi8
+
+MAINTAINER Thingpedia Admins <thingpedia-admins@lists.stanford.edu>
+
+USER root
+
+# install basic tools, nodejs 10.x and yarn
+RUN dnf -y install make gettext unzip zip nano xz gcc-c++ diffutils \
+	git gcc gcc-c++ procps-ng \
+	python3 \
+	python3-pip \
+	python3-devel \
+	python3-wheel \
+	&& pip3 install --upgrade pip \
+	&& pip3 install --use-feature=2020-resolver awscli \
+	&& dnf -y module enable nodejs:10 \
+	&& curl -sL https://dl.yarnpkg.com/rpm/yarn.repo | tee /etc/yum.repos.d/yarn.repo \
+	&& dnf -y install nodejs yarn \
+	&& dnf clean all \
+	&& rm -fr /root/.cache
+
+# add user genie-toolkit
+RUN useradd -ms /bin/bash -r genie-toolkit
+
+ARG MaSP_VERSION=master
+RUN git clone https://github.com/taoshen58/MaSP /opt/MaSP/
+WORKDIR /opt/MaSP/
+RUN git checkout ${MaSP_VERSION}
+
+COPY preprocess.sh requirements.txt ./
+RUN pip install -r requirements.txt
+RUN python3 -m spacy download en
+
+# ensures python sys.std* encoding is always utf-8
+ENV PYTHONIOENCODING=UTF-8

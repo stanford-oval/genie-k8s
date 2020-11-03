@@ -1,0 +1,10 @@
+timeout_decorator
+fuzzywuzzy
+tqdm
+flask
+nltk
+ftfy
+spacy
+numpy
+tensorflow-gpu==1.11.0
+python-Levenshtein
