@@ -403,3 +403,68 @@ def generate_paraphrase_train_eval_pipeline(
     (add_env(add_ssh_volume(eval_op), eval_env)
         .after(train_op)
     )
+
+@dsl.pipeline(
+    name='Train a MaSP model',
+    description='Train a MaSP model'
+)
+def masp_train_pipeline(
+    owner,
+    model,
+    image=default_image,
+    search_logical_form_max_train_train='90000',
+    search_logical_form_max_train_dev='6000',
+    search_logical_form_additional_args='',
+    train_additional_args=''):
+    
+    slf_train = components.load_component_from_file('components/masp-search-logical-form.yaml')(
+        image=image,
+        owner=owner,
+        max_train=search_logical_form_max_train_train,
+        split='train',
+        additional_args=search_logical_form_additional_args)
+    (slf_train.container
+        .set_memory_limit('55Gi')
+        .set_memory_request('55Gi')
+        .set_cpu_limit('15.5')
+        .set_cpu_request('15.5')
+    )
+    (add_ssh_volume(slf_train)
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'm5.4xlarge'))
+    
+    slf_dev = components.load_component_from_file('components/masp-search-logical-form.yaml')(
+        image=image,
+        owner=owner,
+        max_train=search_logical_form_max_train_dev,
+        split='dev',
+        additional_args=search_logical_form_additional_args)
+    (slf_dev.container
+        .set_memory_limit('55Gi')
+        .set_memory_request('55Gi')
+        .set_cpu_limit('15.5')
+        .set_cpu_request('15.5')
+    )
+    (add_ssh_volume(slf_dev)
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'm5.4xlarge'))
+    
+    train_num_gpus=1
+    train_op = components.load_component_from_file('components/masp-train.yaml')(
+        image=image,
+        owner=owner,
+        model=model,
+        additional_args=train_additional_args)
+    (train_op.container
+        .set_memory_request('56Gi')
+        .set_memory_limit('56Gi')
+        .set_cpu_request('7.5')
+        .set_cpu_limit('7.5')
+        .set_gpu_limit(str(train_num_gpus))
+        .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
+    )
+    (add_ssh_volume(train_op)
+        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*train_num_gpus}xlarge')
+        .add_volume(V1Volume(name='tensorboard',
+            persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf')))
+        .after(slf_train)
+        .after(slf_dev))
