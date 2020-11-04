@@ -414,6 +414,7 @@ def masp_train_pipeline(
     image=default_image,
     search_logical_form_max_train_train='90000',
     search_logical_form_max_train_dev='6000',
+    search_logical_form_beam_size='1000',
     search_logical_form_additional_args='',
     train_additional_args=''):
     
@@ -421,6 +422,7 @@ def masp_train_pipeline(
         image=image,
         owner=owner,
         max_train=search_logical_form_max_train_train,
+        beam_size =search_logical_form_beam_size,
         split='train',
         additional_args=search_logical_form_additional_args)
     (slf_train.container
@@ -436,6 +438,7 @@ def masp_train_pipeline(
         image=image,
         owner=owner,
         max_train=search_logical_form_max_train_dev,
+        beam_size =search_logical_form_beam_size,
         split='dev',
         additional_args=search_logical_form_additional_args)
     (slf_dev.container

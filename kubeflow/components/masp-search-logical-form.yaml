@@ -6,6 +6,7 @@ inputs:
   - {name: owner, description: '', default: ''}
   - {name: split, description: '', default: ''}
   - {name: max_train, description: '', default: ''}
+  - {name: beam_size, description: '', default: ''}
   - {name: additional_args, description: '', default: ''}
 implementation: 
   container:
@@ -16,17 +17,17 @@ implementation:
     - -c
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image owner split max_train" "$@"
+      parse_args "$0" "image owner split max_train beam_size" "$@"
       shift $n
       cd $HOME
       
       aws s3 sync s3://geniehai/${owner}/dataset/csqa/ data/
       python3 /opt/MaSP/main_bfs_run.py -mode offline -num_parallel 1 \
-        -beam_size 1000 -start_index 0 -max_train ${max_train} -data_mode dir \
+        -beam_size {beam_size} -start_index 0 -max_train ${max_train} -data_mode dir \
         -data_path data/BFS/${split} -shuffle 1 -out_dir_suffix wo_con -all_lf 0 \
         "$@"
     
-      aws s3 sync data/BFS/${split} s3://geniehai/${owner}/dataset/csqa/BFS/${split}/
+      aws s3 sync data/BFS/${split}_proc_direct_{beam_size}_wo_con s3://geniehai/${owner}/dataset/csqa/BFS/${split}_proc_direct_{beam_size}_wo_con/
     
     args: [
       'cmd',
@@ -34,5 +35,6 @@ implementation:
       --owner, {inputValue: owner},
       --split, {inputValue: split},
       --max_train, {inputValue: max_train},
+      --beam_size, {inputValue: beam_size},
       --, {inputValue: additional_args}
     ]
