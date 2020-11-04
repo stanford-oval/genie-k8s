@@ -25,10 +25,12 @@ docker build -t ${IMAGE} \
   .
 docker push ${IMAGE}
 
-docker build -t ${JUPYTER_IMAGE} \
-  --build-arg BASE_IMAGE=${IMAGE} \
-  -f Dockerfile.jupyter \
-  .
-docker push ${JUPYTER_IMAGE}
+if test -n "${JUPYTER_IMAGE}" ; then
+  docker build -t ${JUPYTER_IMAGE} \
+    --build-arg BASE_IMAGE=${IMAGE} \
+    -f Dockerfile.jupyter \
+    .
+  docker push ${JUPYTER_IMAGE}
+fi
 
 rm lib.sh

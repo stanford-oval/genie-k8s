@@ -13,7 +13,7 @@ cd /opt/thingtalk/
 THINGTALK_HEAD=`git rev-parse HEAD`
 if [ -n "${THINGTALK_VERSION}" ] && [ "${THINGTALK_VERSION}" != "${THINGTALK_HEAD}" ]; then
   git fetch
-  git checkout ${THINGTALK_VERSION}
+  git checkout -f ${THINGTALK_VERSION}
   if test -f yarn.lock ; then
     yarn install
     yarn link
@@ -32,7 +32,7 @@ cd  /opt/genie-toolkit/
 GENIE_HEAD=`git rev-parse HEAD`
 if [ -n "${GENIE_VERSION}" ] && [ "${GENIE_VERSION}" != "${GENIE_HEAD}" ]; then
   git fetch
-  git checkout ${GENIE_VERSION}
+  git checkout -f ${GENIE_VERSION}
   if test -f yarn.lock ; then
     yarn link thingtalk
     yarn install
@@ -66,6 +66,10 @@ if [ -n "${WORKDIR_REPO}" ] && [ -n "${WORKDIR_VERSION}" ]; then
     # we cannot run npm as root, it will not run the build steps correctly
     # (https://github.com/npm/cli/issues/2062)
     if test `id -u` = 0 ; then
+      # grant search permissions along the path, and ownership of the directory
+      # we're modifying
+      chmod +x $HOME $PWD
+      chown -R genie-toolkit:genie-toolkit .
       rm -f node_modules/thingtalk
       rm -f node_modules/genie-toolkit
       su genie-toolkit -c "npm install && npm link thingtalk && npm link genie-toolkit"
