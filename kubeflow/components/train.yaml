@@ -2,18 +2,19 @@ name: Train
 description: |
   Training
 inputs:
-  - {name: image, description: '', default: ''}
-  - {name: s3_bucket, description: '', default: ''}
-  - {name: owner, description: '', default: ''}
-  - {name: task_name, description: '', default: '' }
-  - {name: project, description: '', default: ''}
-  - {name: experiment, description: '', default: ''}
-  - {name: model, description: '', default: ''}
-  - {name: load_from, description: '', default: ''}
-  - {name: s3_datadir, description: '', default: ''}
-  - {name: train_iterations, description: '', default: ''}
-  - {name: skip_tensorboard, description: '', default: 'false'}
-  - {name: additional_args, description: '', default: ''}
+  - {name: image, description: ''}
+  - {name: s3_bucket, description: ''}
+  - {name: owner, description: ''}
+  - {name: task_name, description: ''}
+  - {name: project, description: ''}
+  - {name: experiment, description: ''}
+  - {name: model, description: ''}
+  - {name: load_from, description: ''}
+  - {name: s3_datadir, description: ''}
+  - {name: dataset_subfolder, description: ''}
+  - {name: train_iterations, description: ''}
+  - {name: skip_tensorboard, description: ''}
+  - {name: additional_args, description: ''}
 outputs:
   - {name: s3_model_dir}
 implementation:
@@ -26,7 +27,7 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image s3_bucket owner task_name project experiment model load_from s3_datadir s3_model_dir skip_tensorboard" "$@"
+      parse_args "$0" "image s3_bucket owner task_name project experiment model load_from s3_datadir dataset_subfolder s3_model_dir skip_tensorboard" "$@"
       shift $n 
       cd $HOME
       s3_datadir=`cat $s3_datadir`
@@ -36,11 +37,15 @@ implementation:
       modeldir="$HOME/models/$model"
       mkdir -p "$modeldir"
 
-      if ! test  ${load_from} = 'None' ; then
+      if ! test ${load_from} = 'None' ; then
           aws s3 sync --no-progress ${load_from}/ "$modeldir"/ --exclude "iteration_*.pth" --exclude "*eval/*"  --exclude "*.log"
       fi
 
-      aws s3 sync --no-progress --exclude "synthetic*.txt" ${s3_datadir} dataset/
+      if test "${dataset_subfolder}" != 'None' ; then
+          aws s3 sync --no-progress --exclude "synthetic*.txt" ${s3_datadir}${dataset_subfolder} dataset/
+      else
+          aws s3 sync --no-progress --exclude "synthetic*.txt" ${s3_datadir} dataset/
+      fi
 
       rm -fr "$modeldir/dataset"
       mkdir "$modeldir/dataset"
@@ -85,6 +90,7 @@ implementation:
       --model, {inputValue: model},
       --load_from, {inputValue: load_from},
       --s3_datadir, {inputPath: s3_datadir},
+      --dataset_subfolder, {inputValue: dataset_subfolder},
       --s3_model_dir, {outputPath: s3_model_dir},
       --skip_tensorboard, {inputValue: skip_tensorboard},
       --,

@@ -38,7 +38,7 @@ def upload_pipeline(name, pipeline):
     if pid:
         resp = client.pipeline_uploads.upload_pipeline_version(compiled_pipeline_path, name=version, pipelineid=pid)
     else:
-        resp = client.pipeline_uploads.upload_pipeline(compiled_pipeline_path, name=name)
+        resp = client.pipeline_uploads.upload_pipeline(compiled_pipeline_path, name=name, description=pipeline._component_description)
 
     os.remove(compiled_pipeline_path)
     return resp
