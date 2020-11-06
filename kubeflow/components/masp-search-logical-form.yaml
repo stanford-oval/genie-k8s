@@ -23,13 +23,17 @@ implementation:
       shift $n
       cd $HOME
       
-      aws s3 sync s3://geniehai/${owner}/dataset/csqa/ data/
+      aws s3 sync --no-progress s3://geniehai/${owner}/dataset/csqa/BFS/${split} data/BFS/${split}
+      aws s3 cp --no-progress s3://geniehai/${owner}/dataset/csqa/kb/items_wikidata_n_tokenized.json data/kb/items_wikidata_n_tokenized.json
+      aws s3 cp --no-progress s3://geniehai/${owner}/dataset/csqa/BFS/wikidata.pkl data/BFS/wikidata.pkl
+      aws s3 cp --no-progress s3://geniehai/${owner}/dataset/csqa/BFS/type_kb.pkl data/BFS/type_kb.pkl
+      aws s3 cp --no-progress s3://geniehai/${owner}/dataset/csqa/BFS/pre_type.pkl data/BFS/pre_type.pkl
+
       python3 /opt/MaSP/main_bfs_run.py -mode offline -num_parallel ${num_parallel} \
         -beam_size ${beam_size} -start_index ${start_index} -max_train ${max_train} -data_mode dir \
-        -data_path data/BFS/${split} -shuffle 1 -out_dir_suffix wo_con -all_lf 0 \
-        "$@"
+        -data_path data/BFS/${split} -shuffle 1 -out_dir_suffix wo_con -all_lf 0
     
-      aws s3 sync data/BFS/${split}_proc_direct_${beam_size}_wo_con s3://geniehai/${owner}/dataset/csqa/BFS/${split}_proc_direct_${beam_size}_wo_con/
+      aws s3 sync  --no-progress data/BFS/${split}_proc_direct_${beam_size}_wo_con s3://geniehai/${owner}/dataset/csqa/BFS/${split}_proc_direct_${beam_size}_wo_con/
     
     args: [
       'cmd',

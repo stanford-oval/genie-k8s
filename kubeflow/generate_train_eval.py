@@ -433,13 +433,13 @@ def masp_train_pipeline(
         split='train',
         additional_args=search_logical_form_additional_args)
     (slf_train.container
-        .set_memory_limit('55Gi')
-        .set_memory_request('55Gi')
+        .set_memory_limit('110Gi')
+        .set_memory_request('110Gi')
         .set_cpu_limit('15.5')
         .set_cpu_request('15.5')
     )
     (add_ssh_volume(slf_train)
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'm5.4xlarge'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'r5.4xlarge'))
     
     slf_dev = components.load_component_from_file('components/masp-search-logical-form.yaml')(
         image=image,
@@ -451,13 +451,13 @@ def masp_train_pipeline(
         split='dev',
         additional_args=search_logical_form_additional_args)
     (slf_dev.container
-        .set_memory_limit('55Gi')
-        .set_memory_request('55Gi')
+        .set_memory_limit('110Gi')
+        .set_memory_request('110Gi')
         .set_cpu_limit('15.5')
         .set_cpu_request('15.5')
     )
     (add_ssh_volume(slf_dev)
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'm5.4xlarge'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'r5.4xlarge'))
     
     train_num_gpus=1
     train_op = components.load_component_from_file('components/masp-train.yaml')(
