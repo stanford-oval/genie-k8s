@@ -211,8 +211,8 @@ def paraphrase_step(
         ignore_context=ignore_context,
         additional_args=additional_args)
     (paraphrase_op.container
-        .set_memory_request('220G')
-        .set_memory_limit('220G')
+        .set_memory_request('150G')
+        .set_memory_limit('150G')
         .set_cpu_request('16')
         .set_cpu_limit('16')
         # not supported yet in the version of kfp we're using
