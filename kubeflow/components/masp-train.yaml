@@ -5,6 +5,10 @@ inputs:
   - {name: image, description: '', default: ''}
   - {name: owner, description: '', default: ''}
   - {name: model, description: '', default: ''}
+  - {name: train_batch_size, description: '', default: ''}
+  - {name: test_batch_size, description: '', default: ''}
+  - {name: num_epochs, description: '', default: ''}
+  - {name: eval_period, description: '', default: ''}
   - {name: additional_args, description: '', default: ''}
 outputs:
   - {name: s3_model_dir}
@@ -17,7 +21,7 @@ implementation:
     - -c
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image owner model s3_model_dir" "$@"
+      parse_args "$0" "image owner model train_batch_size test_batch_size num_epochs eval_period s3_model_dir" "$@"
       shift $n
       cd $HOME
       
@@ -25,10 +29,12 @@ implementation:
       unzip -q bert_base.zip -d .
       mv "uncased_L-12_H-768_A-12" bert_base
       
-      aws s3 sync s3://geniehai/${owner}/dataset/csqa/ data/
+      aws s3 sync --no-progress s3://geniehai/${owner}/dataset/csqa/BFS/train_proc_direct_100_wo_con_0_90000 data/BFS/train_proc_direct_1000_wo_co
+      aws s3 sync --no-progress s3://geniehai/${owner}/dataset/csqa/BFS/dev_proc_direct_1000_wo_con_0_6000 data/BFS/dev_proc_direct_1000_subset_wo_con
+      aws s3 sync --no-progress s3://geniehai/${owner}/dataset/csqa/kb data/kb
       python3 /opt/MaSP/main_e2e.py --network_class bert --network_type bert_template --dataset e2e_wo_con \
         --preprocessing_hparams bert_pretrained_dir=bert_base,max_sequence_len=72 \
-        --training_hparams train_batch_size=128,test_batch_size=128,num_epochs=8,eval_period=2000,save_model=True \
+        --training_hparams train_batch_size=${train_batch_size},test_batch_size=${test_batch_size},num_epochs=${num_epochs},eval_period=${eval_period},save_model=True \
         --model_hparams pos_gain=10.,use_qt_loss_gain=True,seq_label_loss_weight=1.,seq2seq_loss_weight=1.5,pretrained_num_layers=-2,level_for_ner=1,level_for_predicate=1,level_for_type=1,level_for_dec=1,decoder_layer=2,warmup_proportion=0.01,learning_rate=1e-4,hidden_size_input=300,num_attention_heads_input=6,intermediate_size_input=1200,hn=300,clf_head_num=6, \
         --model_dir_prefix ${model} --gpu 0
       
@@ -43,6 +49,10 @@ implementation:
       --image, {inputValue: image},
       --owner, {inputValue: owner},
       --model, {inputValue: model},
+      --model, {inputValue: train_batch_size},
+      --model, {inputValue: test_batch_size},
+      --model, {inputValue: num_epochs},
+      --model, {inputValue: eval_period},
       --s3_model_dir, {outputPath: s3_model_dir},
       --,
       {inputValue: additional_args}, 

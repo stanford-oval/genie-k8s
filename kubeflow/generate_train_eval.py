@@ -412,6 +412,10 @@ def masp_train_pipeline(
     owner,
     model,
     image=default_image,
+    train_batch_size='128',
+    test_batch_size='128',
+    num_epochs='8',
+    eval_period='2000',
     search_logical_form_max_train_train='90000',
     search_logical_form_beam_size_train='1000',
     search_logical_form_num_parallel_train='1',
@@ -422,8 +426,8 @@ def masp_train_pipeline(
     search_logical_form_start_index_dev='0',
     search_logical_form_additional_args='',
     train_additional_args=''):
-    
-    slf_train = components.load_component_from_file('components/masp-search-logical-form.yaml')(
+
+    '''slf_train = components.load_component_from_file('components/masp-search-logical-form.yaml')(
         image=image,
         owner=owner,
         start_index=search_logical_form_start_index_train,
@@ -439,8 +443,47 @@ def masp_train_pipeline(
         .set_cpu_request('15.5')
     )
     (add_ssh_volume(slf_train)
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'r5.4xlarge'))'''
+    
+    '''# To delete
+    slf_train = components.load_component_from_file('components/masp-search-logical-form.yaml')(
+        image=image,
+        owner=owner,
+        start_index='10000',
+        max_train=search_logical_form_max_train_train,
+        beam_size=search_logical_form_beam_size_train,
+        num_parallel=search_logical_form_num_parallel_train,
+        split='train',
+        additional_args=search_logical_form_additional_args)
+    (slf_train.container
+        .set_memory_limit('110Gi')
+        .set_memory_request('110Gi')
+        .set_cpu_limit('15.5')
+        .set_cpu_request('15.5')
+    )
+    (add_ssh_volume(slf_train)
         .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'r5.4xlarge'))
     
+    # To delete
+    slf_train = components.load_component_from_file('components/masp-search-logical-form.yaml')(
+        image=image,
+        owner=owner,
+        start_index='20000',
+        max_train=search_logical_form_max_train_train,
+        beam_size=search_logical_form_beam_size_train,
+        num_parallel=search_logical_form_num_parallel_train,
+        split='train',
+        additional_args=search_logical_form_additional_args)
+    (slf_train.container
+        .set_memory_limit('110Gi')
+        .set_memory_request('110Gi')
+        .set_cpu_limit('15.5')
+        .set_cpu_request('15.5')
+    )
+    (add_ssh_volume(slf_train)
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'r5.4xlarge'))'''
+    
+    '''
     slf_dev = components.load_component_from_file('components/masp-search-logical-form.yaml')(
         image=image,
         owner=owner,
@@ -457,13 +500,17 @@ def masp_train_pipeline(
         .set_cpu_request('15.5')
     )
     (add_ssh_volume(slf_dev)
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'r5.4xlarge'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'r5.4xlarge'))'''
     
     train_num_gpus=1
     train_op = components.load_component_from_file('components/masp-train.yaml')(
         image=image,
         owner=owner,
         model=model,
+        train_batch_size=train_batch_size,
+        test_batch_size=test_batch_size,
+        num_epochs=num_epochs,
+        eval_period=eval_period,
         additional_args=train_additional_args)
     (train_op.container
         .set_memory_request('56Gi')
@@ -477,6 +524,6 @@ def masp_train_pipeline(
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
         .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*train_num_gpus}xlarge')
         .add_volume(V1Volume(name='tensorboard',
-            persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf')))
-        .after(slf_train)
-        .after(slf_dev))
+            persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
+        #.after(slf_train)
+        #.after(slf_dev))
