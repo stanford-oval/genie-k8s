@@ -1,29 +1,30 @@
-FROM nvidia/cuda:10.2-runtime-ubi8
+FROM tensorflow/tensorflow:1.11.0-devel-gpu-py3
 
 MAINTAINER Thingpedia Admins <thingpedia-admins@lists.stanford.edu>
 
 USER root
 
 # install basic tools, nodejs 10.x and yarn
-RUN dnf -y install make gettext unzip zip nano xz gcc-c++ diffutils \
-	git gcc gcc-c++ procps-ng \
-	python3 \
-	python3-pip \
-	python3-devel \
-	python3-wheel \
+RUN apt-get update
+RUN apt -y install make gettext unzip zip nano diffutils git \
 	&& pip3 install --upgrade pip \
 	&& pip3 install --use-feature=2020-resolver awscli \
-	&& dnf -y module enable nodejs:10 \
-	&& curl -sL https://dl.yarnpkg.com/rpm/yarn.repo | tee /etc/yum.repos.d/yarn.repo \
-	&& dnf -y install nodejs yarn \
-	&& dnf clean all \
+	&& apt clean all \
 	&& rm -fr /root/.cache
+
+RUN mkdir -p /usr/local/nvidia/lib64/
+RUN ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/nvidia/lib64/libcuda.so.1
 
 # add user genie-toolkit
 RUN useradd -ms /bin/bash -r genie-toolkit
 
+ARG GENIE_VERSION=master
+RUN git clone https://github.com/stanford-oval/genie-k8s /opt/genie-toolkit/
+WORKDIR /opt/genie-toolkit/
+RUN git checkout ${GENIE_VERSION}
+
 ARG MaSP_VERSION=master
-RUN git clone https://github.com/taoshen58/MaSP /opt/MaSP/
+RUN git clone https://github.com/nayamamura/MaSP /opt/MaSP/
 WORKDIR /opt/MaSP/
 RUN git checkout ${MaSP_VERSION}
 

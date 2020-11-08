@@ -24,14 +24,17 @@ implementation:
       parse_args "$0" "image owner model train_batch_size test_batch_size num_epochs eval_period s3_model_dir" "$@"
       shift $n
       cd $HOME
+      ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/libcuda.so.1
+              export LD_LIBRARY_PATH=/sbin/ldconfig.real:/usr/lib/x86_64-linux-gnu:/usr/local/cuda-9.0/targets/x86_64-linux/lib:/usr/local/cuda/extras/CUPTI/lib64/:/usr/local/cuda/lib:/usr/local/cuda/lib64:/usr/local/cuda/lib64/stubs:$LD_LIBRARY_PATH
       
       curl https://storage.googleapis.com/bert_models/2018_10_18/uncased_L-12_H-768_A-12.zip  > bert_base.zip
       unzip -q bert_base.zip -d .
       mv "uncased_L-12_H-768_A-12" bert_base
       
-      aws s3 sync --no-progress s3://geniehai/${owner}/dataset/csqa/BFS/train_proc_direct_100_wo_con_0_90000 data/BFS/train_proc_direct_1000_wo_co
+      aws s3 sync --no-progress s3://geniehai/${owner}/dataset/csqa/BFS/train_proc_direct_100_wo_con_0_90000 data/BFS/train_proc_direct_1000_wo_con
       aws s3 sync --no-progress s3://geniehai/${owner}/dataset/csqa/BFS/dev_proc_direct_1000_wo_con_0_6000 data/BFS/dev_proc_direct_1000_subset_wo_con
       aws s3 sync --no-progress s3://geniehai/${owner}/dataset/csqa/kb data/kb
+
       python3 /opt/MaSP/main_e2e.py --network_class bert --network_type bert_template --dataset e2e_wo_con \
         --preprocessing_hparams bert_pretrained_dir=bert_base,max_sequence_len=72 \
         --training_hparams train_batch_size=${train_batch_size},test_batch_size=${test_batch_size},num_epochs=${num_epochs},eval_period=${eval_period},save_model=True \
@@ -39,8 +42,9 @@ implementation:
         --model_dir_prefix ${model} --gpu 0
       
       S3_MODEL_DIR=s3://geniehai/${owner}/models/csqa/${model}/`date +%s`/
-      aws s3 sync --no-progress runtime/model/${model} ${S3_MODEL_DIR}
-            
+      aws s3 sync --no-progress runtime/run_model/${model} ${S3_MODEL_DIR}
+      aws s3 sync --no-progress runtime/preproc s3://geniehai/${owner}/dataset/csqa/preproc
+      
       mkdir -p `dirname $s3_model_dir`
       echo ${S3_MODEL_DIR} > $s3_model_dir
 
@@ -49,10 +53,10 @@ implementation:
       --image, {inputValue: image},
       --owner, {inputValue: owner},
       --model, {inputValue: model},
-      --model, {inputValue: train_batch_size},
-      --model, {inputValue: test_batch_size},
-      --model, {inputValue: num_epochs},
-      --model, {inputValue: eval_period},
+      --train_batch_size, {inputValue: train_batch_size},
+      --test_batch_size, {inputValue: test_batch_size},
+      --num_epochs, {inputValue: num_epochs},
+      --eval_period, {inputValue: eval_period},
       --s3_model_dir, {outputPath: s3_model_dir},
       --,
       {inputValue: additional_args}, 
