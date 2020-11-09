@@ -5,6 +5,7 @@ inputs:
   - {name: image, description: '', default: ''}
   - {name: owner, description: '', default: ''}
   - {name: model, description: '', default: ''}
+  - {name: model_id, description: '', default: ''}
   - {name: timeout, description: '', default: ''}
   - {name: num_parallels, description: '', default: ''}
   - {name: additional_args, description: '', default: ''}
@@ -19,7 +20,7 @@ implementation:
     - -c
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image owner model timeout num_parallels s3_model_dir" "$@"
+      parse_args "$0" "image owner model model_id timeout num_parallels s3_model_dir" "$@"
       shift $n
       cd $HOME
       ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/libcuda.so.1
@@ -30,24 +31,25 @@ implementation:
       mv "uncased_L-12_H-768_A-12" bert_base
       
       aws s3 sync --no-progress s3://geniehai/${owner}/dataset/csqa/BFS/dev data/BFS/test
-      #aws s3 sync --no-progress s3://geniehai/${owner}/dataset/csqa/CSQA data/CSQA
       aws s3 sync --no-progress s3://geniehai/${owner}/dataset/csqa/kb data/kb
       aws s3 sync --no-progress s3://geniehai/${owner}/dataset/csqa/EDL data/EDL
-      aws s3 sync --no-progress s3://geniehai/${owner}/models/csqa/masp/1604820536/ckpt runtime/run_model/${model}/ckpt/
-      aws s3 sync --no-progress s3://geniehai/${owner}/dataset/csqa/preproc runtime/preproc
       aws s3 cp --no-progress s3://geniehai/${owner}/dataset/csqa/BFS/wikidata.pkl data/BFS/wikidata.pkl
       aws s3 cp --no-progress s3://geniehai/${owner}/dataset/csqa/BFS/type_kb.pkl data/BFS/type_kb.pkl
       aws s3 cp --no-progress s3://geniehai/${owner}/dataset/csqa/BFS/pre_type.pkl data/BFS/pre_type.pkl
       
+      S3_MODEL_DIR=s3://geniehai/${owner}/models/csqa/${model}/${model_id}
+      
+      aws s3 sync --no-progress ${S3_MODEL_DIR}/ckpt runtime/run_model/${model}/ckpt/
+      aws s3 sync --no-progress ${S3_MODEL_DIR}/preproc runtime/preproc
+      
       python3 /opt/MaSP/main_e2e.py --mode parallel_test --network_class bert --network_type bert_template \
       --dataset e2e_wo_con \
-      --preprocessing_hparams bert_pretrained_dir=bert_base,timeout=${timeout},num_parallels=${num_parallels},dump_dir=multi_sp,kb_mode=offline,use_filtered_ent=True \
+      --preprocessing_hparams bert_pretrained_dir=bert_base,timeout=${timeout},num_parallels=${num_parallels},dump_dir=multi_sp,kb_mode=offline,verbose_test=True,use_filtered_ent=True \
       --training_hparams load_model=True,load_path=runtime/run_model/${model}/ckpt \
       --model_dir_prefix parallel_decoding \
       --gpu 0
       
-      S3_MODEL_DIR=s3://geniehai/${owner}/models/csqa/${model}/`date +%s`/
-      aws s3 sync --no-progress runtime ${S3_MODEL_DIR}
+      aws s3 sync --no-progress runtime/run_model/parallel_decoding/log_files ${S3_MODEL_DIR}/eval
       
       mkdir -p `dirname $s3_model_dir`
       echo ${S3_MODEL_DIR} > $s3_model_dir
@@ -57,6 +59,7 @@ implementation:
       --image, {inputValue: image},
       --owner, {inputValue: owner},
       --model, {inputValue: model},
+      --model_id, {inputValue: model_id},
       --timeout, {inputValue: timeout},
       --num_parallels, {inputValue: num_parallels},
       --s3_model_dir, {outputPath: s3_model_dir},

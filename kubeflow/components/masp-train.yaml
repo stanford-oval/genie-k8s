@@ -11,6 +11,7 @@ inputs:
   - {name: eval_period, description: '', default: ''}
   - {name: additional_args, description: '', default: ''}
 outputs:
+  - {name: model_id}
   - {name: s3_model_dir}
 implementation: 
   container:
@@ -21,7 +22,7 @@ implementation:
     - -c
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image owner model train_batch_size test_batch_size num_epochs eval_period s3_model_dir" "$@"
+      parse_args "$0" "image owner model train_batch_size test_batch_size num_epochs eval_period model_id s3_model_dir" "$@"
       shift $n
       cd $HOME
       ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/libcuda.so.1
@@ -31,7 +32,7 @@ implementation:
       unzip -q bert_base.zip -d .
       mv "uncased_L-12_H-768_A-12" bert_base
       
-      aws s3 sync --no-progress s3://geniehai/${owner}/dataset/csqa/BFS/train_proc_direct_100_wo_con_0_90000 data/BFS/train_proc_direct_1000_wo_con
+      aws s3 sync --no-progress s3://geniehai/${owner}/dataset/csqa/BFS/train_proc_direct_300_wo_con_0_90000 data/BFS/train_proc_direct_1000_wo_con
       aws s3 sync --no-progress s3://geniehai/${owner}/dataset/csqa/BFS/dev_proc_direct_1000_wo_con_0_6000 data/BFS/dev_proc_direct_1000_subset_wo_con
       aws s3 sync --no-progress s3://geniehai/${owner}/dataset/csqa/kb data/kb
 
@@ -41,12 +42,15 @@ implementation:
         --model_hparams pos_gain=10.,use_qt_loss_gain=True,seq_label_loss_weight=1.,seq2seq_loss_weight=1.5,pretrained_num_layers=-2,level_for_ner=1,level_for_predicate=1,level_for_type=1,level_for_dec=1,decoder_layer=2,warmup_proportion=0.01,learning_rate=1e-4,hidden_size_input=300,num_attention_heads_input=6,intermediate_size_input=1200,hn=300,clf_head_num=6, \
         --model_dir_prefix ${model} --gpu 0
       
-      S3_MODEL_DIR=s3://geniehai/${owner}/models/csqa/${model}/`date +%s`/
+      MODEL_ID=`date +%s`
+      S3_MODEL_DIR=s3://geniehai/${owner}/models/csqa/${model}/${MODEL_ID}
       aws s3 sync --no-progress runtime/run_model/${model} ${S3_MODEL_DIR}
-      aws s3 sync --no-progress runtime/preproc s3://geniehai/${owner}/dataset/csqa/preproc
+      aws s3 sync --no-progress runtime/preproc ${S3_MODEL_DIR}/preproc
       
       mkdir -p `dirname $s3_model_dir`
       echo ${S3_MODEL_DIR} > $s3_model_dir
+      mkdir -p `dirname $model_id`
+      echo ${MODEL_ID} > $model_id
 
     args: [
       'cmd',
@@ -57,6 +61,7 @@ implementation:
       --test_batch_size, {inputValue: test_batch_size},
       --num_epochs, {inputValue: num_epochs},
       --eval_period, {inputValue: eval_period},
+      --model_id, {outputPath: model_id},
       --s3_model_dir, {outputPath: s3_model_dir},
       --,
       {inputValue: additional_args}, 
