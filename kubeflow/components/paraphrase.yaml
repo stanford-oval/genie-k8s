@@ -28,7 +28,7 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image s3_bucket owner task_name project experiment dataset s3_input_datadir s3_output_datadir filtering_model paraphrasing_model skip_generation skip_filtering keep_original_duplicates task_name ignore_context" "$@"
+      parse_args "$0" "image s3_bucket owner task_name project experiment dataset s3_input_datadir s3_output_datadir filtering_model paraphrasing_model skip_generation skip_filtering keep_original_duplicates task_name ignore_context, paraphrase_subfolder" "$@"
       shift $n
       #s3_datadir=`cat $s3_datadir`
       #filtering_model=`cat $filtering_model`
@@ -57,9 +57,9 @@ implementation:
       paraphrasing_arguments="$@"
       if [ "$task_name" = "almond_dialogue_nlu" ] ; then
         is_dialogue=true
-        input_dir="input_dataset/user"
-        output_dir="output_dataset/user"
-        filtering_dir="almond/user"
+        input_dir="input_dataset/$paraphrase_subfolder"
+        output_dir="output_dataset/$paraphrase_subfolder"
+        filtering_dir="almond/$paraphrase_subfolder"
         filtering_batch_size="128"
       elif [ "$task_name" = "almond" ] ; then
         input_dir="input_dataset"

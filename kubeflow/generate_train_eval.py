@@ -206,9 +206,10 @@ def paraphrase_step(
         filtering_model=filtering_model,
         paraphrasing_model=paraphrasing_model,
         skip_generation=skip_generation,
-        skip_filtering=skip_generation,
+        skip_filtering=skip_filtering,
         keep_original_duplicates=keep_original_duplicates,
         ignore_context=ignore_context,
+        paraphrase_subfolder=paraphrase_subfolder,
         additional_args=additional_args)
     (paraphrase_op.container
         .set_memory_request('150G')
@@ -256,6 +257,7 @@ def everything(
     ignore_context='true',
     keep_original_duplicates='false',
     paraphrasing_model=PARAPHRASING_MODEL,
+    paraphrase_subfolder='user',
     paraphrase_additional_args='',
     eval_set='dev',
     eval_additional_args=''):
@@ -306,6 +308,7 @@ def everything(
                                         keep_original_duplicates=keep_original_duplicates,
                                         ignore_context=ignore_context,
                                         genienlp_version=genienlp_version,
+                                        paraphrase_subfolder=paraphrase_subfolder,
                                         additional_args=paraphrase_additional_args)
         if do_generate:
             paraphrase_op.after(generate_dataset_op)
@@ -497,6 +500,7 @@ def generate_paraphrase_train_eval_pipeline(
     ignore_context='true',
     keep_original_duplicates='false',
     paraphrasing_model=PARAPHRASING_MODEL,
+    paraphrase_subfolder='user',
     paraphrase_additional_args='',
     eval_set='dev',
     eval_additional_args=''
@@ -526,6 +530,7 @@ def generate_paraphrase_train_eval_pipeline(
                ignore_context=ignore_context,
                keep_original_duplicates=keep_original_duplicates,
                paraphrasing_model=paraphrasing_model,
+               paraphrase_subfolder=paraphrase_subfolder,
                paraphrase_additional_args=paraphrase_additional_args,
                eval_set=eval_set,
                eval_additional_args=eval_additional_args)
@@ -612,6 +617,7 @@ def generate_paraphrase_train_fewshot_eval_pipeline(
     ignore_context='true',
     keep_original_duplicates='false',
     paraphrasing_model=PARAPHRASING_MODEL,
+    paraphrase_subfolder='user',
     paraphrase_additional_args='',
     eval_set='dev',
     eval_additional_args=''
@@ -642,6 +648,7 @@ def generate_paraphrase_train_fewshot_eval_pipeline(
                ignore_context=ignore_context,
                keep_original_duplicates=keep_original_duplicates,
                paraphrasing_model=paraphrasing_model,
+               paraphrase_subfolder=paraphrase_subfolder,
                paraphrase_additional_args=paraphrase_additional_args,
                eval_set=eval_set,
                eval_additional_args=eval_additional_args)
