@@ -16,6 +16,7 @@ inputs:
   - {name: skip_filtering, description: '', default: ''}
   - {name: keep_original_duplicates, description: '', default: ''}
   - {name: ignore_context, description: '', default: ''}
+  - {name: paraphrase_subfolder, description: '', default: ''}
   - {name: additional_args, description: '', default: ''}
 outputs:
   - {name: s3_output_datadir}

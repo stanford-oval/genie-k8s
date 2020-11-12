@@ -187,6 +187,7 @@ def paraphrase_step(
     keep_original_duplicates,
     ignore_context,
     genienlp_version,
+    paraphrase_subfolder,
     additional_args
 ):
     paraphrase_env = {
