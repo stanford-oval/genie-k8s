@@ -50,16 +50,24 @@ implementation:
       echo ${s3_output_dir} > $s3_output_datadir
 
       paraphrasing_arguments="$@"
-      if "$task_name" | grep -q "almond_dialogue_nlu" ; then # almond_dialogue_nlu or almond_dialogue_nlu_agent
-        is_dialogue=true
-        input_dir="input_dataset/$paraphrase_subfolder"
-        output_dir="output_dataset/$paraphrase_subfolder"
-      elif [ "$task_name" = "almond" ] ; then
-        input_dir="input_dataset"
-        output_dir="output_dataset"
-      else
-        exit 1
-      fi
+
+      case "$task_name" in
+        "almond_dialogue_nlu" | "almond_dialogue_nlu_agent")
+          is_dialogue=true
+          input_dir="input_dataset/$paraphrase_subfolder"
+          output_dir="output_dataset/$paraphrase_subfolder"
+          ;;
+
+        "almond")
+          input_dir="input_dataset"
+          output_dir="output_dataset"
+          ;;
+
+        *)
+          echo "Error: invalid task name."
+          exit 1
+          ;;
+      esac
 
       make_input_ready() {
           if [ "$keep_original_duplicates" = false ] ; then
