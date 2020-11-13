@@ -61,12 +61,12 @@ implementation:
         input_dir="input_dataset/$paraphrase_subfolder"
         output_dir="output_dataset/$paraphrase_subfolder"
         filtering_dir="almond/$paraphrase_subfolder"
-        filtering_batch_size="128"
+        filtering_batch_size="4000"
       elif [ "$task_name" = "almond" ] ; then
         input_dir="input_dataset"
         output_dir="output_dataset"
         filtering_dir="almond"
-        filtering_batch_size="2000"
+        filtering_batch_size="4000"
       else
         exit 1
       fi
