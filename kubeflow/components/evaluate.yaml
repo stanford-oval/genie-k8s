@@ -26,7 +26,6 @@ implementation:
       . /opt/genie-toolkit/lib.sh
       parse_args "$0" "image project experiment model model_owner eval_set s3_model_dir s3_metrics_output metrics_output" "$@"
       shift $n
-      s3_model_dir=`cat $s3_model_dir`
       cd $HOME
 
       /opt/genie-toolkit/sync-repos.sh
@@ -43,6 +42,20 @@ implementation:
 
       export TZ=America/Los_Angeles
 
+      make -j \
+        geniedir=/opt/genie-toolkit \
+        "owner=${owner}" \
+        "genie_k8s_owner=${owner}" \
+        "genie_k8s_project=${project}" \
+        "s3_bucket=geniehai" \
+        thingpedia_cli=thingpedia \
+        "experiment=$experiment" \
+        "eval_set=${eval_set}" \
+        "model=${MODEL_DIR}" \
+        "s3_model_dir=${s3_model_dir}" \
+        "metrics_output=${metrics_output}" \
+        "s3_metrics_output=${s3_metrics_output}" \
+        evaluate
       make \
         geniedir=/opt/genie-toolkit \
         "owner=${owner}" \
@@ -56,7 +69,6 @@ implementation:
         "s3_model_dir=${s3_model_dir}" \
         "metrics_output=${metrics_output}" \
         "s3_metrics_output=${s3_metrics_output}" \
-        evaluate \
         evaluate-output-artifacts
 
     args: [
@@ -67,7 +79,7 @@ implementation:
       --model, {inputValue: model},
       --model_owner, {inputValue: model_owner},
       --eval_set, {inputValue: eval_set},
-      --s3_model_dir, {inputPath: s3_model_dir},
+      --s3_model_dir, {inputValue: s3_model_dir},
       --s3_metrics_output, {outputPath: s3_metrics_output},
       --metrics_output, {outputPath: metrics_output},
       --, {inputValue: additional_args}
