@@ -119,6 +119,8 @@ implementation:
       run_parser
       filter
       append_to_original
+
+      rm ${output_dir}/unfiltered.tsv
       
       # upload the new dataset to S3
       aws s3 sync --no-progress output_dataset/ "${s3_output_dir}"

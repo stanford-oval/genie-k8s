@@ -146,6 +146,10 @@ implementation:
       run_paraphrase
       join
 
+      # Delete intermediate files that don't help debugging
+      rm ${output_dir}/paraphrased.tsv
+      rm ${output_dir}/with_context.tsv
+
       # upload the new dataset to S3
       aws s3 sync --no-progress output_dataset/ "${s3_output_dir}"
     
