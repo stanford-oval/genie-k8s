@@ -38,7 +38,7 @@ implementation:
       mkdir -p output_dataset
       cp -r input_dataset/* output_dataset
       
-      s3_output_dir="$s3_input_datadir" # filtering does not create a new folder
+      s3_output_dir="s3://${s3_bucket}/${owner}/dataset/${project}/${experiment}/${dataset}-gen-filt/`date +%s`/"
             
       mkdir -p `dirname $s3_output_datadir`
       echo ${s3_output_dir} > $s3_output_datadir
@@ -62,7 +62,7 @@ implementation:
       run_parser() {
         # get parser output for paraphrased utterances
         mkdir -p filtering_dataset/${filtering_dir}
-        cp ${output_dir}/unfiltered.tsv filtering_dataset/${filtering_dir}/eval.tsv
+        cp ${input_dir}/unfiltered.tsv filtering_dataset/${filtering_dir}/eval.tsv
         genienlp predict \
           --data ./filtering_dataset \
           --path filtering_model \
@@ -81,7 +81,7 @@ implementation:
       filter() {
         # remove paraphrases that do not preserve the meaning according to the parser
         genienlp transform-dataset \
-          ${output_dir}/unfiltered.tsv \
+          ${input_dir}/unfiltered.tsv \
           ${output_dir}/filtered.tsv \
           --thrown_away ${output_dir}/thrown_away.tsv \
           --thingtalk_gold_file eval_dir/valid/${task_name}.tsv \
