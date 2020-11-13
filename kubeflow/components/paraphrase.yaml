@@ -238,6 +238,7 @@ implementation:
       --skip_filtering, {inputValue: skip_filtering},
       --keep_original_duplicates, {inputValue: keep_original_duplicates},
       --ignore_context, {inputValue: ignore_context},
+      --paraphrase_subfolder, {inputValue: paraphrase_subfolder},
       --, {inputValue: additional_args}, 
     ]
     
