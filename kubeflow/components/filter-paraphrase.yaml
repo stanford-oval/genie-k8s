@@ -12,8 +12,6 @@ inputs:
   - {name: s3_input_datadir, description: '', default: ''}
   - {name: filtering_model, description: '', default: ''}
   - {name: paraphrasing_model, description: '', default: ''}
-  - {name: keep_original_duplicates, description: '', default: ''}
-  - {name: ignore_context, description: '', default: ''}
   - {name: paraphrase_subfolder, description: '', default: ''}
   - {name: additional_args, description: '', default: ''}
 outputs:
@@ -27,17 +25,13 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image s3_bucket owner task_name project experiment dataset s3_input_datadir s3_output_datadir filtering_model paraphrasing_model keep_original_duplicates task_name ignore_context paraphrase_subfolder" "$@"
+      parse_args "$0" "image s3_bucket owner task_name project experiment dataset s3_input_datadir s3_output_datadir filtering_model paraphrasing_model task_name paraphrase_subfolder" "$@"
       shift $n
       
       set -e
       set -x
       
       /opt/genie-toolkit/sync-repos.sh 
-
-      if [ "$ignore_context" = true ] ; then
-        echo "ignoring context"
-      fi
 
       aws s3 sync --no-progress "${s3_input_datadir}" input_dataset/
       aws s3 sync --no-progress --exclude '*/dataset/*' --exclude '*/cache/*' --exclude 'iteration_*.pth' --exclude '*_optim.pth' "${filtering_model}" filtering_model/
@@ -136,8 +130,6 @@ implementation:
       --s3_output_datadir, {outputPath: s3_output_datadir},
       --filtering_model, {inputValue: filtering_model},
       --paraphrasing_model, {inputValue: paraphrasing_model},
-      --keep_original_duplicates, {inputValue: keep_original_duplicates},
-      --ignore_context, {inputValue: ignore_context},
       --paraphrase_subfolder, {inputValue: paraphrase_subfolder},
       --, {inputValue: additional_args}, 
     ]

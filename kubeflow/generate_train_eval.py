@@ -232,8 +232,6 @@ def paraphrase_filtering_step(
     train_task_name,
     filtering_model,
     paraphrasing_model,
-    keep_original_duplicates,
-    ignore_context,
     genienlp_version,
     paraphrase_subfolder,
     additional_args
@@ -254,8 +252,6 @@ def paraphrase_filtering_step(
         s3_input_datadir=s3_input_datadir,
         filtering_model=filtering_model,
         paraphrasing_model=paraphrasing_model,
-        keep_original_duplicates=keep_original_duplicates,
-        ignore_context=ignore_context,
         paraphrase_subfolder=paraphrase_subfolder,
         additional_args=additional_args)
     (paraphrase_op.container
@@ -364,8 +360,6 @@ def everything(
                                         train_task_name=train_task_name,
                                         filtering_model=pretrain_op.outputs['s3_model_dir'],
                                         paraphrasing_model=paraphrasing_model,
-                                        keep_original_duplicates=keep_original_duplicates,
-                                        ignore_context=ignore_context,
                                         genienlp_version=genienlp_version,
                                         paraphrase_subfolder=paraphrase_subfolder,
                                         additional_args=paraphrase_additional_args)
