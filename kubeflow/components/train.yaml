@@ -30,15 +30,16 @@ implementation:
       parse_args "$0" "image s3_bucket owner task_name project experiment model load_from s3_datadir dataset_subfolder s3_model_dir skip_tensorboard" "$@"
       shift $n 
       cd $HOME
-      s3_datadir=`cat $s3_datadir`
 
       /opt/genie-toolkit/sync-repos.sh 
 
       modeldir="$HOME/models/$model"
       mkdir -p "$modeldir"
 
-      if ! test ${load_from} = 'None' ; then
-          aws s3 sync --no-progress ${load_from}/ "$modeldir"/ --exclude "iteration_*.pth" --exclude "*eval/*"  --exclude "*.log"
+      load_args=
+      if test "${load_from}" != None ; then 
+        aws s3 sync --no-progress "${load_from}" "$modeldir"/ --exclude "iteration_*.pth" --exclude "*eval/*"  --exclude "*.log"
+        load_args="--load best.pth"
       fi
 
       if test "${dataset_subfolder}" != 'None' ; then
@@ -69,6 +70,7 @@ implementation:
           --preserve_case \
           --exist_ok \
           --skip_cache \
+          ${load_args} \
           $@ 
 
       rm -fr "$modeldir/cache"
@@ -89,7 +91,7 @@ implementation:
       --experiment, {inputValue: experiment},
       --model, {inputValue: model},
       --load_from, {inputValue: load_from},
-      --s3_datadir, {inputPath: s3_datadir},
+      --s3_datadir, {inputValue: s3_datadir},
       --dataset_subfolder, {inputValue: dataset_subfolder},
       --s3_model_dir, {outputPath: s3_model_dir},
       --skip_tensorboard, {inputValue: skip_tensorboard},
