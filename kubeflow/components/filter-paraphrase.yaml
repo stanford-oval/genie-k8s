@@ -82,7 +82,7 @@ implementation:
 
       filter() {
         # remove paraphrases that do not preserve the meaning according to the parser
-        python3 /opt/genienlp/genienlp/paraphrase/scripts/transform_dataset.py \
+        genienlp transform-dataset \
           ${output_dir}/unfiltered.tsv \
           ${output_dir}/filtered.tsv \
           --thrown_away ${output_dir}/thrown_away.tsv \
@@ -95,7 +95,7 @@ implementation:
         # append paraphrases to the end of the original training file and remove duplicates
         cp ${input_dir}/train.tsv ${output_dir}/train.tsv
         cp ${output_dir}/filtered.tsv ${output_dir}/temp.tsv
-        python3 /opt/genienlp/genienlp/paraphrase/scripts/transform_dataset.py \
+        genienlp transform-dataset \
           ${output_dir}/temp.tsv \
           ${output_dir}/filtered.tsv \
           --remove_duplicates \

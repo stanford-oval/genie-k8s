@@ -64,7 +64,7 @@ implementation:
       make_input_ready() {
           if [ "$keep_original_duplicates" = false ] ; then
             # remove duplicates before paraphrasing to avoid wasting effort
-            python3 /opt/genienlp/genienlp/paraphrase/scripts/transform_dataset.py \
+            genienlp transform-dataset \
               ${input_dir}/train.tsv \
               ${input_dir}/train_no_duplicate.tsv \
               --remove_duplicates \
@@ -74,7 +74,7 @@ implementation:
 
           if [ "$is_dialogue" = true ] ; then
             # add previous agent utterance; this additional context helps the paraphraser
-            python3 /opt/genienlp/genienlp/paraphrase/scripts/dialog_to_tsv.py \
+            genienlp dialog-to-tsv \
               ${input_dir}/train.tsv \
               --dialog_file input_dataset/synthetic.txt \
               ${output_dir}/with_context.tsv
@@ -124,7 +124,7 @@ implementation:
       join() {
         # join the original file and the paraphrasing output
         export num_new_queries=$((`wc -l ${output_dir}/paraphrased.tsv | cut -d " " -f1` / `wc -l ${input_dir}/train.tsv | cut -d " " -f1`))
-        python3 /opt/genienlp/genienlp/paraphrase/scripts/transform_dataset.py \
+        genienlp transform-dataset \
           ${input_dir}/train.tsv \
           ${output_dir}/unfiltered.tsv \
           --query_file ${output_dir}/paraphrased.tsv \
