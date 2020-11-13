@@ -172,7 +172,7 @@ def eval_step(
     return eval_op
 
      
-def paraphrase_step(
+def paraphrase_generation_step(
     image,
     owner,
     project,
@@ -180,10 +180,7 @@ def paraphrase_step(
     dataset,
     s3_input_datadir,
     train_task_name,
-    filtering_model,
     paraphrasing_model,
-    skip_generation,
-    skip_filtering,
     keep_original_duplicates,
     ignore_context,
     genienlp_version,
@@ -195,7 +192,58 @@ def paraphrase_step(
     }
     
     paraphrase_num_gpus=4
-    paraphrase_op = components.load_component_from_file('components/paraphrase.yaml')(
+    paraphrase_op = components.load_component_from_file('components/generate-paraphrase.yaml')(
+        image=image,
+        s3_bucket='geniehai',
+        owner=owner,
+        task_name=train_task_name,
+        project=project,
+        experiment=experiment,
+        dataset=dataset,
+        s3_input_datadir=s3_input_datadir,
+        paraphrasing_model=paraphrasing_model,
+        keep_original_duplicates=keep_original_duplicates,
+        ignore_context=ignore_context,
+        paraphrase_subfolder=paraphrase_subfolder,
+        additional_args=additional_args)
+    (paraphrase_op.container
+        .set_memory_request('150G')
+        .set_memory_limit('150G')
+        .set_cpu_request('16')
+        .set_cpu_limit('16')
+        # not supported yet in the version of kfp we're using
+        #.set_ephemeral_storage_request('75G')
+        #.set_ephemeral_storage_limit('75G')
+        .set_gpu_limit(str(paraphrase_num_gpus))
+    )
+    (add_env(add_ssh_volume(paraphrase_op), paraphrase_env)
+        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.12xlarge'))
+     
+    return paraphrase_op
+
+def paraphrase_filtering_step(
+    image,
+    owner,
+    project,
+    experiment,
+    dataset,
+    s3_input_datadir,
+    train_task_name,
+    filtering_model,
+    paraphrasing_model,
+    keep_original_duplicates,
+    ignore_context,
+    genienlp_version,
+    paraphrase_subfolder,
+    additional_args
+):
+    paraphrase_env = {
+        'GENIENLP_VERSION': genienlp_version,
+    }
+    
+    paraphrase_num_gpus=4
+    paraphrase_op = components.load_component_from_file('components/filter-paraphrase.yaml')(
         image=image,
         s3_bucket='geniehai',
         owner=owner,
@@ -206,8 +254,6 @@ def paraphrase_step(
         s3_input_datadir=s3_input_datadir,
         filtering_model=filtering_model,
         paraphrasing_model=paraphrasing_model,
-        skip_generation=skip_generation,
-        skip_filtering=skip_filtering,
         keep_original_duplicates=keep_original_duplicates,
         ignore_context=ignore_context,
         paraphrase_subfolder=paraphrase_subfolder,
@@ -295,27 +341,39 @@ def everything(
         if do_generate:
             pretrain_op.after(generate_dataset_op)
 
-        paraphrase_op = paraphrase_step(image=image,
+        paraphrase_generation_op = paraphrase_generation_step(image=image,
                                         owner=owner,
                                         project=project,
                                         experiment=experiment,
                                         dataset=dataset,
                                         s3_input_datadir=generate_dataset_op.outputs['s3_datadir'],
                                         train_task_name=train_task_name,
+                                        paraphrasing_model=paraphrasing_model,
+                                        keep_original_duplicates=keep_original_duplicates,
+                                        ignore_context=ignore_context,
+                                        genienlp_version=genienlp_version,
+                                        paraphrase_subfolder=paraphrase_subfolder,
+                                        additional_args=paraphrase_additional_args)
+
+        paraphrase_filtering_op = paraphrase_filtering_step(image=image,
+                                        owner=owner,
+                                        project=project,
+                                        experiment=experiment,
+                                        dataset=dataset,
+                                        s3_input_datadir=paraphrase_generation_op.outputs['s3_output_datadir'],
+                                        train_task_name=train_task_name,
                                         filtering_model=pretrain_op.outputs['s3_model_dir'],
                                         paraphrasing_model=paraphrasing_model,
-                                        skip_generation='false',
-                                        skip_filtering='false',
                                         keep_original_duplicates=keep_original_duplicates,
                                         ignore_context=ignore_context,
                                         genienlp_version=genienlp_version,
                                         paraphrase_subfolder=paraphrase_subfolder,
                                         additional_args=paraphrase_additional_args)
         if do_generate:
-            paraphrase_op.after(generate_dataset_op)
-        paraphrase_op.after(pretrain_op)
+            paraphrase_generation_op.after(generate_dataset_op)
+        paraphrase_filtering_op.after(paraphrase_generation_op, pretrain_op)
         
-        train_s3_datadir = paraphrase_op.outputs['s3_output_datadir']
+        train_s3_datadir = paraphrase_filtering_op.outputs['s3_output_datadir']
     
     train_op = train_step(image=image,
                           owner=owner,
@@ -331,7 +389,7 @@ def everything(
                           skip_tensorboard='false',
                           additional_args=train_additional_args)
     if do_paraphrase:
-        train_op.after(paraphrase_op)
+        train_op.after(paraphrase_filtering_op)
     elif do_generate:
         train_op.after(generate_dataset_op)
     eval_model = train_op.outputs['s3_model_dir']

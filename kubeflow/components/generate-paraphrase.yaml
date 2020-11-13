@@ -1,0 +1,161 @@
+name: Generate Paraphrases
+description: |
+  Automatic paraphrasing of a dataset (without filtering)
+inputs:
+  - {name: image, description: '', default: ''}
+  - {name: s3_bucket, description: '', default: ''}
+  - {name: owner, description: '', default: ''}
+  - {name: task_name, description: '', default: '' }
+  - {name: project, description: '', default: ''}
+  - {name: experiment, description: '', default: ''}
+  - {name: dataset, description: '', default: ''}
+  - {name: s3_input_datadir, description: '', default: ''}
+  - {name: paraphrasing_model, description: '', default: ''}
+  - {name: keep_original_duplicates, description: '', default: ''}
+  - {name: ignore_context, description: '', default: ''}
+  - {name: paraphrase_subfolder, description: '', default: ''}
+  - {name: additional_args, description: '', default: ''}
+outputs:
+  - {name: s3_output_datadir}
+implementation:
+  container:
+    image: '{{inputs.parameters.image}}'
+    command:
+    - /bin/bash
+    - -c
+    - |
+      . /opt/genie-toolkit/lib.sh
+
+      parse_args "$0" "image s3_bucket owner task_name project experiment dataset s3_input_datadir s3_output_datadir paraphrasing_model keep_original_duplicates task_name ignore_context paraphrase_subfolder" "$@"
+      shift $n
+      
+      set -e
+      set -x
+      
+      /opt/genie-toolkit/sync-repos.sh 
+
+      if [ "$ignore_context" = true ] ; then
+        echo "ignoring context"
+      fi
+
+      aws s3 sync --no-progress "${s3_input_datadir}" input_dataset/
+      aws s3 sync --no-progress --exclude '*checkpoint*' "${paraphrasing_model}" paraphraser/
+
+      mkdir -p output_dataset
+      cp -r input_dataset/* output_dataset
+      
+      s3_output_dir="s3://${s3_bucket}/${owner}/dataset/${project}/${experiment}/${dataset}-gen/`date +%s`/"
+            
+      mkdir -p `dirname $s3_output_datadir`
+      echo ${s3_output_dir} > $s3_output_datadir
+
+      paraphrasing_arguments="$@"
+      if [ "$task_name" = "almond_dialogue_nlu" ] ; then
+        is_dialogue=true
+        input_dir="input_dataset/$paraphrase_subfolder"
+        output_dir="output_dataset/$paraphrase_subfolder"
+      elif [ "$task_name" = "almond" ] ; then
+        input_dir="input_dataset"
+        output_dir="output_dataset"
+      else
+        exit 1
+      fi
+
+      make_input_ready() {
+          if [ "$keep_original_duplicates" = false ] ; then
+            # remove duplicates before paraphrasing to avoid wasting effort
+            python3 /opt/genienlp/genienlp/paraphrase/scripts/transform_dataset.py \
+              ${input_dir}/train.tsv \
+              ${input_dir}/train_no_duplicate.tsv \
+              --remove_duplicates \
+              --task ${task_name}
+              cp ${input_dir}/train_no_duplicate.tsv ${input_dir}/train.tsv
+          fi
+
+          if [ "$is_dialogue" = true ] ; then
+            # add previous agent utterance; this additional context helps the paraphraser
+            python3 /opt/genienlp/genienlp/paraphrase/scripts/dialog_to_tsv.py \
+              ${input_dir}/train.tsv \
+              --dialog_file input_dataset/synthetic.txt \
+              ${output_dir}/with_context.tsv
+          else
+            : # nothing to be done
+          fi
+      }
+
+      run_paraphrase() {
+        echo $paraphrasing_arguments
+        # run paraphrase generation
+        if [ "$is_dialogue" = true ] ; then
+          if [ "$ignore_context" = true ] ; then
+            genienlp run-paraphrase \
+            --task paraphrase \
+            --model_name_or_path paraphraser \
+            --input_file ${output_dir}/with_context.tsv \
+            --output_file ${output_dir}/paraphrased.tsv \
+            --input_column 3 \
+            --thingtalk_column 2 \
+            --gold_column 3 \
+            $paraphrasing_arguments
+          else
+            genienlp run-paraphrase \
+            --task paraphrase \
+            --model_name_or_path paraphraser \
+            --input_file ${output_dir}/with_context.tsv \
+            --output_file ${output_dir}/paraphrased.tsv \
+            --input_column 0 \
+            --prompt_column 1 \
+            --thingtalk_column 2 \
+            --gold_column 3 \
+            $paraphrasing_arguments
+          fi
+        else
+          genienlp run-paraphrase \
+            --task paraphrase \
+            --model_name_or_path paraphraser \
+            --input_file ${input_dir}/train.tsv \
+            --output_file ${output_dir}/paraphrased.tsv \
+            --input_column 1 \
+            --thingtalk_column 2 \
+            $paraphrasing_arguments
+        fi
+      }
+
+      join() {
+        # join the original file and the paraphrasing output
+        export num_new_queries=$((`wc -l ${output_dir}/paraphrased.tsv | cut -d " " -f1` / `wc -l ${input_dir}/train.tsv | cut -d " " -f1`))
+        python3 /opt/genienlp/genienlp/paraphrase/scripts/transform_dataset.py \
+          ${input_dir}/train.tsv \
+          ${output_dir}/unfiltered.tsv \
+          --query_file ${output_dir}/paraphrased.tsv \
+          --num_new_queries ${num_new_queries} \
+          --transformation replace_queries \
+          --remove_with_heuristics \
+          --task ${task_name}
+      }
+
+      make_input_ready
+      run_paraphrase
+      join
+
+      # upload the new dataset to S3
+      aws s3 sync --no-progress output_dataset/ "${s3_output_dir}"
+    
+    args: [
+      'cmd',
+      --image, {inputValue: image},
+      --s3_bucket, {inputValue: s3_bucket},
+      --owner, {inputValue: owner},
+      --task_name, {inputValue: task_name},
+      --project, {inputValue: project},
+      --experiment, {inputValue: experiment},
+      --dataset, {inputValue: dataset},
+      --s3_input_datadir, {inputValue: s3_input_datadir},
+      --s3_output_datadir, {outputPath: s3_output_datadir},
+      --paraphrasing_model, {inputValue: paraphrasing_model},
+      --keep_original_duplicates, {inputValue: keep_original_duplicates},
+      --ignore_context, {inputValue: ignore_context},
+      --paraphrase_subfolder, {inputValue: paraphrase_subfolder},
+      --, {inputValue: additional_args}, 
+    ]
+    
