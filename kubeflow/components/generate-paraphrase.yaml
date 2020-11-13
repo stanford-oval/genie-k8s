@@ -50,7 +50,7 @@ implementation:
       echo ${s3_output_dir} > $s3_output_datadir
 
       paraphrasing_arguments="$@"
-      if [ "$task_name" = "almond_dialogue_nlu"* ] ; then # almond_dialogue_nlu or almond_dialogue_nlu_agent
+      if [[ "$task_name" == "almond_dialogue_nlu"* ]] ; then # almond_dialogue_nlu or almond_dialogue_nlu_agent
         is_dialogue=true
         input_dir="input_dataset/$paraphrase_subfolder"
         output_dir="output_dataset/$paraphrase_subfolder"

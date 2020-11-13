@@ -22,7 +22,7 @@ default_image = os.environ['CONTAINER_IMAGE']
 default_developer_key = os.environ['THINGPEDIA_DEVELOPER_KEY']
 
 
-GENIENLP_VERSION = '00905bd4c1f67f8ba2577a7f8a09f093d024d061'
+GENIENLP_VERSION = '32e165b8cb6aa8b4d76eadcc49c141c11a30aaac'
 GENIE_VERSION = '84877f2488a0d0dea1e81f3e1f0b92dc6c05c568'
 THINGTALK_VERSION = '2338ef36c76c90a84ef0942d021f909e47c6307f'
 WORKDIR_REPO = 'git@github.com:stanford-oval/thingpedia-common-devices.git'
