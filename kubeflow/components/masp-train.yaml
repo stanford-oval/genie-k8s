@@ -28,10 +28,16 @@ implementation:
       ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/libcuda.so.1
               export LD_LIBRARY_PATH=/sbin/ldconfig.real:/usr/lib/x86_64-linux-gnu:/usr/local/cuda-9.0/targets/x86_64-linux/lib:/usr/local/cuda/extras/CUPTI/lib64/:/usr/local/cuda/lib:/usr/local/cuda/lib64:/usr/local/cuda/lib64/stubs:$LD_LIBRARY_PATH
       
+      cd /opt/MaSP
+      git log --pretty=format:'%H' -n 1
+      git pull origin master
+      git log --pretty=format:'%H' -n 1
+
       curl https://storage.googleapis.com/bert_models/2018_10_18/uncased_L-12_H-768_A-12.zip  > bert_base.zip
       unzip -q bert_base.zip -d .
       mv "uncased_L-12_H-768_A-12" bert_base
       
+      #aws s3 sync --no-progress s3://geniehai/${owner}/dataset/csqa/BFS/train_proc_direct_1000_wo_con data/BFS/train_proc_direct_1000_wo_con
       aws s3 sync --no-progress s3://geniehai/${owner}/dataset/csqa/BFS/train_proc_direct_300_wo_con_0_90000 data/BFS/train_proc_direct_1000_wo_con
       aws s3 sync --no-progress s3://geniehai/${owner}/dataset/csqa/BFS/dev_proc_direct_1000_wo_con_0_6000 data/BFS/dev_proc_direct_1000_subset_wo_con
       aws s3 sync --no-progress s3://geniehai/${owner}/dataset/csqa/kb data/kb

@@ -30,7 +30,13 @@ implementation:
       unzip -q bert_base.zip -d .
       mv "uncased_L-12_H-768_A-12" bert_base
       
-      aws s3 sync --no-progress s3://geniehai/${owner}/dataset/csqa/BFS/dev data/BFS/test
+      cd /opt/MaSP
+      git log --pretty=format:'%H' -n 1
+      git pull origin master
+      git log --pretty=format:'%H' -n 1
+      
+      #aws s3 sync --no-progress s3://geniehai/${owner}/dataset/csqa/BFS/test data/BFS/test
+      aws s3 sync --no-progress s3://geniehai/${owner}/dataset/csqa/BFS/test_proc_direct_1000_wo_con data/BFS/test
       aws s3 sync --no-progress s3://geniehai/${owner}/dataset/csqa/kb data/kb
       aws s3 sync --no-progress s3://geniehai/${owner}/dataset/csqa/EDL data/EDL
       aws s3 cp --no-progress s3://geniehai/${owner}/dataset/csqa/BFS/wikidata.pkl data/BFS/wikidata.pkl

@@ -448,16 +448,15 @@ def masp_train_pipeline(
     )
     (add_ssh_volume(slf_train)
         .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'r5.4xlarge'))'''
-    
-    '''
-    slf_dev = components.load_component_from_file('components/masp-search-logical-form.yaml')(
+
+    '''slf_dev = components.load_component_from_file('components/masp-search-logical-form.yaml')(
         image=image,
         owner=owner,
         start_index=search_logical_form_start_index_dev,
         max_train=search_logical_form_max_train_dev,
         beam_size=search_logical_form_beam_size_dev,
         num_parallel=search_logical_form_num_parallel_dev,
-        split='dev',
+        split='test',
         additional_args=search_logical_form_additional_args)
     (slf_dev.container
         .set_memory_limit('110Gi')
@@ -468,7 +467,7 @@ def masp_train_pipeline(
     (add_ssh_volume(slf_dev)
         .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'r5.4xlarge'))'''
     
-    train_num_gpus=1
+    train_num_gpus=1#4
     train_op = components.load_component_from_file('components/masp-train.yaml')(
         image=image,
         owner=owner,
@@ -479,6 +478,10 @@ def masp_train_pipeline(
         eval_period=train_eval_period,
         additional_args=train_additional_args)
     (train_op.container
+        #.set_memory_request('220G')
+        #.set_memory_limit('220G')
+        #.set_cpu_request('16')
+        #.set_cpu_limit('16')
         .set_memory_request('56Gi')
         .set_memory_limit('56Gi')
         .set_cpu_request('7.5')
