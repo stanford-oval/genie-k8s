@@ -1,0 +1,51 @@
+name: Eval
+description: |
+  Evaluate a TRADE model
+inputs:
+  - {name: owner, description: ''}
+  - {name: project, description: ''}
+  - {name: experiment, description: ''}
+  - {name: s3_datadir, description: ''}
+  - {name: s3_model_dir, description: ''}
+  - {name: additional_args, description: ''}
+outputs:
+  - {name: metrics_output}
+  #- {name: MLPipeline UI metadata, type: UI metadata}
+  #- {name: MLPipeline Metrics, type: Metrics}
+implementation:
+  container:
+    image: '932360549041.dkr.ecr.us-west-2.amazonaws.com/sumbt:20201117.1'
+    command:
+    - /bin/bash
+    - -e
+    - -c
+    - |
+      . k8s/lib.sh
+      
+      parse_args "$0" "owner project experiment s3_datadir s3_model_dir metrics_output" "$@"
+      shift $n
+      set -x
+      
+      aws s3 sync --no-progress ${s3_datadir} data/
+      aws s3 sync --no-progress ${s3_model_dir} save/
+      python3 code/main-multislot.py --data_dir "data/" --output_dir "save/" \
+         --target_slot all --experiment multiwoz2.1 --bert_model bert-base-uncased --task_name bert-gru-sumbt --nbt rnn \
+         --num_train_epochs 300 --do_lower_case --task_name bert-gru-sumbt --warmup_proportion 0.1 --learning_rate 1e-4 \
+         --train_batch_size 3 --distance_metric euclidean --patience 15 --tf_dir tensorboard --hidden_dim 300 \
+         --max_label_length 32 --max_seq_length 64 --do_eval "$@"
+      cp "save/eval_all_accuracies.txt" "save/results"
+
+    args: [
+      'cmd',
+      --owner, {inputValue: owner},
+      --project, {inputValue: project},
+      --experiment, {inputValue: experiment},
+      --s3_datadir, {inputValue: s3_datadir},
+      --s3_model_dir, {inputValue: s3_model_dir},
+      --metrics_output, {outputPath: metrics_output},
+      --, {inputValue: additional_args}
+    ]
+
+    fileOutputs:
+    #  MLPipeline UI metadata: /tmp/mlpipeline-ui-metadata.json
+    #  MLPipeline Metrics: /tmp/mlpipeline-metrics.json

@@ -1,0 +1,53 @@
+name: Train
+description: |
+  Train a TRADE model
+inputs:
+  - {name: owner, description: ''}
+  - {name: project, description: ''}
+  - {name: experiment, description: ''}
+  - {name: model, description: ''}
+  - {name: s3_datadir, description: ''}
+  - {name: additional_args, description: ''}
+outputs:
+  - {name: s3_model_dir}
+implementation:
+  container:
+    image: '932360549041.dkr.ecr.us-west-2.amazonaws.com/sumbt:20201117.1'
+    command:
+    - /bin/bash
+    - -e
+    - -c
+    - |
+      . k8s/lib.sh
+
+      parse_args "$0" "owner project experiment model s3_datadir s3_model_dir" "$@"
+      shift $n
+      set -x
+
+      aws s3 sync --no-progress ${s3_datadir} data/
+
+      python3 code/main-multislot.py --do_train --do_eval --data_dir "data/" --output_dir "save/" \
+          --target_slot all --experiment multiwoz2.1 \
+          --bert_model bert-base-uncased --task_name bert-gru-sumbt --nbt rnn \
+          --num_train_epochs 300 --do_lower_case --task_name bert-gru-sumbt \
+          --warmup_proportion 0.1 --learning_rate 1e-4 --train_batch_size 3 --distance_metric euclidean \
+          --patience 15 --tf_dir tensorboard --hidden_dim 300 --max_label_length 32 --max_seq_length 64 \
+          --max_turn_length 22 "$@"
+
+      S3_MODEL_DIR=s3://geniehai/${owner}/models/${project}/${experiment}/${model}/`date +%s`/
+      aws s3 sync --no-progress save/ ${S3_MODEL_DIR}
+            
+      mkdir -p `dirname $s3_model_dir`
+      echo ${S3_MODEL_DIR} > $s3_model_dir
+    
+    args: [
+      'cmd',
+      --owner, {inputValue: owner},
+      --project, {inputValue: project},
+      --experiment, {inputValue: experiment},
+      --model, {inputValue: model},
+      --s3_datadir, {inputValue: s3_datadir},
+      --s3_model_dir, {outputPath: s3_model_dir},
+      --,
+      {inputValue: additional_args}, 
+    ]

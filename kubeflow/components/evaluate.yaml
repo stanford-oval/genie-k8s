@@ -4,6 +4,7 @@ description: |
 inputs:
   - {name: image, description: '', default: ''}
   - {name: project, description: '', default: ''}
+  - {name: owner, description: '', default: ''}
   - {name: experiment, description: '', default: ''}
   - {name: model, description: '', default: ''}
   - {name: model_owner, description: '', default: ''}
@@ -24,7 +25,7 @@ implementation:
     - -c 
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image project experiment model model_owner eval_set s3_model_dir s3_metrics_output metrics_output" "$@"
+      parse_args "$0" "image project owner experiment model model_owner eval_set s3_model_dir s3_metrics_output metrics_output" "$@"
       shift $n
       cd $HOME
 
@@ -42,7 +43,7 @@ implementation:
 
       export TZ=America/Los_Angeles
 
-      make -j \
+      make -j2 \
         geniedir=/opt/genie-toolkit \
         "owner=${owner}" \
         "genie_k8s_owner=${owner}" \
@@ -74,6 +75,7 @@ implementation:
     args: [
       'cmd',
       --image, {inputValue: image},
+      --owner, {inputValue: owner},
       --project, {inputValue: project},
       --experiment, {inputValue: experiment},
       --model, {inputValue: model},

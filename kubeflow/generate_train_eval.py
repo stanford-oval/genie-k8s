@@ -17,14 +17,13 @@ from kubernetes import client as k8s_client
 from utils import upload_pipeline
 from utils import add_env
 
-# Get the default container image from environment variable
-default_image = os.environ['CONTAINER_IMAGE']
+# Get the Thingpedia key from environment variable
 default_developer_key = os.environ['THINGPEDIA_DEVELOPER_KEY']
 
-
-GENIENLP_VERSION = '32e165b8cb6aa8b4d76eadcc49c141c11a30aaac'
-GENIE_VERSION = '84877f2488a0d0dea1e81f3e1f0b92dc6c05c568'
-THINGTALK_VERSION = '2338ef36c76c90a84ef0942d021f909e47c6307f'
+default_image = '932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit-kf:20201113.1-next'
+GENIENLP_VERSION = 'd04ed4a2c38788eab9a9f4694a20fddeba62ea7d'
+GENIE_VERSION = '862f3444aaee0522c84aa7b24ad0a3f7203b9f48'
+THINGTALK_VERSION = 'a3eb276cab0f554646ee6ef5620be12179f55ba7'
 WORKDIR_REPO = 'git@github.com:stanford-oval/thingpedia-common-devices.git'
 WORKDIR_VERSION = '0db4d113bd2436e85f7dfa7542f800106485f7a8'
 PARAPHRASING_MODEL = 's3://geniehai/sinaj/models/schemaorg/paraphrase/bart-large-speedup-megabatch-5m/'
@@ -155,6 +154,7 @@ def eval_step(
 
     eval_op = components.load_component_from_file('components/evaluate.yaml')(
             image=image,
+            owner=owner,
             project=project,
             experiment=experiment,
             model=model,
@@ -165,8 +165,8 @@ def eval_step(
     (eval_op.container
         .set_memory_limit('12Gi')
         .set_memory_request('12Gi')
-        .set_cpu_limit('8')
-        .set_cpu_request('7'))
+        .set_cpu_limit('14')
+        .set_cpu_request('14'))
     add_env(add_ssh_volume(eval_op), eval_env)
 
     return eval_op
@@ -765,3 +765,148 @@ def paraphrase_train_fewshot_eval_pipeline(
                paraphrase_additional_args=paraphrase_additional_args,
                eval_set=eval_set,
                eval_additional_args=eval_additional_args)
+
+
+@dsl.pipeline(
+    name='Evaluate',
+    description='Evaluate a previously trained model'
+)
+def eval_only_pipeline(
+    owner,
+    project,
+    experiment,
+    model,
+    s3_model_dir,
+    image=default_image,
+    genienlp_version=GENIENLP_VERSION,
+    genie_version=GENIE_VERSION,
+    thingtalk_version=THINGTALK_VERSION,
+    workdir_repo=WORKDIR_REPO,
+    workdir_version=WORKDIR_VERSION,
+    thingpedia_developer_key=default_developer_key,
+    eval_set='dev',
+    additional_args=''
+):
+    eval_step(
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        model=model,
+        s3_model_dir=s3_model_dir,
+        image=image,
+        genienlp_version=genienlp_version,
+        genie_version=genie_version,
+        thingtalk_version=thingtalk_version,
+        workdir_repo=workdir_repo,
+        workdir_version=workdir_version,
+        thingpedia_developer_key=thingpedia_developer_key,
+        eval_set=eval_set,
+        additional_args=additional_args)
+    
+    
+@dsl.pipeline(
+    name='Train and eval TRADE',
+    description='Train and evaluate a TRADE model'
+)
+def train_eval_trade(
+    owner,
+    project,
+    experiment,
+    model,
+    s3_datadir,
+    train_additional_args='',
+    eval_additional_args=''
+):
+    train_env = {}
+    
+    train_num_gpus=1
+    train_op = components.load_component_from_file('components/train-trade.yaml')(
+            owner=owner,
+            project=project,
+            experiment=experiment,
+            model=model,
+            s3_datadir=s3_datadir,
+            additional_args=train_additional_args)
+    (train_op.container
+        .set_memory_request('56Gi')
+        .set_memory_limit('56Gi')
+        .set_cpu_request('7.5')
+        .set_cpu_limit('7.5')
+        .set_gpu_limit(str(train_num_gpus))
+        .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
+    )
+    (add_env(add_ssh_volume(train_op), train_env)
+        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*train_num_gpus}xlarge')
+        .add_volume(V1Volume(name='tensorboard',
+            persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
+
+    eval_env = {}
+
+    eval_op = components.load_component_from_file('components/evaluate-trade.yaml')(
+            owner=owner,
+            project=project,
+            experiment=experiment,
+            s3_datadir=s3_datadir,
+            s3_model_dir=train_op.outputs['s3_model_dir'],
+            additional_args=eval_additional_args)
+    (eval_op.container
+        .set_memory_limit('15Gi')
+        .set_memory_request('15Gi')
+        .set_cpu_limit('4')
+        .set_cpu_request('4'))
+    add_env(add_ssh_volume(eval_op), eval_env)
+
+
+@dsl.pipeline(
+    name='Train and eval SUMBT',
+    description='Train and evaluate a SUMBT model'
+)
+def train_eval_sumbt(
+    owner,
+    project,
+    experiment,
+    model,
+    s3_datadir,
+    train_additional_args='',
+    eval_additional_args=''
+):
+    train_env = {}
+    
+    train_num_gpus=1
+    train_op = components.load_component_from_file('components/train-sumbt.yaml')(
+            owner=owner,
+            project=project,
+            experiment=experiment,
+            model=model,
+            s3_datadir=s3_datadir,
+            additional_args=train_additional_args)
+    (train_op.container
+        .set_memory_request('56Gi')
+        .set_memory_limit('56Gi')
+        .set_cpu_request('7.5')
+        .set_cpu_limit('7.5')
+        .set_gpu_limit(str(train_num_gpus))
+        .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
+    )
+    (add_env(add_ssh_volume(train_op), train_env)
+        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*train_num_gpus}xlarge')
+        .add_volume(V1Volume(name='tensorboard',
+            persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
+
+    eval_env = {}
+
+    eval_op = components.load_component_from_file('components/evaluate-sumbt.yaml')(
+            owner=owner,
+            project=project,
+            experiment=experiment,
+            s3_datadir=s3_datadir,
+            s3_model_dir=train_op.outputs['s3_model_dir'],
+            additional_args=eval_additional_args)
+    (eval_op.container
+        .set_memory_limit('15Gi')
+        .set_memory_request('15Gi')
+        .set_cpu_limit('4')
+        .set_cpu_request('4'))
+    add_env(add_ssh_volume(eval_op), eval_env)
