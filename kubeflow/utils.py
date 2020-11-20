@@ -20,12 +20,12 @@ def add_env(op, envs):
 
 
 def list_pipelines(client):
-  resp = client.list_pipelines(page_size=100)
-  pipelines = resp.pipelines
-  while resp.next_page_token:
-    resp = client.list_pipelines(page_token=resp.next_page_token, page_size=100)
-    pipelines.extend(resp.pipelines)
-  return pipelines
+    resp = client.list_pipelines(page_size=100)
+    pipelines = resp.pipelines
+    while resp.next_page_token:
+        resp = client.list_pipelines(page_token=resp.next_page_token, page_size=100)
+        pipelines.extend(resp.pipelines)
+    return pipelines
 
 
 def upload_pipeline(name, pipeline):
