@@ -18,13 +18,23 @@ def add_env(op, envs):
     op.container.add_env_variable(V1EnvVar(name=k, value=v))
   return op
 
+
+def list_pipelines(client):
+  resp = client.list_pipelines(page_size=100)
+  pipelines = resp.pipelines
+  while resp.next_page_token:
+    resp = client.list_pipelines(page_token=resp.next_page_token, page_size=100)
+    pipelines.extend(resp.pipelines)
+  return pipelines
+
+
 def upload_pipeline(name, pipeline):
     """Upload pipeline to kubeflow"""
     compiled_pipeline_path = f'{name}.tar.gz'
     kfp.compiler.Compiler().compile(pipeline, compiled_pipeline_path)
 
     client = kfp.Client()
-    pipelines = client.list_pipelines().pipelines
+    pipelines = list_pipelines(client)
     pipelines = [] if pipelines is None else pipelines
     version = datetime.now().strftime("%m%d%Y-%H:%M:%S")
 
