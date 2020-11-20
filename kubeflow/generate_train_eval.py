@@ -24,6 +24,7 @@ default_image = '932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit-kf:2
 GENIENLP_VERSION = 'd04ed4a2c38788eab9a9f4694a20fddeba62ea7d'
 GENIE_VERSION = '862f3444aaee0522c84aa7b24ad0a3f7203b9f48'
 THINGTALK_VERSION = 'a3eb276cab0f554646ee6ef5620be12179f55ba7'
+BOOTLEG_VERSION = 'f53e67397ddcd099f3a18a014c9ce82b02d2223c'
 WORKDIR_REPO = 'git@github.com:stanford-oval/thingpedia-common-devices.git'
 WORKDIR_VERSION = '0db4d113bd2436e85f7dfa7542f800106485f7a8'
 PARAPHRASING_MODEL = 's3://geniehai/sinaj/models/schemaorg/paraphrase/bart-large-speedup-megabatch-5m/'
@@ -1455,6 +1456,11 @@ def train_eval_spl(
         load_from,
         train_iterations,
         s3_datadir,
+        genienlp_version,
+        genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo='git@github.com:stanford-oval/SPL.git',
+        workdir_version='729e3ad19a9b0ccedd0c9a3e9ebd19ca30166306',
         train_languages='en',
         eval_languages='en',
         pred_languages='en',
@@ -1466,7 +1472,13 @@ def train_eval_spl(
         train_additional_args='',
         eval_additional_args=''
 ):
-    train_env = {}
+    train_env = {
+        'GENIENLP_VERSION': genienlp_version,
+        'GENIE_VERSION': genie_version,
+        'THINGTALK_VERSION': thingtalk_version,
+        'WORKDIR_REPO': workdir_repo,
+        'WORKDIR_VERSION': workdir_version,
+    }
     
     train_num_gpus = 1
     train_op = components.load_component_from_file('components/train-spl.yaml')(
@@ -1502,7 +1514,13 @@ def train_eval_spl(
      .add_volume(V1Volume(name='tensorboard',
                           persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
     
-    eval_env = {}
+    eval_env = {
+        'GENIENLP_VERSION': genienlp_version,
+        'GENIE_VERSION': genie_version,
+        'THINGTALK_VERSION': thingtalk_version,
+        'WORKDIR_REPO': workdir_repo,
+        'WORKDIR_VERSION': workdir_version,
+    }
     
     eval_op = components.load_component_from_file('components/evaluate-spl.yaml')(
         image=image,
