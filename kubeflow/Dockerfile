@@ -72,10 +72,14 @@ RUN if test -f yarn.lock ; then \
 #USER root
 #RUN python3 -m pip install scipy
 
+ARG ADD_BOOTLEG=false
+RUN echo ${ADD_BOOTLEG}
 ARG BOOTLEG_VERSION=master
-RUN git clone https://github.com/Mehrad0711/bootleg.git /opt/bootleg/
-WORKDIR /opt/bootleg/
-RUN git checkout ${BOOTLEG_VERSION} && pip3 install --use-feature=2020-resolver -r requirements.txt && pip3 install --use-feature=2020-resolver -e .
+RUN if [ ${ADD_BOOTLEG} == true ]; then \
+		git clone https://github.com/Mehrad0711/bootleg.git /opt/bootleg/ ; \
+		cd /opt/bootleg/ ; \
+		git checkout ${BOOTLEG_VERSION} && pip3 install --use-feature=2020-resolver -r requirements.txt && pip3 install --use-feature=2020-resolver -e . ; \
+	fi
 
 ARG GENIENLP_VERSION=master
 RUN rm -rf /opt/genienlp/

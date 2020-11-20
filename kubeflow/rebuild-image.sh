@@ -13,6 +13,7 @@ genienlp_version=${genienlp_version:-master}
 thingtalk_version=${thingtalk_version:-master}
 genie_version=${genie_version:-master}
 bootleg_version=${bootleg_version:-master}
+add_bootleg=${add_bootleg:-false}
 
 cp ../lib.sh .
 
@@ -23,6 +24,7 @@ docker build -t ${IMAGE} \
   --build-arg THINGTALK_VERSION=${thingtalk_version} \
   --build-arg GENIE_VERSION=${genie_version} \
   --build-arg BOOTLEG_VERSION=${bootleg_version} \
+  --build-arg ADD_BOOTLEG=${add_bootleg} \
   .
 docker push ${IMAGE}
 
