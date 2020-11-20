@@ -1,0 +1,72 @@
+name: Selftrain
+description: |
+  Automatically annotate a dataset for selftraining
+inputs:
+  - {name: image, description: '', default: ''}
+  - {name: s3_bucket, description: '', default: ''}
+  - {name: owner, description: '', default: ''}
+  - {name: project, description: '', default: ''}
+  - {name: experiment, description: '', default: ''}
+  - {name: dataset, description: '', default: ''}
+  - {name: user_model, description: '', default: ''}
+  - {name: agent_model, description: '', default: ''}
+  - {name: additional_args, description: '', default: ''}
+outputs:
+  - {name: s3_datadir}
+implementation: 
+  container:
+    image: '{{inputs.parameters.image}}'
+    command:
+    - /bin/bash
+    - -ex
+    - -c
+    - |
+      . /opt/genie-toolkit/lib.sh
+      parse_args "$0" "image s3_bucket owner project experiment dataset user_model agent_model s3_datadir" "$@"
+      shift $n
+      cd $HOME
+
+      /opt/genie-toolkit/sync-repos.sh 
+      MAKEDIR=`get_make_dir ${project}`
+      GENIE=/opt/genie-toolkit/dist/tool/genie.js
+      
+      cat >> workdir/config.mk <<EOF
+      developer_key = ${THINGPEDIA_DEVELOPER_KEY}
+      EOF
+      cd workdir/${MAKEDIR}
+      
+      experiment=multidomain
+      make experiment="${experiment}" \
+        "${experiment}/schema.tt" \
+        "${experiment}/database-map.tsv"
+      mkdir -p "${experiment}/${eval_set}_auto_${target}"
+
+      aws s3 cp s3://geniehai/gcampax/dataset/multiwoz/baseline21/train_dials.json train_dials.json
+      aws s3 sync --no-progress "${user_model}" ${experiment}/models/nlu-user
+      aws s3 sync --no-progress "${agent_model}" ${experiment}/models/nlu-agent
+
+      node --experimental_worker "${GENIE}" auto-annotate-multiwoz \
+        -o "${experiment}/train_auto_selftrain/annotated.txt" \
+        --user-nlu-server "file://$(realpath ${experiment}/models/nlu-user)" --agent-nlu-server "file://$(realpath ${experiment}/models/nlu-agent)" \
+        --thingpedia "${experiment}/schema.tt" --database-file "${experiment}/database-map.tsv" \
+        train_dials.json --no-use-existing "$@"
+      make experiment="${experiment}" datadir/selftrain
+      
+      S3_DATADIR=s3://${s3_bucket}/${owner}/dataset/${project}/${experiment}/${dataset}-selftrain/`date +%s`/
+      aws s3 sync --no-progress datadir/selftrain ${S3_DATADIR}/user
+      mkdir -p `dirname $s3_datadir`
+      echo ${S3_DATADIR}  > $s3_datadir
+
+    args: [
+      'cmd',
+      --image, {inputValue: image},
+      --s3_bucket, {inputValue: s3_bucket},
+      --owner, {inputValue: owner},
+      --project, {inputValue: project},
+      --experiment, {inputValue: experiment},
+      --dataset, {inputValue: dataset},
+      --user_model, {inputValue: user_model},
+      --agent_model, {inputValue: agent_model},
+      --s3_datadir, {outputPath: s3_datadir},
+      --, {inputValue: additional_args}
+    ]
