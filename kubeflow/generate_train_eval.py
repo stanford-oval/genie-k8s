@@ -1436,3 +1436,91 @@ def train_eval_sumbt(
         .set_cpu_limit('4')
         .set_cpu_request('4'))
     add_env(add_ssh_volume(eval_op), eval_env)
+
+
+@dsl.pipeline(
+    name='Train and eval SPL',
+    description='Train and evaluate pipeline for SPL experiments'
+)
+def train_eval_spl(
+        image,
+        s3_bucket,
+        s3_database_dir,
+        dlg_side,
+        owner,
+        project,
+        experiment,
+        model,
+        task_name,
+        load_from,
+        train_iterations,
+        s3_datadir,
+        train_languages='en',
+        eval_languages='en',
+        pred_languages='en',
+        eval_set='eval',
+        dataset_subfolder='None',
+        annotated_set_name='annotated',
+        is_oracle='false',
+        skip_tensorboard='false',
+        train_additional_args='',
+        eval_additional_args=''
+):
+    train_env = {}
+    
+    train_num_gpus = 1
+    train_op = components.load_component_from_file('components/train-spl.yaml')(
+        image=image,
+        s3_bucket=s3_bucket,
+        owner=owner,
+        task_name=task_name,
+        project=project,
+        experiment=experiment,
+        model=model,
+        load_from=load_from,
+        eval_set=eval_set,
+        s3_datadir=s3_datadir,
+        s3_database_dir=s3_database_dir,
+        dataset_subfolder=dataset_subfolder,
+        train_iterations=train_iterations,
+        skip_tensorboard=skip_tensorboard,
+        train_languages=train_languages,
+        eval_languages=eval_languages,
+        dlg_side=dlg_side,
+        additional_args=train_additional_args)
+    (train_op.container
+     .set_memory_request('56Gi')
+     .set_memory_limit('56Gi')
+     .set_cpu_request('7.5')
+     .set_cpu_limit('7.5')
+     .set_gpu_limit(str(train_num_gpus))
+     .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
+     )
+    (add_env(add_ssh_volume(train_op), train_env)
+     .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+     .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2 * train_num_gpus}xlarge')
+     .add_volume(V1Volume(name='tensorboard',
+                          persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
+    
+    eval_env = {}
+    
+    eval_op = components.load_component_from_file('components/evaluate-spl.yaml')(
+        image=image,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        model=model,
+        eval_set=eval_set,
+        annotated_set_name=annotated_set_name,
+        is_oracle=is_oracle,
+        pred_languages=pred_languages,
+        task_name=task_name,
+        s3_datadir=s3_datadir,
+        s3_model_dir=train_op.outputs['s3_model_dir'],
+        additional_args=eval_additional_args)
+    (eval_op.container
+     .set_memory_limit('15Gi')
+     .set_memory_request('15Gi')
+     .set_cpu_limit('4')
+     .set_cpu_request('4'))
+    add_env(add_ssh_volume(eval_op), eval_env)
