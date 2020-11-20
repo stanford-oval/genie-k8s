@@ -25,7 +25,7 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image s3_bucket owner task_name project experiment dataset s3_input_datadir s3_output_datadir filtering_model task_name paraphrase_subfolder" "$@"
+      parse_args "$0" "image s3_bucket owner task_name project experiment dataset s3_input_datadir s3_output_datadir filtering_model filtering_batch_size task_name paraphrase_subfolder" "$@"
       shift $n
       
       set -e
