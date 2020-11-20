@@ -2,27 +2,6 @@ ARG COMMON_IMAGE=
 FROM ${COMMON_IMAGE}
 MAINTAINER Thingpedia Admins <thingpedia-admins@lists.stanford.edu>
 
-WORKDIR /opt/genienlp/
-ARG GENIENLP_VERSION=master
-RUN git fetch && git checkout ${GENIENLP_VERSION} && pip3 install --use-feature=2020-resolver -e .
-
-# uncomment the models you want to use
-# RUN genienlp cache-embeddings --destdir /usr/local/share/genienlp/embeddings --embeddings bert-large-uncased-whole-word-masking
-# RUN genienlp cache-embeddings --destdir /usr/local/share/genienlp/embeddings --embeddings bert-large-uncased-whole-word-masking-finetuned-squad
-
-# uncomment it you need Apex (for mixed precision training)
-# RUN yum install -y \
-#        cuda-nvml-dev-$CUDA_PKG_VERSION \
-#        cuda-command-line-tools-$CUDA_PKG_VERSION \
-#	cuda-libraries-dev-$CUDA_PKG_VERSION \
-#        cuda-minimal-build-$CUDA_PKG_VERSION \
-#        libcublas-devel-10.2.2.89-1 \
-#        && \
-#    	rm -rf /var/cache/yum/*
-# RUN git clone https://github.com/NVIDIA/apex /opt/apex/
-# WORKDIR /opt/apex/
-# RUN pip3 install -v --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./
-
 # add user genie-toolkit
 RUN useradd -ms /bin/bash genie-toolkit
 
@@ -76,6 +55,34 @@ RUN if test -f yarn.lock ; then \
    ln -s /opt/genie-toolkit/dist/tool/genie.js /usr/local/bin/genie ; \
    chmod +x /usr/local/bin/genie ; \
  fi
+
+# uncomment it you need Apex (for mixed precision training)
+# RUN yum install -y \
+#        cuda-nvml-dev-$CUDA_PKG_VERSION \
+#        cuda-command-line-tools-$CUDA_PKG_VERSION \
+#	cuda-libraries-dev-$CUDA_PKG_VERSION \
+#        cuda-minimal-build-$CUDA_PKG_VERSION \
+#        libcublas-devel-10.2.2.89-1 \
+#        && \
+#    	rm -rf /var/cache/yum/*
+# RUN git clone https://github.com/NVIDIA/apex /opt/apex/
+# WORKDIR /opt/apex/
+# RUN pip3 install -v --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./
+
+#USER root
+#RUN python3 -m pip install scipy
+
+ARG BOOTLEG_VERSION=master
+RUN git clone https://github.com/Mehrad0711/bootleg.git /opt/bootleg/
+WORKDIR /opt/bootleg/
+RUN git checkout ${BOOTLEG_VERSION} && pip3 install --use-feature=2020-resolver -r requirements.txt && pip3 install --use-feature=2020-resolver -e .
+
+ARG GENIENLP_VERSION=master
+RUN rm -rf /opt/genienlp/
+RUN git clone https://github.com/stanford-oval/genienlp /opt/genienlp/
+WORKDIR /opt/genienlp/
+RUN git fetch && git checkout ${GENIENLP_VERSION} && pip3 install --use-feature=2020-resolver -e .
+
 USER genie-toolkit
 
 COPY lib.sh sync-repos.sh ./
