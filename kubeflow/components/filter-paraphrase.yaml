@@ -11,6 +11,7 @@ inputs:
   - {name: dataset, description: '', default: ''}
   - {name: s3_input_datadir, description: '', default: ''}
   - {name: filtering_model, description: '', default: ''}
+  - {name: filtering_batch_size, description: '', default: ''}
   - {name: paraphrase_subfolder, description: '', default: ''}
   - {name: additional_args, description: '', default: ''}
 outputs:
@@ -51,14 +52,12 @@ implementation:
           input_dir="input_dataset/$paraphrase_subfolder"
           output_dir="output_dataset/$paraphrase_subfolder"
           filtering_dir="almond/$paraphrase_subfolder"
-          filtering_batch_size="4000"
           ;;
 
         "almond")
           input_dir="input_dataset"
           output_dir="output_dataset"
           filtering_dir="almond"
-          filtering_batch_size="4000"
           ;;
 
         *)
@@ -137,6 +136,7 @@ implementation:
       --s3_input_datadir, {inputValue: s3_input_datadir},
       --s3_output_datadir, {outputPath: s3_output_datadir},
       --filtering_model, {inputValue: filtering_model},
+      --filtering_batch_size, {inputValue: filtering_batch_size},
       --paraphrase_subfolder, {inputValue: paraphrase_subfolder},
       --, {inputValue: additional_args}, 
     ]
