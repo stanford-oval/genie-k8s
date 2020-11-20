@@ -27,12 +27,11 @@ Pipeline must run in t`research-kf` namespace, which has proper resources and pe
 7. Review the default params. `image` is the executing docker container for the pipeline.  `genienlp_version`, `genine_version`, and `thingtalk_version` will be updated to the specified versions during runtime.
 8. Set `workdir_repo` to your project git repo. In this example we will use, `git@github.com:stanford-oval/thingpedia-common-devices.git`
 9. `workdir_version` should be the commit hash in your wip branch. For example, `0db4d113bd2436e85f7dfa7542f800106485f7a8`.
-10. If `workdir_s3_config_dir` is set, the files in the s3 directory will be copied to the local `workd_dir` during runtime.  This is useful if a project requires additional configuration files that cannot be checked into the git repo. For example, `thingpedia-common-devices` requires a developer key defined in `config.mk` to run.  So we create a `s3://geniehai/jgd5/config/almond/config.mk` file with the developer key and set `workdir_s3_config_dir` to `s3://geniehai/jgd5/config/almond`. If you don't have accesses to s3, you can use your Jupyter notebook session to create config files on s3.
-11. Additional generate dataset args can be defined in `generate_dataset_addtional_args`.  In this example, we want to generate a small test dataset. So we set the args to `subdatasets=1 target_pruning_size=25 max_turns=2 debug_level=2`.
-12. Additional train args can be defined in `train_addtional_args`.  In this example, we want to do a quick training with 3 iterations: `--train_iterations 3 --save_every 1 --log_every 1 --val_every 1`
-13. Additional eval args can be defined in `eval_additional_args`. We don't have any additional args in this example. So we leave it blank.
-14. Click start to run your pipeline.
-15. Click on `Experiments` on the side bar. Go to your experiment. You should see your run. This example run usually finishes in 1 hour.
+10. Additional generate dataset args can be defined in `generate_dataset_addtional_args`.  In this example, we want to generate a small test dataset. So we set the args to `subdatasets=1 target_pruning_size=25 max_turns=2 debug_level=2`.
+11. Additional train args can be defined in `train_addtional_args`.  In this example, we want to do a quick training with 3 iterations: `--train_iterations 3 --save_every 1 --log_every 1 --val_every 1`
+12. Additional eval args can be defined in `eval_additional_args`. We don't have any additional args in this example. So we leave it blank.
+13. Click start to run your pipeline.
+14. Click on `Experiments` on the side bar. Go to your experiment. You should see your run. This example run usually finishes in 1 hour.
 
 
 ## Modify or create a new pipeline
@@ -64,16 +63,11 @@ Kubeflow pipelines are under `genie-k8s/kubeflow`. You can modify an existing pi
 Run the following python code in Jupyter notebook:
 
 ```
-import generate_train_eval
-from from utils import upload_pipeline
-    resp = upload_pipeline('generate-train-eval', train_pipeline)
-    print(resp)
-```
+import generate_train_eval 
+from utils import upload_pipeline
 
-Or run the pipeline file in the terminal:
-
-```
-python3 generate_train_eval.py
+resp = upload_pipeline('train', generate_train_eval.train_pipeline)
+print(resp)
 ```
 
 Go to https://kubeflow.research.almond.stanford.edu/_/pipeline/?ns=research-kf to see your newly submitted pipeline.
