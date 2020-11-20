@@ -37,3 +37,5 @@ if test -n "${JUPYTER_IMAGE}" ; then
 fi
 
 rm lib.sh
+
+docker system prune -f

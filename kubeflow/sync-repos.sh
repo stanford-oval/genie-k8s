@@ -8,13 +8,14 @@ if [ -n "${GENIENLP_VERSION}" ] && [ "${GENIENLP_VERSION}" != "${GENIENLP_HEAD}"
   pip3 install --upgrade --use-feature=2020-resolver -e .
 fi
 
-
-cd /opt/bootleg/
-BOOTLEG_HEAD=`git rev-parse HEAD`
-if [ -n "${BOOTLEG_VERSION}" ] && [ "${BOOTLEG_VERSION}" != "${BOOTLEG_HEAD}" ]; then
-  git fetch
-  git checkout ${BOOTLEG_VERSION}
-  pip3 install --upgrade --use-feature=2020-resolver -e .
+if [ -d /opt/bootleg/ ] ; then
+  cd /opt/bootleg/
+  BOOTLEG_HEAD=`git rev-parse HEAD`
+  if [ -n "${BOOTLEG_VERSION}" ] && [ "${BOOTLEG_VERSION}" != "${BOOTLEG_HEAD}" ]; then
+    git fetch
+    git checkout ${BOOTLEG_VERSION}
+    pip3 install --upgrade --use-feature=2020-resolver -e .
+  fi
 fi
 
 
