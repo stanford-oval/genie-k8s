@@ -1444,23 +1444,22 @@ def train_eval_sumbt(
     description='Train and evaluate pipeline for SPL experiments'
 )
 def train_eval_spl(
-        s3_database_dir,
-        dlg_side,
         owner,
         project,
         experiment,
         model,
         task_name,
-        load_from,
-        train_iterations,
         s3_datadir,
-        s3_bucket,
+        s3_bucket='geniehai',
+        s3_database_dir='None',
+        dlg_side='',
         image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-spl',
         genienlp_version='',
         genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
         thingtalk_version=THINGTALK_VERSION,
         workdir_repo='git@github.com:stanford-oval/SPL.git',
         workdir_version='729e3ad19a9b0ccedd0c9a3e9ebd19ca30166306',
+        load_from='None',
         train_languages='en',
         eval_languages='en',
         pred_languages='en',
@@ -1469,6 +1468,7 @@ def train_eval_spl(
         annotated_set_name='annotated',
         is_oracle='false',
         skip_tensorboard='false',
+        train_iterations='',
         train_additional_args='',
         eval_additional_args=''
 ):
@@ -1549,24 +1549,23 @@ def train_eval_spl(
     description='Train and evaluate pipeline for Bootleg experiments'
 )
 def bootleg_train_eval(
-        s3_database_dir,
-        dlg_side,
         owner,
         project,
         experiment,
         model,
         task_name,
-        load_from,
-        train_iterations,
         s3_datadir,
-        s3_bucket,
-        image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-bootleg',
+        s3_bucket='geniehai',
+        s3_database_dir='None',
+        dlg_side='',
+        image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-spl',
         genienlp_version='',
         genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
         thingtalk_version=THINGTALK_VERSION,
         workdir_repo='git@github.com:stanford-oval/SPL.git',
         workdir_version='729e3ad19a9b0ccedd0c9a3e9ebd19ca30166306',
         bootleg_version='f53e67397ddcd099f3a18a014c9ce82b02d2223c',
+        load_from='None',
         train_languages='en',
         eval_languages='en',
         pred_languages='en',
@@ -1575,6 +1574,7 @@ def bootleg_train_eval(
         annotated_set_name='annotated',
         is_oracle='false',
         skip_tensorboard='false',
+        train_iterations='',
         train_additional_args='',
         eval_additional_args=''
 ):
