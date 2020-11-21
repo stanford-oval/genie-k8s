@@ -19,7 +19,7 @@ inputs:
   - {name: train_languages, description: ''}
   - {name: eval_languages, description: ''}
   - {name: dlg_side, description: ''}
-  - {name: s3_bootleg_prepped_data, description: ''}
+  - {name: s3_bootleg_prepped_data, description: '', default: 'None'}
   - {name: additional_args, description: ''}
 outputs:
   - {name: s3_model_dir}
