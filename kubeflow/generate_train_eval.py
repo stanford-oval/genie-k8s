@@ -1444,33 +1444,33 @@ def train_eval_sumbt(
     description='Train and evaluate pipeline for SPL experiments'
 )
 def train_eval_spl(
-        owner,
-        project,
-        experiment,
-        model,
-        task_name,
-        s3_datadir,
+        owner='mehrad',
+        project='multilanguage',
+        experiment='restaurants',
+        model='',
+        task_name='almond_multilingual',
+        s3_datadir='',
         s3_bucket='geniehai',
         s3_database_dir='None',
-        dlg_side='',
+        dlg_side='user',
         image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-spl',
-        genienlp_version='',
+        genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
         genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
         thingtalk_version=THINGTALK_VERSION,
         workdir_repo='git@github.com:stanford-oval/SPL.git',
         workdir_version='729e3ad19a9b0ccedd0c9a3e9ebd19ca30166306',
         load_from='None',
-        train_languages='en',
-        eval_languages='en',
-        pred_languages='en',
+        train_languages='es',
+        eval_languages='es',
+        pred_languages='es',
         eval_set='eval',
         dataset_subfolder='None',
         annotated_set_name='annotated',
         is_oracle='false',
         skip_tensorboard='false',
         train_iterations='',
-        train_additional_args='',
-        eval_additional_args=''
+        train_additional_args='--dimension 768 --transformer_hidden 768 --trainable_decoder_embeddings 50 --encoder_embeddings=xlm-roberta-base --decoder_embeddings= --seq2seq_encoder=Identity --rnn_layers 1 --transformer_heads 12 --transformer_layers 0 --rnn_zero_state=average --train_encoder_embeddings --transformer_lr_multiply 0.08 --max_to_keep 1 --almond_has_multiple_programs --train_iterations 40000 --train_batch_tokens 5000',
+        eval_additional_args='--evaluate valid --overwrite --eval_set test'
 ):
     train_env = {
         'GENIENLP_VERSION': genienlp_version,
@@ -1499,6 +1499,7 @@ def train_eval_spl(
         train_languages=train_languages,
         eval_languages=eval_languages,
         dlg_side=dlg_side,
+        s3_bootleg_prepped_data='None',
         additional_args=train_additional_args)
     (train_op.container
      .set_memory_request('56Gi')
@@ -1606,6 +1607,7 @@ def bootleg_train_eval(
         train_languages=train_languages,
         eval_languages=eval_languages,
         dlg_side=dlg_side,
+        s3_bootleg_prepped_data='None',
         additional_args=train_additional_args)
     (bootleg_op.container
      .set_memory_request('56Gi')
