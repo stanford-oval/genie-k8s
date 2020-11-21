@@ -33,7 +33,7 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image s3_bucket owner task_name project experiment model load_from s3_datadir dataset_subfolder s3_model_dir skip_tensorboard train_languages eval_languages dlg_side s3_bootleg_prepped_data" "$@"
+      parse_args "$0" "image s3_bucket owner task_name project experiment model load_from s3_datadir s3_database_dir dataset_subfolder s3_model_dir skip_tensorboard train_languages eval_languages eval_set dlg_side s3_bootleg_prepped_data" "$@"
       shift $n 
       cd $HOME
 
@@ -47,11 +47,11 @@ implementation:
       modeldir="$HOME/models/$model"
       mkdir -p "$modeldir"
 
-      if test "{s3_database_dir}" != None ; then
+      if test "${s3_database_dir}" != None ; then
         aws s3 sync ${s3_database_dir} ./database/ --exclude '*' --include '*.json' --include '*bootleg_wiki*' --include '*emb_data*' --include '*entity_db*'
       fi
 
-      if test "{s3_bootleg_prepped_data}" != None ; then
+      if test "${s3_bootleg_prepped_data}" != None ; then
         aws s3 sync ${s3_bootleg_prepped_data} results_temp
       fi
 
@@ -63,18 +63,18 @@ implementation:
 
       if [[ "$task_name" == *"multilingual"* ]] ; then
         for lang in "${TLS[@]}" "${ELS[@]}" ; do
-          aws s3 sync ${s3_datadir} ${HOME}/dataset/ --exclude "*" --include "*$lang*"
+          aws s3 sync ${s3_datadir} dataset/ --exclude "*" --include "*$lang*"
         done
-        mkdir -p $modeldir/dataset/almond/multilingual
-        ln -s ${HOME}/dataset/* $modeldir/dataset/almond/multilingual
+        mkdir -p $modeldir/data/almond/multilingual
+        mv dataset/* $modeldir/data/almond/multilingual/
       elif [[ "$task_name" == *"dialog"* || "$task_name" == *"contextual"* ]] ; then
         aws s3 sync --exclude "synthetic*.txt" ${s3_datadir} dataset/
-        mkdir -p $modeldir/dataset/almond/${dlg_side}
-        ln -s ${HOME}/dataset/* $modeldir/dataset/almond/${dlg_side}
+        mkdir -p $modeldir/data/almond/${dlg_side}
+        mv dataset/* $modeldir/data/almond/${dlg_side}/
       else
         aws s3 sync ${s3_datadir} dataset/
-        mkdir -p $modeldir/dataset/almond/
-        ln -s ${HOME}/dataset/* $modeldir/dataset/almond/
+        mkdir -p $modeldir/data/almond/
+        mv dataset/* $modeldir/data/almond/
       fi
 
       rm -fr "$modeldir/dataset"
@@ -89,10 +89,8 @@ implementation:
         tensorboard_args="--tensorboard_dir /shared/tensorboard/${project}/${experiment}/${owner}/${model}"
       fi
 
-      ls -R
-     
       genienlp train \
-          --data "$modeldir/dataset" \
+          --data "$modeldir/data" \
           --save "$modeldir" \
           ${tensorboard_args} \
           --cache "$modeldir/cache" \
@@ -108,7 +106,8 @@ implementation:
 
       rm -fr "$modeldir/cache"
       rm -fr "$modeldir/dataset"
-      S3_MODEL_DIR=s3://${s3_bucket}/${owner}/models/${project}/${experiment}/${model}/`date +%s`/
+      rm -fr "$modeldir/data"
+      S3_MODEL_DIR=s3://${s3_bucket}/${owner}/models/${project}/${experiment}/${model}/
       aws s3 sync --no-progress ${modeldir}/ ${S3_MODEL_DIR}
             
       mkdir -p `dirname $s3_model_dir`
@@ -123,8 +122,10 @@ implementation:
       --project, {inputValue: project},
       --experiment, {inputValue: experiment},
       --model, {inputValue: model},
+      --eval_set, {inputValue: eval_set},
       --load_from, {inputValue: load_from},
       --s3_datadir, {inputValue: s3_datadir},
+      --s3_database_dir, {inputValue: s3_database_dir},
       --dataset_subfolder, {inputValue: dataset_subfolder},
       --s3_model_dir, {outputPath: s3_model_dir},
       --skip_tensorboard, {inputValue: skip_tensorboard},

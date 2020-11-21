@@ -30,7 +30,7 @@ implementation:
     - -c 
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image project owner experiment model model_owner eval_set s3_model_dir s3_metrics_output metrics_output" "$@"
+      parse_args "$0" "image project owner experiment model model_owner eval_set task_name s3_model_dir pred_languages s3_metrics_output metrics_output annotated_set_name is_oracle" "$@"
       shift $n
       cd $HOME
 
