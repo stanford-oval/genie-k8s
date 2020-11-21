@@ -89,7 +89,7 @@ RUN git fetch && git checkout ${GENIENLP_VERSION} && pip3 install --use-feature=
 
 USER genie-toolkit
 
-COPY lib.sh sync-repos.sh ./
+COPY lib.sh sync-repos.sh /opt/genie-toolkit/
 
 # Use root for now until https://github.com/aws/amazon-eks-pod-identity-webhook/issues/8 is fixed.
 # There is a workaround by changing pod fsgroup but kubeflow does not provide to api to modify pod securityContext.

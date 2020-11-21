@@ -33,7 +33,7 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image s3_bucket owner task_name project experiment model load_from s3_datadir dataset_subfolder s3_model_dir skip_tensorboard train_iterations eval_languages dlg_side s3_bootleg_prepped_data" "$@"
+      parse_args "$0" "image s3_bucket owner task_name project experiment model load_from s3_datadir dataset_subfolder s3_model_dir skip_tensorboard train_iterations train_languages eval_languages dlg_side s3_bootleg_prepped_data" "$@"
       shift $n 
       cd $HOME
 
