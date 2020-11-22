@@ -1546,6 +1546,61 @@ def train_eval_spl(
 
 
 @dsl.pipeline(
+    name='Eval SPL',
+    description='Evaluate a model for SPL experiments'
+)
+def eval_spl(
+        owner='mehrad',
+        project='multilanguage',
+        experiment='restaurants',
+        model='',
+        task_name='almond_multilingual',
+        s3_datadir='',
+        s3_model_dir='',
+        image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-spl',
+        genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
+        genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo='git@github.com:stanford-oval/SPL.git',
+        workdir_version='729e3ad19a9b0ccedd0c9a3e9ebd19ca30166306',
+        pred_languages='es',
+        eval_set='eval',
+        annotated_set_name='annotated',
+        is_oracle='false',
+        eval_additional_args='--evaluate valid --overwrite --eval_set test'
+):
+    
+    eval_env = {
+        'GENIENLP_VERSION': genienlp_version,
+        'GENIE_VERSION': genie_version,
+        'THINGTALK_VERSION': thingtalk_version,
+        'WORKDIR_REPO': workdir_repo,
+        'WORKDIR_VERSION': workdir_version,
+    }
+    
+    eval_op = components.load_component_from_file('components/evaluate-spl.yaml')(
+        image=image,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        model=model,
+        eval_set=eval_set,
+        annotated_set_name=annotated_set_name,
+        is_oracle=is_oracle,
+        pred_languages=pred_languages,
+        task_name=task_name,
+        s3_datadir=s3_datadir,
+        s3_model_dir=s3_model_dir,
+        additional_args=eval_additional_args)
+    (eval_op.container
+     .set_memory_limit('15Gi')
+     .set_memory_request('15Gi')
+     .set_cpu_limit('4')
+     .set_cpu_request('4'))
+    add_env(add_ssh_volume(eval_op), eval_env)
+
+
+@dsl.pipeline(
     name='Train and eval Genie+Bootleg',
     description='Train and evaluate pipeline for Bootleg experiments'
 )
