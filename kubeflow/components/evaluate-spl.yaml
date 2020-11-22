@@ -52,6 +52,10 @@ implementation:
       for lang in "${PLS[@]}"; do
         mkdir -p $experiment/${eval_set}/${lang}
         if [[ "$task_name" == *"contextual"* || "$task_name" == *"dialog"* ]] ; then
+            is_dlg=true
+            if [[ ! "$task_name" == *"multilingual"* ]] ; then
+              lang=''
+            fi
             aws s3 sync ${s3_datadir} ./dataset/ --exclude "*" --include "$$lang" --include "*eval*.tsv"  --include "*test*.tsv"
             make -j2 -B geniedir=/opt/genie-toolkit s3_model_dir=${s3_model_dir} project=$project experiment_dialog=$experiment eval_set=${eval_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${lang}/${eval_set}.tsv" ${experiment}/${eval_set}/${model}.nlu.results
             for f in $experiment/${eval_set}/${model}.nlu.{results,debug} ; do
@@ -69,6 +73,7 @@ implementation:
             fi
 
         else
+          is_dlg=false
           if [[ ! "$task_name" == *"multilingual"* ]] ; then
             lang=''
           fi
@@ -77,12 +82,14 @@ implementation:
           for f in $experiment/${eval_set}/${model}.{results,debug} ; do
             aws s3 cp $f s3://geniehai/${owner}/workdir/${project}/${experiment}/${eval_set}/${lang}/
           done
+          cp $experiment/${eval_set}/${model}.results $experiment/${eval_set}/${model}.nlu.results
           if [[ -s $experiment/${eval_set}/${model}.errors ]] ; then
             aws s3 cp $experiment/${eval_set}/${model}.errors s3://geniehai/${owner}/workdir/${project}/${experiment}/${eval_set}/${lang}/
           fi
           cat $experiment/${eval_set}/${model}.results
         fi
 
+        make -B s3_metrics_output=${s3_metrics_output} metrics_output=${metrics_output} is_dlg=${is_dlg} artifact_lang=${lang} project=$project experiment=$experiment eval_set=${eval_set} evaluate-output-artifacts-${model}
       done
 
 
