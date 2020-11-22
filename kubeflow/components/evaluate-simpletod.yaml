@@ -1,0 +1,49 @@
+name: Eval
+description: |
+  Evaluate a TRADE model
+inputs:
+  - {name: owner, description: ''}
+  - {name: project, description: ''}
+  - {name: experiment, description: ''}
+  - {name: s3_datadir, description: ''}
+  - {name: s3_model_dir, description: ''}
+  - {name: additional_args, description: ''}
+outputs:
+  - {name: metrics_output}
+  #- {name: MLPipeline UI metadata, type: UI metadata}
+  #- {name: MLPipeline Metrics, type: Metrics}
+implementation:
+  container:
+    image: '932360549041.dkr.ecr.us-west-2.amazonaws.com/simpletod:20201121.4'
+    command:
+    - /bin/bash
+    - -e
+    - -c
+    - |
+      . k8s/lib.sh
+      
+      parse_args "$0" "owner project experiment s3_datadir s3_model_dir metrics_output" "$@"
+      shift $n
+      set -x
+      
+      aws s3 sync --no-progress ${s3_datadir} resources/
+      aws s3 sync --no-progress ${s3_model_dir} save/
+      
+      mkdir -p `dirname $metrics_output`
+      python3 compute_joint_accuracy.py save/*.json > $metrics_output
+      cat results
+
+    args: [
+      'cmd',
+      --owner, {inputValue: owner},
+      --project, {inputValue: project},
+      --experiment, {inputValue: experiment},
+      --s3_datadir, {inputValue: s3_datadir},
+      --s3_model_dir, {inputValue: s3_model_dir},
+      --metrics_output, {outputPath: metrics_output},
+      --, {inputValue: additional_args}
+    ]
+
+    #fileOutputs:
+    #  MLPipeline UI metadata: /tmp/mlpipeline-ui-metadata.json
+    #  MLPipeline Metrics: /tmp/mlpipeline-metrics.json
