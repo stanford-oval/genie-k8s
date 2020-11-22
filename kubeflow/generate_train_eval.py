@@ -1757,7 +1757,7 @@ def bootleg_train_eval(
         s3_datadir='',
         s3_bucket='geniehai',
         s3_database_dir='s3://geniehai/mehrad/extras/bootleg_material/',
-        dlg_side='',
+        dlg_side='user',
         image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-bootleg',
         genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
         genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
@@ -1775,8 +1775,8 @@ def bootleg_train_eval(
         is_oracle='false',
         skip_tensorboard='false',
         train_iterations='',
-        bootleg_additional_args='',
-        train_additional_args='--bootleg_skip_feature_creation --dimension 768 --transformer_hidden 768 --trainable_decoder_embeddings 50 --encoder_embeddings=xlm-roberta-base --decoder_embeddings= --seq2seq_encoder=Identity --rnn_layers 1 --transformer_heads 12 --transformer_layers 0 --rnn_zero_state=average --train_encoder_embeddings --transformer_lr_multiply 0.08 --max_to_keep 1 --almond_has_multiple_programs --train_batch_tokens 5000',
+        bootleg_additional_args='--do_ner --retrieve_method bootleg --lookup_method ngrams --features type freq --features_size 3 3 --features_default_val 0 1.0 --num_workers 0 --bootleg_input_dir bootleg_material --bootleg_model bootleg_wiki_types --entity_type_agg_method weighted',
+        train_additional_args='--do_ner --retrieve_method bootleg --lookup_method ngrams --features type freq --features_size 3 3 --features_default_val 0 1.0 --num_workers 0 --bootleg_skip_feature_creation --bootleg_input_dir bootleg_material --bootleg_model bootleg_wiki_types --entity_type_agg_method weighted --dimension 768 --transformer_hidden 768 --trainable_decoder_embeddings 50 --encoder_embeddings=xlm-roberta-base --decoder_embeddings= --seq2seq_encoder=Identity --rnn_layers 1 --transformer_heads 12 --transformer_layers 0 --rnn_zero_state=average --train_encoder_embeddings --transformer_lr_multiply 0.08 --max_to_keep 1 --almond_has_multiple_programs --train_batch_tokens 5000',
         eval_additional_args='--evaluate valid --overwrite'
 ):
 
