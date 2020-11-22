@@ -14,7 +14,7 @@ outputs:
   #- {name: MLPipeline Metrics, type: Metrics}
 implementation:
   container:
-    image: '932360549041.dkr.ecr.us-west-2.amazonaws.com/simpletod:20201121.4'
+    image: '932360549041.dkr.ecr.us-west-2.amazonaws.com/simpletod:20201121.7'
     command:
     - /bin/bash
     - -e

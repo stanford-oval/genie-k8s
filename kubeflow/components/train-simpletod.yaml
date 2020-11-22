@@ -7,12 +7,13 @@ inputs:
   - {name: experiment, description: ''}
   - {name: model, description: ''}
   - {name: s3_datadir, description: ''}
+  - {name: train_batch_size, description: ''}
   - {name: additional_args, description: ''}
 outputs:
   - {name: s3_model_dir}
 implementation:
   container:
-    image: '932360549041.dkr.ecr.us-west-2.amazonaws.com/simpletod:20201121.4'
+    image: '932360549041.dkr.ecr.us-west-2.amazonaws.com/simpletod:20201121.7'
     command:
     - /bin/bash
     - -e
@@ -20,13 +21,13 @@ implementation:
     - |
       . k8s/lib.sh
 
-      parse_args "$0" "owner project experiment model s3_datadir s3_model_dir" "$@"
+      parse_args "$0" "owner project experiment model train_batch_size s3_datadir s3_model_dir" "$@"
       shift $n
       set -x
 
       aws s3 sync --no-progress ${s3_datadir} resources/
 
-      ./train_dst.sh 0 gpt2 distilgpt2 32
+      ./train_dst.sh 0 gpt2 distilgpt2 ${train_batch_size}
       
       S3_MODEL_DIR=s3://geniehai/${owner}/models/${project}/${experiment}/${model}/`date +%s`/
       aws s3 sync --no-progress output/ ${S3_MODEL_DIR}
@@ -43,6 +44,7 @@ implementation:
       --project, {inputValue: project},
       --experiment, {inputValue: experiment},
       --model, {inputValue: model},
+      --train_batch_size, {inputValue: train_batch_size},
       --s3_datadir, {inputValue: s3_datadir},
       --s3_model_dir, {outputPath: s3_model_dir},
       --,

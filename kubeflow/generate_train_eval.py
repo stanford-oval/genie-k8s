@@ -1222,6 +1222,78 @@ def selftrain_nopara_pipeline(
                         thingpedia_developer_key=thingpedia_developer_key,
                         additional_args=eval_additional_args)
     
+    
+@dsl.pipeline(
+    name='Selftrain without generation',
+    description='Runs selftrain finetuning'
+)
+def selftrain_only_pipeline(
+    owner,
+    project,
+    experiment,
+    model,
+    dataset,
+    user_model,
+    agent_model,
+    image=default_image,
+    genienlp_version=GENIENLP_VERSION,
+    genie_version=GENIE_VERSION,
+    thingtalk_version=THINGTALK_VERSION,
+    workdir_repo=WORKDIR_REPO,
+    workdir_version=WORKDIR_VERSION,
+    thingpedia_developer_key=default_developer_key,
+    train_additional_args='',
+    selftrain_train_iterations='20000',
+    auto_annotate_additional_args='',
+    eval_set='dev',
+    eval_additional_args=''
+):  
+    auto_annotate_op = auto_annotate_step(image=image,
+                                          owner=owner,
+                                          project=project,
+                                          experiment=experiment,
+                                          dataset=dataset,
+                                          user_model=user_model,
+                                          agent_model=agent_model,
+                                          genienlp_version=genienlp_version,       
+                                          genie_version=genie_version,
+                                          thingtalk_version=thingtalk_version,
+                                          workdir_repo=workdir_repo,
+                                          workdir_version=workdir_version,
+                                          thingpedia_developer_key=thingpedia_developer_key,
+                                          additional_args=auto_annotate_additional_args)
+    selftrain_datadir = auto_annotate_op.outputs['s3_datadir']
+    
+    train_op = train_step(image=image,
+                          owner=owner,
+                          project=project,
+                          experiment=experiment,
+                          model='%s-selftrain' % (model,),
+                          task_name='almond_dialogue_nlu',
+                          load_from=user_model,
+                          s3_datadir=selftrain_datadir,
+                          dataset_subfolder='None',
+                          genienlp_version=genienlp_version,
+                          train_iterations=selftrain_train_iterations,
+                          skip_tensorboard='false',
+                          additional_args=train_additional_args)
+    eval_model = train_op.outputs['s3_model_dir']
+    
+    eval_op = eval_step(image=image,
+                        owner=owner,
+                        project=project,
+                        experiment=experiment,
+                        model=model,
+                        s3_model_dir=eval_model,
+                        eval_set=eval_set,
+                        genienlp_version=genienlp_version,
+                        genie_version=genie_version,
+                        thingtalk_version=thingtalk_version,
+                        workdir_repo=workdir_repo,
+                        workdir_version=workdir_version,
+                        thingpedia_developer_key=thingpedia_developer_key,
+                        additional_args=eval_additional_args)
+
 
 @dsl.pipeline(
     name='Evaluate',
@@ -1324,6 +1396,7 @@ def train_eval_simpletod(
     experiment,
     model,
     s3_datadir,
+    train_batch_size='16',
     train_additional_args='',
     eval_additional_args=''
 ):
@@ -1335,6 +1408,7 @@ def train_eval_simpletod(
             project=project,
             experiment=experiment,
             model=model,
+            train_batch_size=train_batch_size,
             s3_datadir=s3_datadir,
             additional_args=train_additional_args)
     (train_op.container
