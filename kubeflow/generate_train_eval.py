@@ -1750,32 +1750,33 @@ def train_eval_spl(
 )
 def bootleg_train_eval(
         owner='mehrad',
-        project='multilanguage',
+        project='schemaorg',
         experiment='restaurants',
         model='',
-        task_name='almond_multilingual',
+        task_name='almond',
         s3_datadir='',
         s3_bucket='geniehai',
-        s3_database_dir='None',
-        dlg_side='user',
-        image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-spl',
+        s3_database_dir='s3://geniehai/mehrad/extras/bootleg_material/',
+        dlg_side='',
+        image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-bootleg',
         genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
         genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
         thingtalk_version=THINGTALK_VERSION,
-        workdir_repo='git@github.com:stanford-oval/SPL.git',
+        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
         workdir_version='master',
         bootleg_version='master',
         load_from='None',
-        train_languages='es',
-        eval_languages='es',
-        pred_languages='es',
+        train_languages='en',
+        eval_languages='en',
+        pred_languages='en',
         eval_set='eval',
         dataset_subfolder='None',
         annotated_set_name='annotated',
         is_oracle='false',
         skip_tensorboard='false',
         train_iterations='',
-        train_additional_args='--dimension 768 --transformer_hidden 768 --trainable_decoder_embeddings 50 --encoder_embeddings=xlm-roberta-base --decoder_embeddings= --seq2seq_encoder=Identity --rnn_layers 1 --transformer_heads 12 --transformer_layers 0 --rnn_zero_state=average --train_encoder_embeddings --transformer_lr_multiply 0.08 --max_to_keep 1 --almond_has_multiple_programs --train_batch_tokens 5000',
+        bootleg_additional_args='',
+        train_additional_args='--bootleg_skip_feature_creation --dimension 768 --transformer_hidden 768 --trainable_decoder_embeddings 50 --encoder_embeddings=xlm-roberta-base --decoder_embeddings= --seq2seq_encoder=Identity --rnn_layers 1 --transformer_heads 12 --transformer_layers 0 --rnn_zero_state=average --train_encoder_embeddings --transformer_lr_multiply 0.08 --max_to_keep 1 --almond_has_multiple_programs --train_batch_tokens 5000',
         eval_additional_args='--evaluate valid --overwrite'
 ):
 
@@ -1798,7 +1799,7 @@ def bootleg_train_eval(
         eval_set=eval_set,
         dataset_subfolder=dataset_subfolder,
         skip_tensorboard=skip_tensorboard,
-        additional_args=train_additional_args
+        additional_args=bootleg_additional_args
     )
 
     train_op = train_spl_step(
