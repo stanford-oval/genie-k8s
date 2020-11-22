@@ -13,7 +13,7 @@ inputs:
   - {name: filtering_model, description: '', default: ''}
   - {name: filtering_batch_size, description: '', default: ''}
   - {name: paraphrase_subfolder, description: '', default: ''}
-  - {name: filtering_additional_args, description: '', default: ''}
+  - {name: additional_args, description: '', default: ''}
 outputs:
   - {name: s3_output_datadir}
 implementation:
