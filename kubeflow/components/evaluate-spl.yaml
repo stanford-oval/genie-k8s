@@ -34,10 +34,17 @@ implementation:
       cd $HOME
 
       /opt/genie-toolkit/sync-repos.sh
-      MAKEDIR='.'
+
+      if [ -f workdir/Makefile ] ; then
+        MAKEDIR='.'
+      else
+        MAKEDIR=${project}
+      fi
+
       cat >> workdir/config.mk <<EOF
       developer_key = ${THINGPEDIA_DEVELOPER_KEY}
       EOF
+
       cd workdir/${MAKEDIR}
 
       IFS='+'; read -ra PLS <<<"$pred_languages"; IFS=' '
