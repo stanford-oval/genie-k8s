@@ -1452,6 +1452,7 @@ def train_spl_step(
         s3_bootleg_prepped_data='None',
         image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-spl',
         genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
+        bootleg_version='master',
         load_from='None',
         train_languages='es',
         eval_languages='es',
@@ -1464,6 +1465,7 @@ def train_spl_step(
     
     train_env = {
         'GENIENLP_VERSION': genienlp_version,
+        'BOOTLEG_VERSION': bootleg_version
     }
     
     train_num_gpus = 1
@@ -1556,6 +1558,115 @@ def eval_spl_step(
     return eval_op
 
 
+def bootleg_step(
+        owner='mehrad',
+        project='multilanguage',
+        experiment='restaurants',
+        model='',
+        task_name='almond_multilingual',
+        s3_datadir='',
+        s3_bucket='geniehai',
+        s3_database_dir='None',
+        dlg_side='user',
+        image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-spl',
+        genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
+        bootleg_version='master',
+        load_from='None',
+        train_languages='es',
+        eval_languages='es',
+        eval_set='eval',
+        dataset_subfolder='None',
+        skip_tensorboard='false',
+        additional_args='',
+):
+    bootleg_env = {
+        'GENIENLP_VERSION': genienlp_version,
+        'BOOTLEG_VERSION': bootleg_version
+    }
+    
+    bootleg_num_gpus = 1
+    bootleg_op = components.load_component_from_file('components/bootleg.yaml')(
+        image=image,
+        s3_bucket=s3_bucket,
+        owner=owner,
+        task_name=task_name,
+        project=project,
+        experiment=experiment,
+        model=model,
+        load_from=load_from,
+        eval_set=eval_set,
+        s3_datadir=s3_datadir,
+        s3_database_dir=s3_database_dir,
+        dataset_subfolder=dataset_subfolder,
+        skip_tensorboard=skip_tensorboard,
+        train_languages=train_languages,
+        eval_languages=eval_languages,
+        dlg_side=dlg_side,
+        additional_args=additional_args
+    )
+    (bootleg_op.container
+     .set_memory_request('56Gi')
+     .set_memory_limit('56Gi')
+     .set_cpu_request('7.5')
+     .set_cpu_limit('7.5')
+     .set_gpu_limit(str(bootleg_num_gpus))
+     .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
+     )
+    (add_env(add_ssh_volume(bootleg_op), bootleg_env)
+     .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+     .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2 * bootleg_num_gpus}xlarge')
+     .add_volume(V1Volume(name='tensorboard',
+                          persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
+    
+    return bootleg_op
+
+
+@dsl.pipeline(
+    name='Eval SPL',
+    description='Evaluate a model for SPL experiments'
+)
+def eval_spl(
+        owner='mehrad',
+        project='multilanguage',
+        experiment='restaurants',
+        model='',
+        task_name='almond_multilingual',
+        s3_datadir='',
+        s3_model_dir='',
+        image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-spl',
+        genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
+        genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo='git@github.com:stanford-oval/SPL.git',
+        workdir_version='master',
+        pred_languages='es',
+        eval_set='eval',
+        annotated_set_name='annotated',
+        is_oracle='false',
+        eval_additional_args='--evaluate valid --overwrite'
+):
+    eval_op = eval_spl_step(
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        model=model,
+        task_name=task_name,
+        s3_datadir=s3_datadir,
+        image=image,
+        genienlp_version=genienlp_version,
+        genie_version=genie_version,
+        thingtalk_version=thingtalk_version,
+        workdir_repo=workdir_repo,
+        workdir_version=workdir_version,
+        pred_languages=pred_languages,
+        eval_set=eval_set,
+        annotated_set_name=annotated_set_name,
+        is_oracle=is_oracle,
+        s3_model_dir=s3_model_dir,
+        additional_args=eval_additional_args
+    )
+
+
 @dsl.pipeline(
     name='Train and eval SPL',
     description='Train and evaluate pipeline for SPL experiments'
@@ -1572,6 +1683,10 @@ def train_eval_spl(
         dlg_side='user',
         image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-spl',
         genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
+        genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo='git@github.com:stanford-oval/SPL.git',
+        workdir_version='master',
         load_from='None',
         train_languages='es',
         eval_languages='es',
@@ -1609,55 +1724,23 @@ def train_eval_spl(
     )
 
     eval_op = eval_spl_step(
-        image=image,
         owner=owner,
         project=project,
         experiment=experiment,
         model=model,
+        task_name=task_name,
+        s3_datadir=s3_datadir,
+        image=image,
+        genienlp_version=genienlp_version,
+        genie_version=genie_version,
+        thingtalk_version=thingtalk_version,
+        workdir_repo=workdir_repo,
+        workdir_version=workdir_version,
+        pred_languages=pred_languages,
         eval_set=eval_set,
         annotated_set_name=annotated_set_name,
         is_oracle=is_oracle,
-        pred_languages=pred_languages,
-        task_name=task_name,
-        s3_datadir=s3_datadir,
         s3_model_dir=train_op.outputs['s3_model_dir'],
-        additional_args=eval_additional_args
-    )
-
-
-@dsl.pipeline(
-    name='Eval SPL',
-    description='Evaluate a model for SPL experiments'
-)
-def eval_spl(
-        owner='mehrad',
-        project='multilanguage',
-        experiment='restaurants',
-        model='',
-        task_name='almond_multilingual',
-        s3_datadir='',
-        s3_model_dir='',
-        image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-spl',
-        pred_languages='es',
-        eval_set='eval',
-        annotated_set_name='annotated',
-        is_oracle='false',
-        eval_additional_args='--evaluate valid --overwrite'
-):
-    
-    eval_op = eval_spl_step(
-        image=image,
-        owner=owner,
-        project=project,
-        experiment=experiment,
-        model=model,
-        eval_set=eval_set,
-        annotated_set_name=annotated_set_name,
-        is_oracle=is_oracle,
-        pred_languages=pred_languages,
-        task_name=task_name,
-        s3_datadir=s3_datadir,
-        s3_model_dir=s3_model_dir,
         additional_args=eval_additional_args
     )
 
@@ -1666,82 +1749,100 @@ def eval_spl(
     description='Train and evaluate pipeline for Bootleg experiments'
 )
 def bootleg_train_eval(
-        owner,
-        project,
-        experiment,
-        model,
-        task_name,
-        s3_datadir,
+        owner='mehrad',
+        project='multilanguage',
+        experiment='restaurants',
+        model='',
+        task_name='almond_multilingual',
+        s3_datadir='',
         s3_bucket='geniehai',
         s3_database_dir='None',
-        dlg_side='',
+        dlg_side='user',
         image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-spl',
+        genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
+        genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo='git@github.com:stanford-oval/SPL.git',
+        workdir_version='master',
+        bootleg_version='master',
         load_from='None',
-        train_languages='en',
-        eval_languages='en',
-        pred_languages='en',
+        train_languages='es',
+        eval_languages='es',
+        pred_languages='es',
         eval_set='eval',
         dataset_subfolder='None',
         annotated_set_name='annotated',
         is_oracle='false',
         skip_tensorboard='false',
         train_iterations='',
-        train_additional_args='',
-        eval_additional_args=''
+        train_additional_args='--dimension 768 --transformer_hidden 768 --trainable_decoder_embeddings 50 --encoder_embeddings=xlm-roberta-base --decoder_embeddings= --seq2seq_encoder=Identity --rnn_layers 1 --transformer_heads 12 --transformer_layers 0 --rnn_zero_state=average --train_encoder_embeddings --transformer_lr_multiply 0.08 --max_to_keep 1 --almond_has_multiple_programs --train_batch_tokens 5000',
+        eval_additional_args='--evaluate valid --overwrite'
 ):
 
-    bootleg_op = train_spl_step(
-        image=image,
-        s3_bucket=s3_bucket,
+    bootleg_op = bootleg_step(
         owner=owner,
-        task_name=task_name,
         project=project,
         experiment=experiment,
         model=model,
-        load_from=load_from,
-        eval_set=eval_set,
+        task_name=task_name,
         s3_datadir=s3_datadir,
+        s3_bucket=s3_bucket,
         s3_database_dir=s3_database_dir,
-        dataset_subfolder=dataset_subfolder,
-        skip_tensorboard=skip_tensorboard,
+        dlg_side=dlg_side,
+        image=image,
+        genienlp_version=genienlp_version,
+        bootleg_version=bootleg_version,
+        load_from=load_from,
         train_languages=train_languages,
         eval_languages=eval_languages,
-        dlg_side=dlg_side,
-        s3_bootleg_prepped_data='None',
-        additional_args=train_additional_args)
+        eval_set=eval_set,
+        dataset_subfolder=dataset_subfolder,
+        skip_tensorboard=skip_tensorboard,
+        additional_args=train_additional_args
+    )
 
     train_op = train_spl_step(
-        image=image,
-        s3_bucket=s3_bucket,
         owner=owner,
-        task_name=task_name,
         project=project,
         experiment=experiment,
         model=model,
-        load_from=load_from,
-        eval_set=eval_set,
+        task_name=task_name,
         s3_datadir=s3_datadir,
+        s3_bucket=s3_bucket,
         s3_database_dir=s3_database_dir,
-        dataset_subfolder=dataset_subfolder,
-        train_iterations=train_iterations,
-        skip_tensorboard=skip_tensorboard,
+        dlg_side=dlg_side,
+        image=image,
+        genienlp_version=genienlp_version,
+        bootleg_version=bootleg_version,
+        load_from=load_from,
         train_languages=train_languages,
         eval_languages=eval_languages,
-        dlg_side=dlg_side,
+        eval_set=eval_set,
+        dataset_subfolder=dataset_subfolder,
+        skip_tensorboard=skip_tensorboard,
+        train_iterations=train_iterations,
         s3_bootleg_prepped_data=bootleg_op.outputs['s3_bootleg_prepped_data'],
-        additional_args=train_additional_args)
+        additional_args=train_additional_args
+    )
+
 
     eval_op = eval_spl_step(
-        image=image,
         owner=owner,
         project=project,
         experiment=experiment,
         model=model,
+        task_name=task_name,
+        s3_datadir=s3_datadir,
+        image=image,
+        genienlp_version=genienlp_version,
+        genie_version=genie_version,
+        thingtalk_version=thingtalk_version,
+        workdir_repo=workdir_repo,
+        workdir_version=workdir_version,
+        pred_languages=pred_languages,
         eval_set=eval_set,
         annotated_set_name=annotated_set_name,
         is_oracle=is_oracle,
-        pred_languages=pred_languages,
-        task_name=task_name,
-        s3_datadir=s3_datadir,
         s3_model_dir=train_op.outputs['s3_model_dir'],
-        additional_args=eval_additional_args)
+        additional_args=eval_additional_args
+    )
