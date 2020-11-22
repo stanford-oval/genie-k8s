@@ -1458,19 +1458,19 @@ def train_eval_spl(
         genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
         thingtalk_version=THINGTALK_VERSION,
         workdir_repo='git@github.com:stanford-oval/SPL.git',
-        workdir_version='729e3ad19a9b0ccedd0c9a3e9ebd19ca30166306',
+        workdir_version='c297756385963b07ff754e74cbafdf5631ec5f51',
         load_from='None',
         train_languages='es',
         eval_languages='es',
         pred_languages='es',
-        eval_set='eval',
+        eval_set='test',
         dataset_subfolder='None',
         annotated_set_name='annotated',
         is_oracle='false',
         skip_tensorboard='false',
         train_iterations='',
-        train_additional_args='--dimension 768 --transformer_hidden 768 --trainable_decoder_embeddings 50 --encoder_embeddings=xlm-roberta-base --decoder_embeddings= --seq2seq_encoder=Identity --rnn_layers 1 --transformer_heads 12 --transformer_layers 0 --rnn_zero_state=average --train_encoder_embeddings --transformer_lr_multiply 0.08 --max_to_keep 1 --almond_has_multiple_programs --train_iterations 40000 --train_batch_tokens 5000',
-        eval_additional_args='--evaluate valid --overwrite --eval_set test'
+        train_additional_args='--dimension 768 --transformer_hidden 768 --trainable_decoder_embeddings 50 --encoder_embeddings=xlm-roberta-base --decoder_embeddings= --seq2seq_encoder=Identity --rnn_layers 1 --transformer_heads 12 --transformer_layers 0 --rnn_zero_state=average --train_encoder_embeddings --transformer_lr_multiply 0.08 --max_to_keep 1 --almond_has_multiple_programs --train_batch_tokens 5000',
+        eval_additional_args='--evaluate valid --overwrite'
 ):
     train_env = {
         'GENIENLP_VERSION': genienlp_version,
@@ -1562,12 +1562,12 @@ def eval_spl(
         genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
         thingtalk_version=THINGTALK_VERSION,
         workdir_repo='git@github.com:stanford-oval/SPL.git',
-        workdir_version='729e3ad19a9b0ccedd0c9a3e9ebd19ca30166306',
+        workdir_version='c297756385963b07ff754e74cbafdf5631ec5f51',
         pred_languages='es',
-        eval_set='eval',
+        eval_set='test',
         annotated_set_name='annotated',
         is_oracle='false',
-        eval_additional_args='--evaluate valid --overwrite --eval_set test'
+        eval_additional_args='--evaluate valid --overwrite'
 ):
     
     eval_env = {
@@ -1619,7 +1619,7 @@ def bootleg_train_eval(
         genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
         thingtalk_version=THINGTALK_VERSION,
         workdir_repo='git@github.com:stanford-oval/SPL.git',
-        workdir_version='729e3ad19a9b0ccedd0c9a3e9ebd19ca30166306',
+        workdir_version='c297756385963b07ff754e74cbafdf5631ec5f51',
         bootleg_version='f53e67397ddcd099f3a18a014c9ce82b02d2223c',
         load_from='None',
         train_languages='en',

@@ -7,7 +7,6 @@ inputs:
   - {name: owner, description: '', default: ''}
   - {name: experiment, description: '', default: ''}
   - {name: model, description: '', default: ''}
-  - {name: model_owner, description: '', default: ''}
   - {name: eval_set, description: '', default: ''}
   - {name: annotated_set_name, description: '', default: ''}
   - {name: is_oracle, description: '', default: ''}
@@ -30,12 +29,12 @@ implementation:
     - -c 
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image project owner experiment model model_owner eval_set task_name s3_model_dir pred_languages s3_metrics_output metrics_output annotated_set_name is_oracle" "$@"
+      parse_args "$0" "image project owner experiment model eval_set task_name s3_model_dir s3_datadir pred_languages s3_metrics_output metrics_output annotated_set_name is_oracle" "$@"
       shift $n
       cd $HOME
 
       /opt/genie-toolkit/sync-repos.sh
-      MAKEDIR=`get_make_dir ${project}`
+      MAKEDIR='.'
       cat >> workdir/config.mk <<EOF
       developer_key = ${THINGPEDIA_DEVELOPER_KEY}
       EOF
@@ -54,15 +53,15 @@ implementation:
         mkdir -p $experiment/${eval_set}/${lang}
         if [[ "$task_name" == *"contextual"* || "$task_name" == *"dialog"* ]] ; then
             aws s3 sync ${s3_datadir} ./dataset/ --exclude "*" --include "$$lang" --include "*eval*.tsv"  --include "*test*.tsv"
-            make -j2 -B geniedir=/opt/genie-toolkit project=$project experiment_dialog=$experiment eval_set=${eval_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${lang}/${eval_set}.tsv" ${experiment}/${eval_set}/${model}.nlu.results
+            make -j2 -B geniedir=/opt/genie-toolkit s3_model_dir=${s3_model_dir} project=$project experiment_dialog=$experiment eval_set=${eval_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${lang}/${eval_set}.tsv" ${experiment}/${eval_set}/${model}.nlu.results
             for f in $experiment/${eval_set}/${model}.nlu.{results,debug} ; do
               aws s3 cp $f s3://geniehai/${owner}/workdir/${project}/${experiment}/${eval_set}/${lang}/ || true
             done
             cat $experiment/${eval_set}/${model}.nlu.results
 
             if [[ "${annotated_set_name}" != 'None' && -f ./dataset/${lang}/annotated/${annotated_set_name}.txt ]] ; then
-              make -B geniedir=/opt/genie-toolkit project=$project experiment_dialog=$experiment eval_set=${eval_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${lang}/annotated/${annotated_set_name}.txt" ${experiment}/${eval_set}/${model}.dialog.results
-              make -B geniedir=/opt/genie-toolkit project=$project experiment_dialog=$experiment eval_set=${eval_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${lang}/annotated/${annotated_set_name}.txt" ${experiment}/${eval_set}/${model}.predictions.json
+              make -j2 -B geniedir=/opt/genie-toolkit s3_model_dir=${s3_model_dir} project=$project experiment_dialog=$experiment eval_set=${eval_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${lang}/annotated/${annotated_set_name}.txt" ${experiment}/${eval_set}/${model}.dialog.results
+              make -j2 -B geniedir=/opt/genie-toolkit s3_model_dir=${s3_model_dir} project=$project experiment_dialog=$experiment eval_set=${eval_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${lang}/annotated/${annotated_set_name}.txt" ${experiment}/${eval_set}/${model}.predictions.json
               for f in $experiment/${eval_set}/${model}.dialog.{results,debug} ; do
                 aws s3 cp $f s3://geniehai/${owner}/workdir/${project}/${experiment}/${eval_set}/${lang}/ || true
               done
@@ -74,7 +73,7 @@ implementation:
             lang=''
           fi
           aws s3 sync ${s3_datadir} ./dataset/ --exclude "*" --include "*eval*.tsv"  --include "*test*.tsv"
-          make -B geniedir=/opt/genie-toolkit project=$project experiment=$experiment eval_set=${eval_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${lang}/${eval_set}.tsv" ${experiment}/${eval_set}/${model}.results_single
+          make -j2 -B geniedir=/opt/genie-toolkit s3_model_dir=${s3_model_dir} project=$project experiment=$experiment eval_set=${eval_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${lang}/${eval_set}.tsv" ${experiment}/${eval_set}/${model}.results_single
           for f in $experiment/${eval_set}/${model}.{results,debug} ; do
             aws s3 cp $f s3://geniehai/${owner}/workdir/${project}/${experiment}/${eval_set}/${lang}/
           done
@@ -86,9 +85,6 @@ implementation:
 
       done
 
-      ls -al 
-      mkdir tmp
-      MODEL_DIR=${model_owner}/${model}
 
     args: [
       'cmd',
@@ -97,9 +93,9 @@ implementation:
       --project, {inputValue: project},
       --experiment, {inputValue: experiment},
       --model, {inputValue: model},
-      --model_owner, {inputValue: model_owner},
       --eval_set, {inputValue: eval_set},
       --s3_model_dir, {inputValue: s3_model_dir},
+      --s3_datadir, {inputValue: s3_datadir},
       --annotated_set_name, {inputValue: annotated_set_name},
       --is_oracle, {inputValue: is_oracle},
       --pred_languages, {inputValue: pred_languages},
