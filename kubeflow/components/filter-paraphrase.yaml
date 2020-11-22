@@ -13,7 +13,7 @@ inputs:
   - {name: filtering_model, description: '', default: ''}
   - {name: filtering_batch_size, description: '', default: ''}
   - {name: paraphrase_subfolder, description: '', default: ''}
-  - {name: additional_args, description: '', default: ''}
+  - {name: filtering_additional_args, description: '', default: ''}
 outputs:
   - {name: s3_output_datadir}
 implementation:
@@ -44,7 +44,7 @@ implementation:
       mkdir -p `dirname $s3_output_datadir`
       echo ${s3_output_dir} > $s3_output_datadir
 
-      paraphrasing_arguments="$@"
+      filtering_arguments="$@"
 
       case "$task_name" in
         "almond_dialogue_nlu" | "almond_dialogue_nlu_agent")
@@ -80,7 +80,8 @@ implementation:
           --silent \
           --main_metric_only \
           --skip_cache \
-          --val_batch_size ${filtering_batch_size}
+          --val_batch_size ${filtering_batch_size} \
+          $filtering_arguments
         cp ./eval_dir/valid/${task_name}.results.json ${output_dir}/
         # cp ./eval_dir/valid/${task_name}.tsv ${output_dir}/ # useful for debugging the paraphraser
       }
