@@ -32,21 +32,19 @@ implementation:
     - -c 
     - |
       . /opt/genie-toolkit/lib.sh
+
       parse_args "$0" "image owner project experiment s3_bucket model_name_or_path input_splits train_output_per_example nmt do_alignment src_lang tgt_lang dlg_side prepare_for_translation do_translation post_process_translation task_name s3_datadir" "$@"
       shift $n
-      cd $HOME
 
-      /opt/genie-toolkit/sync-repos.sh
+      . /opt/genie-toolkit/sync-repos.sh
+
+      cd $HOME
 
       if [ -f workdir/Makefile ] ; then
         MAKEDIR='.'
       else
         MAKEDIR=${project}
       fi
-
-      cat >> workdir/config.mk <<EOF
-      developer_key = ${THINGPEDIA_DEVELOPER_KEY}
-      EOF
 
       cd workdir/${MAKEDIR}
 
@@ -59,42 +57,39 @@ implementation:
 
       IFS='+'; read -ra input_splits_array <<<"$input_splits"; IFS=' '
       if ${prepare_for_translation}; then
-        # copy workdir makefiles over
-        aws s3 sync --no-progress s3://${s3_bucket}/${owner}/workdir/${project} ./ --exclude "*" \
-          --include '*.mk' --include '*.config' --include '*/schema.tt' --include 'Makefile' --include '*/*.py' --include '*parameter-datasets*'
-
         make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} process_data
         aws s3 sync --no-progress ./${experiment}/en/ ${s3_datadir}en/
       fi
 
       # translate
       if ${do_translation}; then
-        # copy workdir makefiles over
-        aws s3 sync --no-progress s3://${s3_bucket}/${owner}/workdir/${project} ./ --exclude "*" \
-          --include '*.mk' --include '*.config' --include '*/schema.tt' --include 'Makefile' --include '*/*.py'
+        case ${nmt}+${do_alignment} in
+          marian+true)
+            make -B -j2 geniedir=/opt/genie-toolkit \
+              default_translation_hparams="${translation_arguments} --tgt_lang ${tgt_lang} --model_name_or_path ${model_name_or_path} --replace_qp --force_replace_qp" \
+              all_names="${input_splits_array[*]}" experiment=${experiment} train_output_per_example=${train_output_per_example} skip_translation=false ${experiment}/marian/${tgt_lang}/unquoted-qpis-translated
+          ;;
+          marian+false)
+            make -B -j2 geniedir=/opt/genie-toolkit \
+              default_translation_hparams="${translation_arguments} --tgt_lang ${tgt_lang} --model_name_or_path ${model_name_or_path}" \
+              all_names="${input_splits_array[*]}" experiment=${experiment} train_output_per_example=${train_output_per_example} skip_translation=false ${experiment}/marian/${tgt_lang}/unquoted-qpis-direct-translated
+          ;;
+          gt+true)
+            make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} gt_project_id="multilanguage-273819" gt_project_number="211743822806" gt_credential_file="gt-json/multilanguage-a40fe9320f88.json" train_output_per_example=${train_output_per_example} skip_translation=false ${experiment}/gt/${tgt_lang}/quoted-qpis-translated
+          ;;
+          gt+false)
+            make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} gt_project_id="multilanguage-273819" gt_project_number="211743822806" gt_credential_file="gt-json/multilanguage-a40fe9320f88.json" train_output_per_example=${train_output_per_example} skip_translation=false ${experiment}/gt/${tgt_lang}/unquoted-qpis-direct-translated
+          ;;
+          *)
+            echo "Not a valid nmt model"
+          esac
 
-        if [ ${nmt} == "marian" ] ; then
-          if ${direct} ; then
-            make -B -j2 geniedir=/opt/genie-toolkit --tgt_lang ${tgt_lang} --model_name_or_path ${model_name_or_path} default_translation_hparams=${translation_arguments} all_names="${input_splits_array[*]}" experiment=${experiment} train_output_per_example=${train_output_per_example} skip_translation=false $(experiment)/marian/${tgt_lang}/unquoted-qpis-direct-translated
-          else
-            make -B -j2 geniedir=/opt/genie-toolkit --tgt_lang ${tgt_lang} --model_name_or_path ${model_name_or_path} default_translation_hparams=${translation_arguments} all_names="${input_splits_array[*]}" experiment=${experiment} train_output_per_example=${train_output_per_example} skip_translation=false $(experiment)/marian/${tgt_lang}/unquoted-qpis-translated
-          fi
-        elif [ ${nmt} == "gt" ] ; then
-          if ${direct} ; then
-            make -B -j2 geniedir=/opt/genie-toolkit default_translation_hparams=${translation_arguments} all_names="${input_splits_array[*]}" experiment=${experiment} gt_project_id="multilanguage-273819" gt_project_number="211743822806" gt_credential_file="gt-json/multilanguage-a40fe9320f88.json" train_output_per_example=${train_output_per_example} skip_translation=false $(experiment)/gt/${tgt_lang}/quoted-qpis-translated
-          else
-            make -B -j2 geniedir=/opt/genie-toolkit default_translation_hparams=${translation_arguments} all_names="${input_splits_array[*]}" experiment=${experiment} gt_project_id="multilanguage-273819" gt_project_number="211743822806" gt_credential_file="gt-json/multilanguage-a40fe9320f88.json" train_output_per_example=${train_output_per_example} skip_translation=false $(experiment)/gt/${tgt_lang}/unquoted-qpis-direct-translated
-          fi
-        fi
         aws s3 sync --no-progress ./${experiment}/marian/${tgt_lang} ${s3_datadir}marian/${tgt_lang}
       fi
 
       # further process the translated files
       if ${post_process_translation}; then
-        # copy workdir makefiles over
-        aws s3 sync --no-progress s3://${s3_bucket}/${owner}/workdir/${project} ./ --exclude "*" \
-          --include '*.mk' --include '*.config' --include '*/schema.tt' --include 'Makefile' --include '*/*.py'  --include '*parameter-datasets*'
-
+        # TODO add alignment option
         if [ ${nmt} == "marian" ] ; then
           make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} train_output_per_example=${train_output_per_example} skip_translation=true translate_marian_unquoted_${tgt_lang}
         elif [ ${nmt} == "gt" ] ; then

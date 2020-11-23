@@ -5,7 +5,11 @@ export AWS_PROFILE
 aws ecr get-login --no-include-email | bash
 
 . ../config
-check_config "IMAGE COMMON_IMAGE JUPYTER_IMAGE genie_version thingtalk_version bootleg_version genienlp_version "
+
+cp ../lib.sh .
+. lib.sh
+
+check_config "IMAGE COMMON_IMAGE genie_version thingtalk_version bootleg_version genienlp_version "
 
 set -ex
 
@@ -15,7 +19,7 @@ genie_version=${genie_version:-master}
 bootleg_version=${bootleg_version:-master}
 add_bootleg=${add_bootleg:-false}
 
-cp ../lib.sh .
+
 
 docker pull ${COMMON_IMAGE}
 docker build -t ${IMAGE} \

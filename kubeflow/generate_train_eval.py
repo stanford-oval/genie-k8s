@@ -1895,7 +1895,7 @@ def prepare_for_translation_step(
         src_lang=src_lang,
         tgt_lang=tgt_lang,
         dlg_side=dlg_side,
-        prepare_for_translation='ture',
+        prepare_for_translation='true',
         do_translation='false',
         post_process_translation='false',
         task_name=task_name,
@@ -2043,11 +2043,7 @@ def post_process_translation_step(
     return post_process_translation_op
 
 
-@dsl.pipeline(
-    name='Translation',
-    description='Generate dataset using NMT'
-)
-def translate(
+def all_translation_steps(
         owner='mehrad',
         project='spl',
         experiment='restaurants',
@@ -2098,6 +2094,7 @@ def translate(
             workdir_version=workdir_version,
             additional_args=additional_args
         )
+        prepare_for_translation_op.container.set_image_pull_policy('Always')
     
     if do_translation:
         do_translation_op = do_translation_step(
@@ -2123,6 +2120,7 @@ def translate(
             workdir_version=workdir_version,
             additional_args=additional_args
         )
+        do_translation_op.container.set_image_pull_policy('Always')
     
         if prepare_for_translation:
             do_translation_op.after(prepare_for_translation_op)
@@ -2151,8 +2149,118 @@ def translate(
                 workdir_version=workdir_version,
                 additional_args=additional_args
             )
+        post_process_translation_op.container.set_image_pull_policy('Always')
     
         if prepare_for_translation and do_translation:
             post_process_translation_op.after(do_translation_op, prepare_for_translation_op)
         elif do_translation:
             post_process_translation_op.after(do_translation_op)
+
+@dsl.pipeline(
+    name='Preprocess for Translation',
+    description='Prepare English dataset for translation'
+)
+def preprocess_for_translation(
+        owner='mehrad',
+        project='spl',
+        experiment='restaurants',
+        s3_bucket='geniehai',
+        task_name='almond',
+        s3_datadir='',
+        model_name_or_path='Helsinki-NLP/opus-mt-en-{}',
+        input_splits='test+eval+train',
+        train_output_per_example='1',
+        nmt='marian',
+        do_alignment='true',
+        src_lang='en',
+        tgt_lang='',
+        dlg_side='user',
+        image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-spl',
+        genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
+        genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
+        workdir_version='master',
+        additional_args='--temperature 0.4 --repetition_penalty 1.0 --num_samples 1 --batch_size 512  --skip_heuristics --att_pooling mean --task translate'
+):
+    all_translation_steps(
+            owner=owner,
+            project=project,
+            experiment=experiment,
+            s3_bucket=s3_bucket,
+            task_name=task_name,
+            s3_datadir=s3_datadir,
+            model_name_or_path=model_name_or_path,
+            input_splits=input_splits,
+            train_output_per_example=train_output_per_example,
+            nmt=nmt,
+            do_alignment=do_alignment,
+            src_lang=src_lang,
+            tgt_lang=tgt_lang,
+            dlg_side=dlg_side,
+            prepare_for_translation=True,
+            do_translation=False,
+            post_process_translation=False,
+            image=image,
+            genienlp_version=genienlp_version,
+            genie_version=genie_version,
+            thingtalk_version=thingtalk_version,
+            workdir_repo=workdir_repo,
+            workdir_version=workdir_version,
+            additional_args=additional_args
+    )
+
+
+@dsl.pipeline(
+    name='Translate and Postprocess)',
+    description='Translate data and postprocess it'
+)
+def translate_and_postprocess(
+        owner='mehrad',
+        project='spl',
+        experiment='restaurants',
+        s3_bucket='geniehai',
+        task_name='almond',
+        s3_datadir='',
+        model_name_or_path='Helsinki-NLP/opus-mt-en-{}',
+        input_splits='test+eval+train',
+        train_output_per_example='1',
+        nmt='marian',
+        do_alignment='true',
+        src_lang='en',
+        tgt_lang='',
+        dlg_side='user',
+        image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-spl',
+        genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
+        genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
+        workdir_version='master',
+        additional_args='--temperature 0.4 --repetition_penalty 1.0 --num_samples 1 --batch_size 512  --skip_heuristics --att_pooling mean --task translate --id_column 0  --input_column 1 --gold_column 1 --return_attentions --output_example_ids_too'
+):
+    all_translation_steps(
+            owner=owner,
+            project=project,
+            experiment=experiment,
+            s3_bucket=s3_bucket,
+            task_name=task_name,
+            s3_datadir=s3_datadir,
+            model_name_or_path=model_name_or_path,
+            input_splits=input_splits,
+            train_output_per_example=train_output_per_example,
+            nmt=nmt,
+            do_alignment=do_alignment,
+            src_lang=src_lang,
+            tgt_lang=tgt_lang,
+            dlg_side=dlg_side,
+            prepare_for_translation=False,
+            do_translation=True,
+            post_process_translation=True,
+            image=image,
+            genienlp_version=genienlp_version,
+            genie_version=genie_version,
+            thingtalk_version=thingtalk_version,
+            workdir_repo=workdir_repo,
+            workdir_version=workdir_version,
+            additional_args=additional_args
+    )
