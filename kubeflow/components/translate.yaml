@@ -53,7 +53,7 @@ implementation:
       aws s3 cp s3://${s3_bucket}/mehrad/extras/gt-json/multilanguage-a40fe9320f88.json ./gt-json/multilanguage-a40fe9320f88.json
 
       aws s3 sync --no-progress ${s3_datadir} dataset/${experiment}/ --exclude '*/*'
-      aws s3 sync --no-progress ${s3_datadir} ${experiment}/ --exclude '*' --include '*/*'
+      aws s3 sync --no-progress ${s3_datadir} ${experiment}/ --exclude '*' --include 'en/*' --include 'marian/${tgt_lang}/*' --include 'gt/${tgt_lang}/*'
 
       IFS='+'; read -ra input_splits_array <<<"$input_splits"; IFS=' '
       if ${prepare_for_translation}; then
