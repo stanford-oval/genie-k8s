@@ -2264,3 +2264,58 @@ def translate_and_postprocess(
             workdir_version=workdir_version,
             additional_args=additional_args
     )
+    
+    
+@dsl.pipeline(
+    name='Postprocess for Translation',
+    description='Postprocess Translated data'
+)
+def postprocess_for_translation(
+        owner='mehrad',
+        project='spl',
+        experiment='restaurants',
+        s3_bucket='geniehai',
+        task_name='almond',
+        s3_datadir='',
+        model_name_or_path='Helsinki-NLP/opus-mt-en-{}',
+        input_splits='test+eval+train',
+        train_output_per_example='1',
+        nmt='marian',
+        do_alignment='true',
+        src_lang='en',
+        tgt_lang='',
+        dlg_side='user',
+        image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-spl',
+        genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
+        genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
+        workdir_version='master',
+        additional_args='--temperature 0.4 --repetition_penalty 1.0 --num_samples 1 --batch_size 512  --skip_heuristics --att_pooling mean --task translate --id_column 0  --input_column 1 --gold_column 1 --return_attentions --output_example_ids_too'
+):
+    all_translation_steps(
+            owner=owner,
+            project=project,
+            experiment=experiment,
+            s3_bucket=s3_bucket,
+            task_name=task_name,
+            s3_datadir=s3_datadir,
+            model_name_or_path=model_name_or_path,
+            input_splits=input_splits,
+            train_output_per_example=train_output_per_example,
+            nmt=nmt,
+            do_alignment=do_alignment,
+            src_lang=src_lang,
+            tgt_lang=tgt_lang,
+            dlg_side=dlg_side,
+            prepare_for_translation=False,
+            do_translation=False,
+            post_process_translation=True,
+            image=image,
+            genienlp_version=genienlp_version,
+            genie_version=genie_version,
+            thingtalk_version=thingtalk_version,
+            workdir_repo=workdir_repo,
+            workdir_version=workdir_version,
+            additional_args=additional_args
+    )
