@@ -2157,10 +2157,10 @@ def all_translation_steps(
             post_process_translation_op.after(do_translation_op)
 
 @dsl.pipeline(
-    name='Preprocess for Translation',
+    name='Prepare dataset for Translation',
     description='Prepare English dataset for translation'
 )
-def preprocess_for_translation(
+def prepare_for_translation(
         owner='mehrad',
         project='spl',
         experiment='restaurants',
