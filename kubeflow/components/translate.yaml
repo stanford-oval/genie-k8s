@@ -54,23 +54,23 @@ implementation:
 
       aws s3 cp s3://${s3_bucket}/mehrad/extras/gt-json/multilanguage-a40fe9320f88.json ./gt-json/multilanguage-a40fe9320f88.json
 
-      mkdir dataset
-      aws s3 sync ${s3_datadir} dataset/${experiment}
+      aws s3 sync --no-progress ${s3_datadir} dataset/${experiment}/ --exclude '*/*'
+      aws s3 sync --no-progress ${s3_datadir} ${experiment}/ --exclude '*' --include '*/*'
 
       IFS='+'; read -ra input_splits_array <<<"$input_splits"; IFS=' '
       if ${prepare_for_translation}; then
         # copy workdir makefiles over
-        aws s3 sync s3://${s3_bucket}/${owner}/workdir/${project} ./ --exclude "*" \
+        aws s3 sync --no-progress s3://${s3_bucket}/${owner}/workdir/${project} ./ --exclude "*" \
           --include '*.mk' --include '*.config' --include '*/schema.tt' --include 'Makefile' --include '*/*.py' --include '*parameter-datasets*'
 
         make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} process_data
-        aws s3 sync ./${experiment}/en/ ${s3_datadir}/en/
+        aws s3 sync --no-progress ./${experiment}/en/ ${s3_datadir}en/
       fi
 
       # translate
       if ${do_translation}; then
         # copy workdir makefiles over
-        aws s3 cp --recursive s3://${s3_bucket}/${owner}/workdir/${project} ./ --exclude "*" \
+        aws s3 sync --no-progress s3://${s3_bucket}/${owner}/workdir/${project} ./ --exclude "*" \
           --include '*.mk' --include '*.config' --include '*/schema.tt' --include 'Makefile' --include '*/*.py'
 
         if [ ${nmt} == "marian" ] ; then
@@ -86,13 +86,13 @@ implementation:
             make -B -j2 geniedir=/opt/genie-toolkit default_translation_hparams=${translation_arguments} all_names="${input_splits_array[*]}" experiment=${experiment} gt_project_id="multilanguage-273819" gt_project_number="211743822806" gt_credential_file="gt-json/multilanguage-a40fe9320f88.json" train_output_per_example=${train_output_per_example} skip_translation=false $(experiment)/gt/${tgt_lang}/unquoted-qpis-direct-translated
           fi
         fi
-        aws s3 sync ./${experiment}/marian/${tgt_lang} ${s3_datadir}/marian/${tgt_lang}
+        aws s3 sync --no-progress ./${experiment}/marian/${tgt_lang} ${s3_datadir}marian/${tgt_lang}
       fi
 
       # further process the translated files
       if ${post_process_translation}; then
         # copy workdir makefiles over
-        aws s3 cp --recursive s3://${s3_bucket}/${owner}/workdir/${project} ./ --exclude "*" \
+        aws s3 sync --no-progress s3://${s3_bucket}/${owner}/workdir/${project} ./ --exclude "*" \
           --include '*.mk' --include '*.config' --include '*/schema.tt' --include 'Makefile' --include '*/*.py'  --include '*parameter-datasets*'
 
         if [ ${nmt} == "marian" ] ; then
@@ -100,7 +100,7 @@ implementation:
         elif [ ${nmt} == "gt" ] ; then
           make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" gt_project_id="multilanguage-273819" gt_project_number="211743822806" gt_credential_file="gt-json/multilanguage-a40fe9320f88.json" experiment=${experiment} train_output_per_example=${train_output_per_example} skip_translation=true translate_gt_quoted_${tgt_lang}
         fi
-        aws s3 sync ./${experiment}/marian/${tgt_lang} ${s3_datadir}/marian/${tgt_lang}
+        aws s3 sync --no-progress ./${experiment}/marian/${tgt_lang} ${s3_datadir}marian/${tgt_lang}
       fi
 
     args: [
