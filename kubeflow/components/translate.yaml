@@ -53,12 +53,12 @@ implementation:
       aws s3 cp s3://${s3_bucket}/mehrad/extras/gt-json/multilanguage-a40fe9320f88.json ./gt-json/multilanguage-a40fe9320f88.json
 
       aws s3 sync --no-progress ${s3_datadir} dataset/${experiment}/ --exclude '*/*'
-      aws s3 sync --no-progress ${s3_datadir} ${experiment}/ --exclude '*' --include 'en/*' --include 'marian/${tgt_lang}/*' --include 'gt/${tgt_lang}/*'
+      aws s3 sync --no-progress ${s3_datadir} ${experiment}/ --exclude '*' --include 'translated/en/*' --include 'translated/marian/${tgt_lang}/*' --include 'translated/gt/${tgt_lang}/*'
 
       IFS='+'; read -ra input_splits_array <<<"$input_splits"; IFS=' '
       if ${prepare_for_translation}; then
         make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} process_data
-        aws s3 sync --no-progress ./${experiment}/en/ ${s3_datadir}en/
+        aws s3 sync --no-progress ./${experiment}/en/ ${s3_datadir}translated/en/
       fi
 
       # translate
@@ -84,7 +84,7 @@ implementation:
             echo "Not a valid nmt model"
           esac
 
-        aws s3 sync --no-progress ./${experiment}/marian/${tgt_lang} ${s3_datadir}marian/${tgt_lang}
+        aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${s3_datadir}translated/${nmt}/${tgt_lang}
       fi
 
       # further process the translated files
@@ -95,7 +95,7 @@ implementation:
         elif [ ${nmt} == "gt" ] ; then
           make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" gt_project_id="multilanguage-273819" gt_project_number="211743822806" gt_credential_file="gt-json/multilanguage-a40fe9320f88.json" experiment=${experiment} train_output_per_example=${train_output_per_example} skip_translation=true translate_gt_quoted_${tgt_lang}
         fi
-        aws s3 sync --no-progress ./${experiment}/marian/${tgt_lang} ${s3_datadir}marian/${tgt_lang}
+        aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${s3_datadir}translated/${nmt}/${tgt_lang}
       fi
 
     args: [
