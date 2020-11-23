@@ -1441,7 +1441,7 @@ def train_eval_sumbt(
 
 def train_spl_step(
         owner='mehrad',
-        project='multilanguage',
+        project='spl',
         experiment='restaurants',
         model='',
         task_name='almond_multilingual',
@@ -1508,7 +1508,7 @@ def train_spl_step(
 
 def eval_spl_step(
         owner='mehrad',
-        project='multilanguage',
+        project='spl',
         experiment='restaurants',
         model='',
         task_name='almond_multilingual',
@@ -1560,7 +1560,7 @@ def eval_spl_step(
 
 def bootleg_step(
         owner='mehrad',
-        project='multilanguage',
+        project='spl',
         experiment='restaurants',
         model='',
         task_name='almond_multilingual',
@@ -1627,7 +1627,7 @@ def bootleg_step(
 )
 def eval_spl(
         owner='mehrad',
-        project='multilanguage',
+        project='spl',
         experiment='restaurants',
         model='',
         task_name='almond_multilingual',
@@ -1673,7 +1673,7 @@ def eval_spl(
 )
 def train_eval_spl(
         owner='mehrad',
-        project='multilanguage',
+        project='spl',
         experiment='restaurants',
         model='',
         task_name='almond_multilingual',
@@ -1750,7 +1750,7 @@ def train_eval_spl(
 )
 def bootleg_train_eval(
         owner='mehrad',
-        project='schemaorg',
+        project='spl',
         experiment='restaurants',
         model='',
         task_name='almond',
@@ -1851,7 +1851,7 @@ def bootleg_train_eval(
 
 def prepare_for_translation_step(
         owner='mehrad',
-        project='schemaorg',
+        project='spl',
         experiment='restaurants',
         s3_bucket='geniehai',
         task_name='almond_multilingual',
@@ -1916,7 +1916,7 @@ def prepare_for_translation_step(
 
 def do_translation_step(
         owner='mehrad',
-        project='schemaorg',
+        project='spl',
         experiment='restaurants',
         s3_bucket='geniehai',
         task_name='almond_multilingual',
@@ -1989,7 +1989,7 @@ def do_translation_step(
 
 def post_process_translation_step(
         owner='mehrad',
-        project='schemaorg',
+        project='spl',
         experiment='restaurants',
         s3_bucket='geniehai',
         task_name='almond_multilingual',
@@ -2058,7 +2058,7 @@ def post_process_translation_step(
 )
 def translate(
         owner='mehrad',
-        project='schemaorg',
+        project='spl',
         experiment='restaurants',
         s3_bucket='geniehai',
         task_name='almond',
