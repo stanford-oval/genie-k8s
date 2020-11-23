@@ -46,7 +46,7 @@ implementation:
       mkdir -p "$modeldir"
 
       if test "{s3_database_dir}" != None ; then
-        aws s3 sync ${s3_database_dir} ./database/ --exclude '*' --include '*.json' --include '*bootleg_wiki*' --include '*emb_data*' --include '*entity_db*'
+        aws s3 sync --no-progress ${s3_database_dir} ./database/ --exclude '*' --include '*.json' --include '*bootleg_wiki*' --include '*emb_data*' --include '*entity_db*'
       fi
 
       load_args=
@@ -57,16 +57,16 @@ implementation:
 
       if [[ "$task_name" == *"multilingual"* ]] ; then
         for lang in "${TLS[@]}" "${ELS[@]}" ; do
-          aws s3 sync ${s3_datadir} ${HOME}/dataset/ --exclude "*" --include "*$lang*"
+          aws s3 sync --no-progress ${s3_datadir} ${HOME}/dataset/ --exclude "*" --include "*$lang*"
         done
         mkdir -p $modeldir/dataset/almond/multilingual
         ln -s ${HOME}/dataset/* $modeldir/dataset/almond/multilingual
       elif [[ "$task_name" == *"dialog"* || "$task_name" == *"contextual"* ]] ; then
-        aws s3 sync --exclude "synthetic*.txt" ${s3_datadir} dataset/
+        aws s3 sync --no-progress --exclude "synthetic*.txt" ${s3_datadir} dataset/
         mkdir -p $modeldir/dataset/almond/${dlg_side}
         ln -s ${HOME}/dataset/* $modeldir/dataset/almond/${dlg_side}
       else
-        aws s3 sync ${s3_datadir} dataset/
+        aws s3 sync --no-progress ${s3_datadir} dataset/
         mkdir -p $modeldir/dataset/almond/
         ln -s ${HOME}/dataset/* $modeldir/dataset/almond/
       fi
