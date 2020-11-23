@@ -1847,3 +1847,321 @@ def bootleg_train_eval(
         s3_model_dir=train_op.outputs['s3_model_dir'],
         additional_args=eval_additional_args
     )
+
+
+def prepare_for_translation_step(
+        owner='mehrad',
+        project='schemaorg',
+        experiment='restaurants',
+        s3_bucket='geniehai',
+        task_name='almond_multilingual',
+        s3_datadir='',
+        model_name_or_path='',
+        input_splits='test+eval+train',
+        train_output_per_example='1',
+        nmt='',
+        do_alignment='true',
+        src_lang='en',
+        tgt_lang='',
+        dlg_side='user',
+        prepare_for_translation='true',
+        do_translation='false',
+        post_process_translation='false',
+        image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-spl',
+        genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
+        genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
+        workdir_version='master',
+        additional_args=''
+
+):
+    prepare_for_translation_env = {
+        'GENIENLP_VERSION': genienlp_version,
+        'GENIE_VERSION': genie_version,
+        'THINGTALK_VERSION': thingtalk_version,
+        'WORKDIR_REPO': workdir_repo,
+        'WORKDIR_VERSION': workdir_version,
+    }
+    
+    prepare_for_translation_op = components.load_component_from_file('components/translate.yaml')(
+        image=image,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        s3_bucket=s3_bucket,
+        model_name_or_path=model_name_or_path,
+        input_splits=input_splits,
+        train_output_per_example=train_output_per_example,
+        nmt=nmt,
+        do_alignment=do_alignment,
+        src_lang=src_lang,
+        tgt_lang=tgt_lang,
+        dlg_side=dlg_side,
+        prepare_for_translation=prepare_for_translation,
+        do_translation=do_translation,
+        post_process_translation=post_process_translation,
+        task_name=task_name,
+        s3_datadir=s3_datadir,
+        additional_args=additional_args)
+    (prepare_for_translation_op.container
+     .set_memory_limit('15Gi')
+     .set_memory_request('15Gi')
+     .set_cpu_limit('4')
+     .set_cpu_request('4'))
+    add_env(add_ssh_volume(prepare_for_translation_op), prepare_for_translation_env)
+    
+    return prepare_for_translation_op
+
+
+def do_translation_step(
+        owner='mehrad',
+        project='schemaorg',
+        experiment='restaurants',
+        s3_bucket='geniehai',
+        task_name='almond_multilingual',
+        s3_datadir='',
+        model_name_or_path='',
+        input_splits='test+eval+train',
+        train_output_per_example='1',
+        nmt='',
+        do_alignment='true',
+        src_lang='en',
+        tgt_lang='',
+        dlg_side='user',
+        prepare_for_translation='false',
+        do_translation='true',
+        post_process_translation='false',
+        image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-spl',
+        genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
+        genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
+        workdir_version='master',
+        additional_args=''
+
+):
+    do_translation_env = {
+        'GENIENLP_VERSION': genienlp_version,
+        'GENIE_VERSION': genie_version,
+        'THINGTALK_VERSION': thingtalk_version,
+        'WORKDIR_REPO': workdir_repo,
+        'WORKDIR_VERSION': workdir_version,
+    }
+
+    do_translation_num_gpus=1
+    do_translation_op = components.load_component_from_file('components/translate.yaml')(
+        image=image,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        s3_bucket=s3_bucket,
+        model_name_or_path=model_name_or_path,
+        input_splits=input_splits,
+        train_output_per_example=train_output_per_example,
+        nmt=nmt,
+        do_alignment=do_alignment,
+        src_lang=src_lang,
+        tgt_lang=tgt_lang,
+        dlg_side=dlg_side,
+        prepare_for_translation=prepare_for_translation,
+        do_translation=do_translation,
+        post_process_translation=post_process_translation,
+        task_name=task_name,
+        s3_datadir=s3_datadir,
+        additional_args=additional_args)
+    (do_translation_op.container
+     .set_memory_request('56Gi')
+     .set_memory_limit('56Gi')
+     .set_cpu_request('7.5')
+     .set_cpu_limit('7.5')
+     .set_gpu_limit(str(do_translation_num_gpus))
+     .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
+     )
+    (add_env(add_ssh_volume(do_translation_op), do_translation_env)
+     .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+     .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2 * do_translation_num_gpus}xlarge')
+     .add_volume(V1Volume(name='tensorboard',
+                          persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
+    
+    return do_translation_op
+
+
+def post_process_translation_step(
+        owner='mehrad',
+        project='schemaorg',
+        experiment='restaurants',
+        s3_bucket='geniehai',
+        task_name='almond_multilingual',
+        s3_datadir='',
+        model_name_or_path='',
+        input_splits='test+eval+train',
+        train_output_per_example='1',
+        nmt='',
+        do_alignment='true',
+        src_lang='en',
+        tgt_lang='',
+        dlg_side='user',
+        prepare_for_translation='false',
+        do_translation='false',
+        post_process_translation='true',
+        image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-spl',
+        genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
+        genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
+        workdir_version='master',
+        additional_args=''
+
+):
+    post_process_translation_env = {
+        'GENIENLP_VERSION': genienlp_version,
+        'GENIE_VERSION': genie_version,
+        'THINGTALK_VERSION': thingtalk_version,
+        'WORKDIR_REPO': workdir_repo,
+        'WORKDIR_VERSION': workdir_version,
+    }
+    
+    post_process_translation_op = components.load_component_from_file('components/translate.yaml')(
+        image=image,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        s3_bucket=s3_bucket,
+        model_name_or_path=model_name_or_path,
+        input_splits=input_splits,
+        train_output_per_example=train_output_per_example,
+        nmt=nmt,
+        do_alignment=do_alignment,
+        src_lang=src_lang,
+        tgt_lang=tgt_lang,
+        dlg_side=dlg_side,
+        prepare_for_translation=prepare_for_translation,
+        do_translation=do_translation,
+        post_process_translation=post_process_translation,
+        task_name=task_name,
+        s3_datadir=s3_datadir,
+        additional_args=additional_args)
+    (post_process_translation_op.container
+     .set_memory_limit('15Gi')
+     .set_memory_request('15Gi')
+     .set_cpu_limit('4')
+     .set_cpu_request('4'))
+    add_env(add_ssh_volume(post_process_translation_op), post_process_translation_env)
+    
+    return post_process_translation_op
+
+
+@dsl.pipeline(
+    name='Translation',
+    description='Generate dataset using NMT'
+)
+def translate(
+        owner='mehrad',
+        project='schemaorg',
+        experiment='restaurants',
+        s3_bucket='geniehai',
+        task_name='almond',
+        s3_datadir='',
+        model_name_or_path='',
+        input_splits='test+eval+train',
+        train_output_per_example='1',
+        nmt='',
+        do_alignment='true',
+        src_lang='en',
+        tgt_lang='',
+        dlg_side='user',
+        prepare_for_translation='false',
+        do_translation='false',
+        post_process_translation='false',
+        image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-spl',
+        genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
+        genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
+        workdir_version='master',
+        additional_args='--temperature 0.4 --repetition_penalty 1.0 --num_samples 1 --batch_size 512  --skip_heuristics --att_pooling mean --task translate'
+
+):
+    if prepare_for_translation:
+        prepare_for_translation_op = prepare_for_translation_step(
+            owner=owner,
+            project=project,
+            experiment=experiment,
+            s3_bucket=s3_bucket,
+            task_name=task_name,
+            s3_datadir=s3_datadir,
+            model_name_or_path=model_name_or_path,
+            input_splits=input_splits,
+            train_output_per_example=train_output_per_example,
+            nmt=nmt,
+            do_alignment=do_alignment,
+            src_lang=src_lang,
+            tgt_lang=tgt_lang,
+            dlg_side=dlg_side,
+            image=image,
+            genienlp_version=genienlp_version,
+            genie_version=genie_version,
+            thingtalk_version=thingtalk_version,
+            workdir_repo=workdir_repo,
+            workdir_version=workdir_version,
+            additional_args=additional_args
+        )
+    
+    if do_translation:
+        do_translation_op = do_translation_step(
+            owner=owner,
+            project=project,
+            experiment=experiment,
+            s3_bucket=s3_bucket,
+            task_name=task_name,
+            s3_datadir=s3_datadir,
+            model_name_or_path=model_name_or_path,
+            input_splits=input_splits,
+            train_output_per_example=train_output_per_example,
+            nmt=nmt,
+            do_alignment=do_alignment,
+            src_lang=src_lang,
+            tgt_lang=tgt_lang,
+            dlg_side=dlg_side,
+            image=image,
+            genienlp_version=genienlp_version,
+            genie_version=genie_version,
+            thingtalk_version=thingtalk_version,
+            workdir_repo=workdir_repo,
+            workdir_version=workdir_version,
+            additional_args=additional_args
+        )
+    
+        if prepare_for_translation:
+            do_translation_op.after(prepare_for_translation_op)
+    
+    if post_process_translation:
+        post_process_translation_op = post_process_translation_step(
+                owner=owner,
+                project=project,
+                experiment=experiment,
+                s3_bucket=s3_bucket,
+                task_name=task_name,
+                s3_datadir=s3_datadir,
+                model_name_or_path=model_name_or_path,
+                input_splits=input_splits,
+                train_output_per_example=train_output_per_example,
+                nmt=nmt,
+                do_alignment=do_alignment,
+                src_lang=src_lang,
+                tgt_lang=tgt_lang,
+                dlg_side=dlg_side,
+                image=image,
+                genienlp_version=genienlp_version,
+                genie_version=genie_version,
+                thingtalk_version=thingtalk_version,
+                workdir_repo=workdir_repo,
+                workdir_version=workdir_version,
+                additional_args=additional_args
+            )
+    
+        if prepare_for_translation and do_translation:
+            post_process_translation_op.after(do_translation_op, prepare_for_translation_op)
+        elif do_translation:
+            post_process_translation_op.after(do_translation_op)
