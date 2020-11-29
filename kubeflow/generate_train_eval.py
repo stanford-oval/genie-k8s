@@ -2586,7 +2586,7 @@ def round_trip_paraphrasing(
         thingtalk_version=THINGTALK_VERSION,
         workdir_repo=GENIE_WORKDIR_REPO,
         workdir_version=GENIE_WORKDIR_VERSION,
-        additional_args='--temperature 0.4 --repetition_penalty 1.0 --num_samples 1 --batch_size 512  --skip_heuristics --att_pooling mean --id_column 0  --input_column 1 --gold_column 1 --return_attentions --output_example_ids_too'
+        additional_args='--temperature 0.4 --repetition_penalty 1.0 --num_samples 1 --batch_size 512  --skip_heuristics --att_pooling mean --id_column 0  --input_column 1 --gold_column 1 --return_attentions --output_example_ids_too --task translate --return_attentions'
 ):
     all_paraphrasing_steps(
             owner=owner,
@@ -2642,7 +2642,7 @@ def masked_paraphrasing(
         thingtalk_version=THINGTALK_VERSION,
         workdir_repo=GENIE_WORKDIR_REPO,
         workdir_version=GENIE_WORKDIR_VERSION,
-        additional_args='--infill_text --num_text_spans 1 --temperature 0.4 --repetition_penalty 1.0 --num_samples 1 --batch_size 512  --skip_heuristics --att_pooling mean --id_column 0  --input_column 1 --gold_column 1 --return_attentions --output_example_ids_too'
+        additional_args='--infill_text --num_text_spans 1 --temperature 0.4 --repetition_penalty 1.0 --num_samples 1 --batch_size 512  --skip_heuristics --att_pooling mean --id_column 0  --input_column 1 --gold_column 1 --return_attentions --output_example_ids_too --task paraphrase --return_attentions'
 ):
     all_paraphrasing_steps(
             owner=owner,
