@@ -60,19 +60,17 @@ implementation:
           aws s3 sync --no-progress ${s3_datadir} ${HOME}/dataset/ --exclude "*" --include "*$lang*"
         done
         mkdir -p $modeldir/dataset/almond/multilingual
-        ln -s ${HOME}/dataset/* $modeldir/dataset/almond/multilingual
+        mv ${HOME}/dataset/* $modeldir/dataset/almond/multilingual
       elif [[ "$task_name" == *"dialog"* || "$task_name" == *"contextual"* ]] ; then
         aws s3 sync --no-progress --exclude "synthetic*.txt" ${s3_datadir} dataset/
         mkdir -p $modeldir/dataset/almond/${dlg_side}
-        ln -s ${HOME}/dataset/* $modeldir/dataset/almond/${dlg_side}
+        mv ${HOME}/dataset/* $modeldir/dataset/almond/${dlg_side}
       else
         aws s3 sync --no-progress ${s3_datadir} dataset/
         mkdir -p $modeldir/dataset/almond/
-        ln -s ${HOME}/dataset/* $modeldir/dataset/almond/
+        mv ${HOME}/dataset/* $modeldir/dataset/almond/
       fi
 
-      rm -fr "$modeldir/dataset"
-      mkdir "$modeldir/dataset"
       rm -fr "$modeldir/cache"
       mkdir -p "$modeldir/cache"
       ln -s $modeldir /home/genie-toolkit/current
@@ -97,7 +95,7 @@ implementation:
           --eval_set_name $eval_set \
           --train_languages $train_languages \
           --eval_languages $eval_languages \
-          --do_ner
+          --do_ner \
           --retrieve_method bootleg \
           --bootleg_input_dir ./database/ \
           --bootleg_dump_features
