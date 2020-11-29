@@ -59,6 +59,8 @@ implementation:
       rm -rf ${experiment}/translated
 
       IFS='+'; read -ra input_splits_array <<<"$input_splits"; IFS=' '
+
+      # prepare for translation
       if ${prepare_for_translation}; then
         make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} process_data
         aws s3 sync --no-progress ./${experiment}/en/ ${s3_datadir}translated/en/

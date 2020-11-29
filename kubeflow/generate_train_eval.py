@@ -1933,7 +1933,6 @@ def do_translation_step(
         workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
         workdir_version='master',
         additional_args=''
-
 ):
     do_translation_env = {
         'GENIENLP_VERSION': genienlp_version,
@@ -2311,6 +2310,347 @@ def postprocess_for_translation(
             prepare_for_translation=False,
             do_translation=False,
             post_process_translation=True,
+            image=image,
+            genienlp_version=genienlp_version,
+            genie_version=genie_version,
+            thingtalk_version=thingtalk_version,
+            workdir_repo=workdir_repo,
+            workdir_version=workdir_version,
+            additional_args=additional_args
+    )
+    
+    
+def paraphrase_step(
+        owner='mehrad',
+        project='spl',
+        experiment='restaurants',
+        s3_bucket='geniehai',
+        task_name='almond_multilingual',
+        s3_datadir='',
+        model_name_or_path='',
+        input_splits='test+eval+train',
+        train_output_per_example='1',
+        nmt='',
+        pivot_lang='',
+        do_alignment='true',
+        src_lang='en',
+        tgt_lang='',
+        dlg_side='user',
+        paraphrasing_method='false',
+        image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-spl',
+        genienlp_version='2341dbdd0faf5a306b3d3b243bb7c71ccfa6cc2a',
+        genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
+        workdir_version='master',
+        additional_args=''
+):
+    
+    paraphrase_env = {
+        'GENIENLP_VERSION': genienlp_version,
+        'GENIE_VERSION': genie_version,
+        'THINGTALK_VERSION': thingtalk_version,
+        'WORKDIR_REPO': workdir_repo,
+        'WORKDIR_VERSION': workdir_version,
+    }
+    
+    paraphrase_num_gpus = 1
+    paraphrase_op = components.load_component_from_file('components/sts-paraphrase.yaml')(
+        image=image,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        s3_bucket=s3_bucket,
+        model_name_or_path=model_name_or_path,
+        input_splits=input_splits,
+        train_output_per_example=train_output_per_example,
+        nmt=nmt,
+        pivot_lang=pivot_lang,
+        do_alignment=do_alignment,
+        src_lang=src_lang,
+        tgt_lang=tgt_lang,
+        dlg_side=dlg_side,
+        do_paraphrasing='true',
+        paraphrasing_method=paraphrasing_method,
+        filter_sts_paraphrase='false',
+        task_name=task_name,
+        s3_datadir=s3_datadir,
+        additional_args=additional_args)
+    (paraphrase_op.container
+     .set_memory_request('56Gi')
+     .set_memory_limit('56Gi')
+     .set_cpu_request('7.5')
+     .set_cpu_limit('7.5')
+     .set_gpu_limit(str(paraphrase_num_gpus))
+     .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
+     )
+    (add_env(add_ssh_volume(paraphrase_op), paraphrase_env)
+     .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+     .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2 * paraphrase_num_gpus}xlarge')
+     .add_volume(V1Volume(name='tensorboard',
+                          persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
+    
+    return paraphrase_op
+
+
+def sts_filtering_step(
+        owner='mehrad',
+        project='spl',
+        experiment='restaurants',
+        s3_bucket='geniehai',
+        task_name='almond_multilingual',
+        s3_datadir='',
+        model_name_or_path='',
+        input_splits='test+eval+train',
+        train_output_per_example='1',
+        nmt='',
+        pivot_lang='',
+        do_alignment='true',
+        src_lang='en',
+        tgt_lang='',
+        dlg_side='user',
+        image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-spl',
+        genienlp_version='2341dbdd0faf5a306b3d3b243bb7c71ccfa6cc2a',
+        genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
+        workdir_version='master',
+        additional_args=''
+):
+    sts_filtering_env = {
+        'GENIENLP_VERSION': genienlp_version,
+        'GENIE_VERSION': genie_version,
+        'THINGTALK_VERSION': thingtalk_version,
+        'WORKDIR_REPO': workdir_repo,
+        'WORKDIR_VERSION': workdir_version,
+    }
+    
+    sts_filtering_num_gpus = 1
+    sts_filtering_op = components.load_component_from_file('components/sts-paraphrase.yaml')(
+        image=image,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        s3_bucket=s3_bucket,
+        model_name_or_path=model_name_or_path,
+        input_splits=input_splits,
+        train_output_per_example=train_output_per_example,
+        nmt=nmt,
+        pivot_lang=pivot_lang,
+        do_alignment=do_alignment,
+        src_lang=src_lang,
+        tgt_lang=tgt_lang,
+        dlg_side=dlg_side,
+        do_paraphrasing='false',
+        paraphrasing_method='',
+        filter_sts_paraphrase='true',
+        task_name=task_name,
+        s3_datadir=s3_datadir,
+        additional_args=additional_args)
+    (sts_filtering_op.container
+     .set_memory_request('56Gi')
+     .set_memory_limit('56Gi')
+     .set_cpu_request('7.5')
+     .set_cpu_limit('7.5')
+     .set_gpu_limit(str(sts_filtering_num_gpus))
+     .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
+     )
+    (add_env(add_ssh_volume(sts_filtering_op), sts_filtering_env)
+     .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+     .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2 * sts_filtering_num_gpus}xlarge')
+     .add_volume(V1Volume(name='tensorboard',
+                          persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
+    
+    return sts_filtering_op
+
+def all_paraphrasing_steps(
+        owner='mehrad',
+        project='spl',
+        experiment='restaurants',
+        s3_bucket='geniehai',
+        task_name='almond',
+        s3_datadir='',
+        model_name_or_path='facebook/mbart-large-cc25',
+        input_splits='test+eval+train',
+        train_output_per_example='1',
+        nmt='marian',
+        pivot_lang='',
+        do_alignment='true',
+        src_lang='en',
+        tgt_lang='',
+        dlg_side='user',
+        do_paraphrasing=True,
+        paraphrasing_method='',
+        filter_sts_paraphrase=True,
+        image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-spl',
+        genienlp_version='2341dbdd0faf5a306b3d3b243bb7c71ccfa6cc2a',
+        genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
+        workdir_version='master',
+        additional_args=''
+):
+    if do_paraphrasing:
+        paraphrase_op = paraphrase_step(
+            owner=owner,
+            project=project,
+            experiment=experiment,
+            s3_bucket=s3_bucket,
+            task_name=task_name,
+            s3_datadir=s3_datadir,
+            model_name_or_path=model_name_or_path,
+            input_splits=input_splits,
+            train_output_per_example=train_output_per_example,
+            nmt=nmt,
+            pivot_lang=pivot_lang,
+            do_alignment=do_alignment,
+            src_lang=src_lang,
+            tgt_lang=tgt_lang,
+            dlg_side=dlg_side,
+            paraphrasing_method=paraphrasing_method,
+            image=image,
+            genienlp_version=genienlp_version,
+            genie_version=genie_version,
+            thingtalk_version=thingtalk_version,
+            workdir_repo=workdir_repo,
+            workdir_version=workdir_version,
+            additional_args=additional_args
+        )
+        paraphrase_op.container.set_image_pull_policy('Always')
+    
+    if filter_sts_paraphrase:
+        sts_filtering_op = sts_filtering_step(
+            owner=owner,
+            project=project,
+            experiment=experiment,
+            s3_bucket=s3_bucket,
+            task_name=task_name,
+            s3_datadir=s3_datadir,
+            model_name_or_path=model_name_or_path,
+            input_splits=input_splits,
+            train_output_per_example=train_output_per_example,
+            nmt=nmt,
+            do_alignment=do_alignment,
+            src_lang=src_lang,
+            tgt_lang=tgt_lang,
+            dlg_side=dlg_side,
+            image=image,
+            genienlp_version=genienlp_version,
+            genie_version=genie_version,
+            thingtalk_version=thingtalk_version,
+            workdir_repo=workdir_repo,
+            workdir_version=workdir_version,
+            additional_args=additional_args
+        )
+        sts_filtering_op.container.set_image_pull_policy('Always')
+        
+        if do_paraphrasing:
+            sts_filtering_op.after(paraphrase_op)
+
+
+@dsl.pipeline(
+    name='Round-trip Paraphrasing',
+    description='Use round-trip translation to generate paraphrases and use STS to filter them'
+)
+def round_trip_paraphrasing(
+        owner='mehrad',
+        project='spl',
+        experiment='restaurants',
+        s3_bucket='geniehai',
+        task_name='almond',
+        s3_datadir='',
+        model_name_or_path='facebook/mbart-large-cc25',
+        input_splits='test+eval+train',
+        train_output_per_example='1',
+        nmt='marian',
+        pivot_lang='',
+        do_alignment='true',
+        src_lang='en',
+        tgt_lang='',
+        dlg_side='user',
+        image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-spl',
+        genienlp_version='2341dbdd0faf5a306b3d3b243bb7c71ccfa6cc2a',
+        genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
+        workdir_version='master',
+        additional_args='--temperature 0.4 --repetition_penalty 1.0 --num_samples 1 --batch_size 512  --skip_heuristics --att_pooling mean --id_column 0  --input_column 1 --gold_column 1 --return_attentions --output_example_ids_too'
+):
+    all_paraphrasing_steps(
+            owner=owner,
+            project=project,
+            experiment=experiment,
+            s3_bucket=s3_bucket,
+            task_name=task_name,
+            s3_datadir=s3_datadir,
+            model_name_or_path=model_name_or_path,
+            input_splits=input_splits,
+            train_output_per_example=train_output_per_example,
+            nmt=nmt,
+            pivot_lang=pivot_lang,
+            do_alignment=do_alignment,
+            src_lang=src_lang,
+            tgt_lang=tgt_lang,
+            dlg_side=dlg_side,
+            do_paraphrasing=True,
+            paraphrasing_method='round_trip',
+            filter_sts_paraphrase=True,
+            image=image,
+            genienlp_version=genienlp_version,
+            genie_version=genie_version,
+            thingtalk_version=thingtalk_version,
+            workdir_repo=workdir_repo,
+            workdir_version=workdir_version,
+            additional_args=additional_args
+    )
+    
+@dsl.pipeline(
+    name='Masked Paraphrasing',
+    description='Use denoisng models (e.g. BART family) to generate paraphrases and use STS to filter them'
+)
+def masked_paraphrasing(
+        owner='mehrad',
+        project='spl',
+        experiment='restaurants',
+        s3_bucket='geniehai',
+        task_name='almond',
+        s3_datadir='',
+        model_name_or_path='facebook/mbart-large-cc25',
+        input_splits='test+eval+train',
+        train_output_per_example='1',
+        nmt='marian',
+        pivot_lang='',
+        do_alignment='true',
+        src_lang='en',
+        tgt_lang='',
+        dlg_side='user',
+        image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-spl',
+        genienlp_version='2341dbdd0faf5a306b3d3b243bb7c71ccfa6cc2a',
+        genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
+        workdir_version='master',
+        additional_args='--infill_text --num_text_spans 1 --temperature 0.4 --repetition_penalty 1.0 --num_samples 1 --batch_size 512  --skip_heuristics --att_pooling mean --id_column 0  --input_column 1 --gold_column 1 --return_attentions --output_example_ids_too'
+):
+    all_paraphrasing_steps(
+            owner=owner,
+            project=project,
+            experiment=experiment,
+            s3_bucket=s3_bucket,
+            task_name=task_name,
+            s3_datadir=s3_datadir,
+            model_name_or_path=model_name_or_path,
+            input_splits=input_splits,
+            train_output_per_example=train_output_per_example,
+            nmt=nmt,
+            pivot_lang=pivot_lang,
+            do_alignment=do_alignment,
+            src_lang=src_lang,
+            tgt_lang=tgt_lang,
+            dlg_side=dlg_side,
+            do_paraphrasing=True,
+            paraphrasing_method='masked',
+            filter_sts_paraphrase=True,
             image=image,
             genienlp_version=genienlp_version,
             genie_version=genie_version,
