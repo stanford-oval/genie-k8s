@@ -18,6 +18,14 @@ def add_env(op, envs):
         op.container.add_env_variable(V1EnvVar(name=k, value=v))
     return op
 
+def list_experiments(client):
+    resp = client.list_experiments(page_size=100)
+    experiments = resp.experiments
+    while resp.next_page_token:
+        resp = client.list_experiments(page_token=resp.next_page_token, page_size=100)
+        experiments.extend(resp.pipelines)
+    return experiments
+
 
 def list_pipelines(client):
     resp = client.list_pipelines(page_size=100)
