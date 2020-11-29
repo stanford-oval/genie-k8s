@@ -87,6 +87,7 @@ implementation:
           ;;
           *)
             echo "Not a valid nmt model"
+          ;;
           esac
 
         aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${s3_datadir}translated/${nmt}/${tgt_lang}

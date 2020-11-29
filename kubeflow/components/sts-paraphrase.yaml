@@ -60,8 +60,8 @@ implementation:
       IFS='+'; read -ra input_splits_array <<<"$input_splits"; IFS=' '
 
       # generate paraphrases
-      if {do_paraphrasing} ; then
-        case ${nmt}+{paraphrasing_method} in
+      if ${do_paraphrasing} ; then
+        case ${nmt}+${paraphrasing_method} in
           marian+masked)
               make -B -j2 geniedir=/opt/genie-toolkit \
                 default_masked_paraphrase_hparams="${paraphrase_arguments} --model_name_or_path ${model_name_or_path}" \
@@ -77,15 +77,17 @@ implementation:
               default_translation_hparams="${paraphrase_arguments} --model_name_or_path ${model_name_or_path} --replace_qp --force_replace_qp" \
               all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=false pivot_lang=${pivot_lang} paraphrase_gt_quoted_${tgt_lang}
           ;;
+          *)
             echo "Not a valid option"
+          ;;
           esac
       fi
 
       # prepare paraphrased files
-      make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true pivot_lang=${pivot_lang} nmt_model=${nmt} para_method=${para_method} prepare_paraphrases_{tgt_lang}
+      make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true pivot_lang=${pivot_lang} nmt_model=${nmt} para_method=${paraphrasing_method} prepare_paraphrases_${tgt_lang}
 
       # filter paraphrases based on sts score
-      make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true pivot_lang=${pivot_lang} nmt_model=${nmt} para_method=${para_method} filtering_metric=${filtering_metric} filter_paraphrase_{tgt_lang}
+      make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true pivot_lang=${pivot_lang} nmt_model=${nmt} para_method=${paraphrasing_method} filtering_metric=${filtering_metric} filter_paraphrase_${tgt_lang}
 
       aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${s3_datadir}paraphrased/${nmt}/${tgt_lang}
 
