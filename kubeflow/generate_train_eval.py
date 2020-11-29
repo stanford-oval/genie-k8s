@@ -27,6 +27,8 @@ THINGTALK_VERSION = 'a3eb276cab0f554646ee6ef5620be12179f55ba7'
 BOOTLEG_VERSION = 'f53e67397ddcd099f3a18a014c9ce82b02d2223c'
 WORKDIR_REPO = 'git@github.com:stanford-oval/thingpedia-common-devices.git'
 WORKDIR_VERSION = '0db4d113bd2436e85f7dfa7542f800106485f7a8'
+GENIE_WORKDIR_REPO = 'git@github.com:stanford-oval/genie-workdirs.git'
+GENIE_WORKDIR_VERSION = 'master'
 PARAPHRASING_MODEL = 's3://geniehai/sinaj/models/schemaorg/paraphrase/bart-large-speedup-megabatch-5m/'
 
 
@@ -1518,8 +1520,8 @@ def eval_spl_step(
         genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
         genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
         thingtalk_version=THINGTALK_VERSION,
-        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
-        workdir_version='master',
+        workdir_repo=GENIE_WORKDIR_REPO,
+        workdir_version=GENIE_WORKDIR_VERSION,
         pred_languages='es',
         eval_set='eval',
         annotated_set_name='annotated',
@@ -1638,7 +1640,7 @@ def eval_spl(
         genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
         thingtalk_version=THINGTALK_VERSION,
         workdir_repo='git@github.com:stanford-oval/SPL.git',
-        workdir_version='master',
+        workdir_version=GENIE_WORKDIR_VERSION,
         pred_languages='es',
         eval_set='eval',
         annotated_set_name='annotated',
@@ -1686,7 +1688,7 @@ def train_eval_spl(
         genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
         thingtalk_version=THINGTALK_VERSION,
         workdir_repo='git@github.com:stanford-oval/SPL.git',
-        workdir_version='master',
+        workdir_version=GENIE_WORKDIR_VERSION,
         load_from='None',
         train_languages='es',
         eval_languages='es',
@@ -1762,8 +1764,8 @@ def bootleg_train_eval(
         genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
         genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
         thingtalk_version=THINGTALK_VERSION,
-        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
-        workdir_version='master',
+        workdir_repo=GENIE_WORKDIR_REPO,
+        workdir_version=GENIE_WORKDIR_VERSION,
         bootleg_version='f53e67397ddcd099f3a18a014c9ce82b02d2223c',
         load_from='None',
         train_languages='en',
@@ -1868,8 +1870,8 @@ def prepare_for_translation_step(
         genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
         genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
         thingtalk_version=THINGTALK_VERSION,
-        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
-        workdir_version='master',
+        workdir_repo=GENIE_WORKDIR_REPO,
+        workdir_version=GENIE_WORKDIR_VERSION,
         additional_args=''
 
 ):
@@ -1932,8 +1934,8 @@ def do_translation_step(
         genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
         genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
         thingtalk_version=THINGTALK_VERSION,
-        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
-        workdir_version='master',
+        workdir_repo=GENIE_WORKDIR_REPO,
+        workdir_version=GENIE_WORKDIR_VERSION,
         additional_args=''
 ):
     do_translation_env = {
@@ -2003,8 +2005,8 @@ def post_process_translation_step(
         genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
         genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
         thingtalk_version=THINGTALK_VERSION,
-        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
-        workdir_version='master',
+        workdir_repo=GENIE_WORKDIR_REPO,
+        workdir_version=GENIE_WORKDIR_VERSION,
         additional_args=''
 
 ):
@@ -2070,8 +2072,8 @@ def all_translation_steps(
         genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
         genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
         thingtalk_version=THINGTALK_VERSION,
-        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
-        workdir_version='master',
+        workdir_repo=GENIE_WORKDIR_REPO,
+        workdir_version=GENIE_WORKDIR_VERSION,
         additional_args='--temperature 0.4 --repetition_penalty 1.0 --num_samples 1 --batch_size 512  --skip_heuristics --att_pooling mean --task translate'
 
 ):
@@ -2184,8 +2186,8 @@ def prepare_for_translation(
         genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
         genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
         thingtalk_version=THINGTALK_VERSION,
-        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
-        workdir_version='master',
+        workdir_repo=GENIE_WORKDIR_REPO,
+        workdir_version=GENIE_WORKDIR_VERSION,
         additional_args='--temperature 0.4 --repetition_penalty 1.0 --num_samples 1 --batch_size 512  --skip_heuristics --att_pooling mean --task translate'
 ):
     all_translation_steps(
@@ -2239,8 +2241,8 @@ def translate_and_postprocess(
         genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
         genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
         thingtalk_version=THINGTALK_VERSION,
-        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
-        workdir_version='master',
+        workdir_repo=GENIE_WORKDIR_REPO,
+        workdir_version=GENIE_WORKDIR_VERSION,
         additional_args='--temperature 0.4 --repetition_penalty 1.0 --num_samples 1 --batch_size 512  --skip_heuristics --att_pooling mean --task translate --id_column 0  --input_column 1 --gold_column 1 --return_attentions --output_example_ids_too'
 ):
     all_translation_steps(
@@ -2294,8 +2296,8 @@ def postprocess_for_translation(
         genienlp_version='c6ffb08742fed0c414d6ffc5eeae679cabdb20ff',
         genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
         thingtalk_version=THINGTALK_VERSION,
-        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
-        workdir_version='master',
+        workdir_repo=GENIE_WORKDIR_REPO,
+        workdir_version=GENIE_WORKDIR_VERSION,
         additional_args='--temperature 0.4 --repetition_penalty 1.0 --num_samples 1 --batch_size 512  --skip_heuristics --att_pooling mean --task translate --id_column 0  --input_column 1 --gold_column 1 --return_attentions --output_example_ids_too'
 ):
     all_translation_steps(
@@ -2347,8 +2349,8 @@ def paraphrase_step(
         genienlp_version='07e1e63cb76f9f713f99727b19a4b4a8584533fa',
         genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
         thingtalk_version=THINGTALK_VERSION,
-        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
-        workdir_version='master',
+        workdir_repo=GENIE_WORKDIR_REPO,
+        workdir_version=GENIE_WORKDIR_VERSION,
         additional_args=''
 ):
     
@@ -2421,8 +2423,8 @@ def sts_filtering_step(
         genienlp_version='07e1e63cb76f9f713f99727b19a4b4a8584533fa',
         genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
         thingtalk_version=THINGTALK_VERSION,
-        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
-        workdir_version='master',
+        workdir_repo=GENIE_WORKDIR_REPO,
+        workdir_version=GENIE_WORKDIR_VERSION,
         additional_args=''
 ):
     sts_filtering_env = {
@@ -2496,8 +2498,8 @@ def all_paraphrasing_steps(
         genienlp_version='07e1e63cb76f9f713f99727b19a4b4a8584533fa',
         genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
         thingtalk_version=THINGTALK_VERSION,
-        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
-        workdir_version='master',
+        workdir_repo=GENIE_WORKDIR_REPO,
+        workdir_version=GENIE_WORKDIR_VERSION,
         additional_args=''
 ):
     if do_paraphrasing:
@@ -2582,8 +2584,8 @@ def round_trip_paraphrasing(
         genienlp_version='07e1e63cb76f9f713f99727b19a4b4a8584533fa',
         genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
         thingtalk_version=THINGTALK_VERSION,
-        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
-        workdir_version='master',
+        workdir_repo=GENIE_WORKDIR_REPO,
+        workdir_version=GENIE_WORKDIR_VERSION,
         additional_args='--temperature 0.4 --repetition_penalty 1.0 --num_samples 1 --batch_size 512  --skip_heuristics --att_pooling mean --id_column 0  --input_column 1 --gold_column 1 --return_attentions --output_example_ids_too'
 ):
     all_paraphrasing_steps(
@@ -2638,8 +2640,8 @@ def masked_paraphrasing(
         genienlp_version='07e1e63cb76f9f713f99727b19a4b4a8584533fa',
         genie_version='5847c1941948fde5bb1ad3a5b2fefb0f841cd86c',
         thingtalk_version=THINGTALK_VERSION,
-        workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
-        workdir_version='master',
+        workdir_repo=GENIE_WORKDIR_REPO,
+        workdir_version=GENIE_WORKDIR_VERSION,
         additional_args='--infill_text --num_text_spans 1 --temperature 0.4 --repetition_penalty 1.0 --num_samples 1 --batch_size 512  --skip_heuristics --att_pooling mean --id_column 0  --input_column 1 --gold_column 1 --return_attentions --output_example_ids_too'
 ):
     all_paraphrasing_steps(
