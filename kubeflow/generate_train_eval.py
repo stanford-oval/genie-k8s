@@ -1907,6 +1907,8 @@ def prepare_for_translation_step(
      .set_cpu_limit('4')
      .set_cpu_request('4'))
     add_env(add_ssh_volume(prepare_for_translation_op), prepare_for_translation_env)
+
+    prepare_for_translation_op.name = 'prepare-for-translation'
     
     return prepare_for_translation_op
 
@@ -1976,6 +1978,8 @@ def do_translation_step(
      .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2 * do_translation_num_gpus}xlarge')
      .add_volume(V1Volume(name='tensorboard',
                           persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
+
+    do_translation_op.name = 'translation'
     
     return do_translation_op
 
@@ -2038,6 +2042,8 @@ def post_process_translation_step(
      .set_cpu_limit('4')
      .set_cpu_request('4'))
     add_env(add_ssh_volume(post_process_translation_op), post_process_translation_env)
+
+    post_process_translation_op.name = 'post-process-translation'
     
     return post_process_translation_op
 
@@ -2389,6 +2395,8 @@ def paraphrase_step(
      .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2 * paraphrase_num_gpus}xlarge')
      .add_volume(V1Volume(name='tensorboard',
                           persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
+
+    paraphrase_op.name = 'sts-paraphrasing'
     
     return paraphrase_op
 
@@ -2460,6 +2468,8 @@ def sts_filtering_step(
      .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2 * sts_filtering_num_gpus}xlarge')
      .add_volume(V1Volume(name='tensorboard',
                           persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
+
+    sts_filtering_op.name = 'sts-filtering'
     
     return sts_filtering_op
 
