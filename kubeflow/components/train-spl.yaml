@@ -20,6 +20,7 @@ inputs:
   - {name: eval_languages, description: ''}
   - {name: dlg_side, description: ''}
   - {name: s3_bootleg_prepped_data, description: ''}
+  - {name: bootleg_model, description: ''}
   - {name: additional_args, description: ''}
 outputs:
   - {name: s3_model_dir}
@@ -33,7 +34,7 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image s3_bucket owner task_name project experiment model load_from s3_datadir s3_database_dir dataset_subfolder s3_model_dir skip_tensorboard train_languages eval_languages eval_set dlg_side s3_bootleg_prepped_data" "$@"
+      parse_args "$0" "image s3_bucket owner task_name project experiment model load_from s3_datadir s3_database_dir dataset_subfolder s3_model_dir skip_tensorboard train_languages eval_languages eval_set dlg_side s3_bootleg_prepped_data bootleg_model" "$@"
       shift $n 
       cd $HOME
 
@@ -48,7 +49,7 @@ implementation:
       mkdir -p "$modeldir"
 
       if test "${s3_database_dir}" != None ; then
-        aws s3 sync ${s3_database_dir} ./database/ --exclude '*' --include '*.json' --include '*bootleg_wiki*' --include '*emb_data*' --include '*entity_db*'
+        aws s3 sync ${s3_database_dir} ./database/ --exclude '*' --include '*.json' --include '*${bootleg_model}/*' --include '*emb_data*' --include '*entity_db*'
       fi
 
       if test "${s3_bootleg_prepped_data}" != None ; then
@@ -134,6 +135,7 @@ implementation:
       --eval_languages, {inputValue: eval_languages},
       --dlg_side, {inputValue: dlg_side},
       --s3_bootleg_prepped_data, {inputValue: s3_bootleg_prepped_data},
+      --bootleg_model, {inputValue: bootleg_model},
       --,
       --train_iterations, {inputValue: train_iterations},
       {inputValue: additional_args}, 

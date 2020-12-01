@@ -18,6 +18,7 @@ inputs:
   - {name: train_languages, description: ''}
   - {name: eval_languages, description: ''}
   - {name: dlg_side, description: ''}
+  - {name: bootleg_model, description: ''}
   - {name: additional_args, description: ''}
 outputs:
   - {name: s3_bootleg_prepped_data}
@@ -31,7 +32,7 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image s3_bucket owner task_name project experiment model load_from eval_set s3_datadir s3_database_dir dataset_subfolder skip_tensorboard train_languages eval_languages dlg_side s3_bootleg_prepped_data" "$@"
+      parse_args "$0" "image s3_bucket owner task_name project experiment model load_from eval_set s3_datadir s3_database_dir dataset_subfolder skip_tensorboard train_languages eval_languages dlg_side s3_bootleg_prepped_data bootleg_model" "$@"
       shift $n 
       cd $HOME
 
@@ -46,7 +47,7 @@ implementation:
       mkdir -p "$modeldir"
 
       if test "{s3_database_dir}" != None ; then
-        aws s3 sync --no-progress ${s3_database_dir} ./database/ --exclude '*' --include '*.json' --include '*bootleg_wiki*' --include '*emb_data*' --include '*entity_db*'
+        aws s3 sync --no-progress ${s3_database_dir} ./database/ --exclude '*' --include '*.json' --include "*${bootleg_model}/*" --include '*emb_data*' --include '*entity_db*'
       fi
 
       load_args=
@@ -101,13 +102,15 @@ implementation:
           --do_ner \
           --retrieve_method bootleg \
           --bootleg_input_dir ./database/ \
-          --bootleg_dump_features
+          --bootleg_model ${bootleg_model} \
+          --bootleg_dump_features \
           ${load_args} \
           $@ 
 
       rm -fr "$modeldir/cache"
       rm -fr "$modeldir/dataset"
-      S3_BOOTLEG_PREPPED_DATA=s3://${s3_bucket}/${owner}/models/${project}/${experiment}/bootleg/prepped_files/
+
+      S3_BOOTLEG_PREPPED_DATA=${s3_datadir}bootleg/prepped_files/
 
       aws s3 sync --no-progress results_temp ${S3_BOOTLEG_PREPPED_DATA}
             
@@ -133,6 +136,7 @@ implementation:
       --train_languages, {inputValue: train_languages},
       --eval_languages, {inputValue: eval_languages},
       --dlg_side, {inputValue: dlg_side},
+      --bootleg_model, {inputValue: bootleg_model},
       --,
       {inputValue: additional_args},
     ]
