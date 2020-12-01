@@ -78,7 +78,7 @@ implementation:
         mkdir -p $modeldir/dataset/almond/${dlg_side}
         ln -s dataset/* $modeldir/dataset/almond/${dlg_side}/
       else
-        aws s3 sync --no-progress ${s3_datadir} dataset/
+        aws s3 sync --no-progress ${s3_datadir} dataset/ --exclude '*/*'
         mkdir -p $modeldir/dataset/almond/
         ln -s dataset/* $modeldir/dataset/almond/
       fi
