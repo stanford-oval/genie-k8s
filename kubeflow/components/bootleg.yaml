@@ -55,24 +55,27 @@ implementation:
         load_args="--load best.pth"
       fi
 
+      rm -rf "$modeldir/dataset"
+      mkdir "$modeldir/dataset"
+      rm -rf "$modeldir/cache"
+      mkdir -p "$modeldir/cache"
+
       if [[ "$task_name" == *"multilingual"* ]] ; then
         for lang in "${TLS[@]}" "${ELS[@]}" ; do
           aws s3 sync --no-progress ${s3_datadir} ${HOME}/dataset/ --exclude "*" --include "*$lang*"
         done
         mkdir -p $modeldir/dataset/almond/multilingual
-        mv ${HOME}/dataset/* $modeldir/dataset/almond/multilingual
+        ln -s ${HOME}/dataset/* $modeldir/dataset/almond/multilingual
       elif [[ "$task_name" == *"dialog"* || "$task_name" == *"contextual"* ]] ; then
         aws s3 sync --no-progress --exclude "synthetic*.txt" ${s3_datadir} dataset/
         mkdir -p $modeldir/dataset/almond/${dlg_side}
-        mv ${HOME}/dataset/* $modeldir/dataset/almond/${dlg_side}
+        ln -s ${HOME}/dataset/* $modeldir/dataset/almond/${dlg_side}
       else
         aws s3 sync --no-progress ${s3_datadir} dataset/
         mkdir -p $modeldir/dataset/almond/
-        mv ${HOME}/dataset/* $modeldir/dataset/almond/
+        ln -s ${HOME}/dataset/* $modeldir/dataset/almond/
       fi
 
-      rm -fr "$modeldir/cache"
-      mkdir -p "$modeldir/cache"
       ln -s $modeldir /home/genie-toolkit/current
       mkdir -p "/shared/tensorboard/${project}/${experiment}/${owner}/${model}"
      

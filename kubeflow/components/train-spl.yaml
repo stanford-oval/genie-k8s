@@ -61,26 +61,27 @@ implementation:
         load_args="--load best.pth"
       fi
 
-      if [[ "$task_name" == *"multilingual"* ]] ; then
-        for lang in "${TLS[@]}" "${ELS[@]}" ; do
-          aws s3 sync ${s3_datadir} dataset/ --exclude "*" --include "*$lang*"
-        done
-        mkdir -p $modeldir/data/almond/multilingual
-        mv dataset/* $modeldir/data/almond/multilingual/
-      elif [[ "$task_name" == *"dialog"* || "$task_name" == *"contextual"* ]] ; then
-        aws s3 sync --exclude "synthetic*.txt" ${s3_datadir} dataset/
-        mkdir -p $modeldir/data/almond/${dlg_side}
-        mv dataset/* $modeldir/data/almond/${dlg_side}/
-      else
-        aws s3 sync ${s3_datadir} dataset/
-        mkdir -p $modeldir/data/almond/
-        mv dataset/* $modeldir/data/almond/
-      fi
-
       rm -fr "$modeldir/dataset"
       mkdir "$modeldir/dataset"
       rm -fr "$modeldir/cache"
       mkdir -p "$modeldir/cache"
+
+      if [[ "$task_name" == *"multilingual"* ]] ; then
+        for lang in "${TLS[@]}" "${ELS[@]}" ; do
+          aws s3 sync ${s3_datadir} dataset/ --exclude "*" --include "*$lang*"
+        done
+        mkdir -p $modeldir/dataset/almond/multilingual
+        ln -s dataset/* $modeldir/dataset/almond/multilingual/
+      elif [[ "$task_name" == *"dialog"* || "$task_name" == *"contextual"* ]] ; then
+        aws s3 sync --exclude "synthetic*.txt" ${s3_datadir} dataset/
+        mkdir -p $modeldir/dataset/almond/${dlg_side}
+        ln -s dataset/* $modeldir/dataset/almond/${dlg_side}/
+      else
+        aws s3 sync ${s3_datadir} dataset/
+        mkdir -p $modeldir/dataset/almond/
+        ln -s dataset/* $modeldir/dataset/almond/
+      fi
+
       ln -s $modeldir /home/genie-toolkit/current
       mkdir -p "/shared/tensorboard/${project}/${experiment}/${owner}/${model}"
      
