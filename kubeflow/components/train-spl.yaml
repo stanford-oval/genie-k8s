@@ -103,6 +103,7 @@ implementation:
           --eval_set_name $eval_set \
           --train_languages $train_languages \
           --eval_languages $eval_languages \
+          --bootleg_model ${bootleg_model} \
           ${load_args} \
           $@ 
 
