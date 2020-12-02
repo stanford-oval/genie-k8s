@@ -1,7 +1,7 @@
 import kfp
 import os
 import argparse
-from utils import list_pipelines, list_experiments
+from utils import list_pipelines, list_experiments, prepare_unknown_args
 
 parser = argparse.ArgumentParser()
 
@@ -10,7 +10,7 @@ parser.add_argument('--project', type=str)
 parser.add_argument('--experiment', type=str)
 parser.add_argument('--image', type=str)
 parser.add_argument('--model', type=str)
-parser.add_argument('--dataset', type=str)
+parser.add_argument('--s3_datadir', type=str)
 parser.add_argument('--train_additional_args', type=str)
 parser.add_argument('--eval_additional_args', type=str)
 parser.add_argument('--pipeline_name', type=str)
@@ -18,7 +18,9 @@ parser.add_argument('--pipeline_version', type=str)
 parser.add_argument('--kf_experiment_name', type=str)
 parser.add_argument('--kf_job_name', type=str)
 
-args = parser.parse_args()
+args, unknown_args = parser.parse_known_args()
+
+extra_param_args = prepare_unknown_args(unknown_args)
 
 kfp_dir = os.path.expanduser('~/.config/kfp/')
 if not os.path.isdir(kfp_dir):
@@ -43,6 +45,11 @@ pipeline_versions = client.pipelines.list_pipeline_versions(
 ).versions
 
 our_pipeline_version = None
+
+if not args.pipeline_version:
+    # choose latest
+    our_pipeline_version = pipeline_versions[-1]
+
 for v in pipeline_versions:
     if v.name == args.pipeline_version:
         our_pipeline_version = v
@@ -68,11 +75,12 @@ params = {
     'experiment': args.experiment,
     'image': args.image,
     'model': args.model,
-    'dataset': args.dataset,
+    's3_datadir': args.s3_datadir,
     'train_additional_args': args.train_additional_args,
     'eval_additional_args': args.eval_additional_args,
-
 }
+
+params.update(extra_param_args)
 
 
 client.run_pipeline(experiment_id=our_experiment.id,

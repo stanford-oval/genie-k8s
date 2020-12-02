@@ -62,3 +62,14 @@ def upload_pipeline(name, pipeline):
     return resp
 
 
+def prepare_unknown_args(args_list):
+    assert len(args_list) % 2 == 0
+    assert all(args_list[i].startswith(("-", "--")) for i in range(0, len(args_list), 2))
+    assert all(not args_list[i].startswith(("-", "--")) for i in range(1, len(args_list), 2))
+    
+    cleaned_args = {}
+    for i in range(0, len(args_list), 2):
+        arg, value = args_list[i], args_list[i+1]
+        cleaned_args[arg.strip('-')] = value
+        
+    return cleaned_args
