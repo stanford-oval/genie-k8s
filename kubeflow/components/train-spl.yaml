@@ -104,6 +104,7 @@ implementation:
           --train_languages $train_languages \
           --eval_languages $eval_languages \
           --bootleg_model ${bootleg_model} \
+          --bootleg_input_dir ./database/ \
           ${load_args} \
           $@ 
 
