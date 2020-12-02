@@ -11,15 +11,10 @@ RUN if [ ${ADD_BOOTLEG} == true ]; then \
 		git checkout ${BOOTLEG_VERSION} && pip3 install --use-feature=2020-resolver -r requirements.txt && pip3 install --use-feature=2020-resolver -e . ; \
 	fi
 
-# next line needed to allow version bumps in torch and transformers take effect
-RUN rm -rf /opt/genienlp/
 WORKDIR /opt/genienlp/
 ARG GENIENLP_VERSION=master
-RUN git clone https://github.com/stanford-oval/genienlp.git /opt/genienlp/ && cd /opt/genienlp/ && git checkout ${GENIENLP_VERSION} && pip3 install --use-feature=2020-resolver -e .
+RUN git fetch && git checkout ${GENIENLP_VERSION} && pip3 install --use-feature=2020-resolver -e .
 
-# uncomment the models you want to use
-# RUN genienlp cache-embeddings --destdir /usr/local/share/genienlp/embeddings --embeddings bert-large-uncased-whole-word-masking
-# RUN genienlp cache-embeddings --destdir /usr/local/share/genienlp/embeddings --embeddings bert-large-uncased-whole-word-masking-finetuned-squad
 
 # uncomment it you need Apex (for mixed precision training)
 # RUN yum install -y \
