@@ -81,11 +81,16 @@ implementation:
           fi
 
           if [ "$is_dialogue" = true ] ; then
-            # add previous agent utterance; this additional context helps the paraphraser
-            genienlp dialog-to-tsv \
-              ${input_dir}/train.tsv \
-              --dialog_file input_dataset/synthetic.txt \
-              ${output_dir}/with_context.tsv
+              if [ "$ignore_context" = true ] ; then
+                : # nothing to be done
+              else
+                # add previous agent utterance; this additional context helps the paraphraser
+                genienlp dialog-to-tsv \
+                  ${input_dir}/train.tsv \
+                  --dialog_file input_dataset/synthetic.txt \
+                  ${output_dir}/with_context.tsv
+              fi
+               
           else
             : # nothing to be done
           fi
@@ -99,11 +104,10 @@ implementation:
             genienlp run-paraphrase \
             --task paraphrase \
             --model_name_or_path paraphraser \
-            --input_file ${output_dir}/with_context.tsv \
+            --input_file ${input_dir}/train.tsv \
             --output_file ${output_dir}/paraphrased.tsv \
-            --input_column 3 \
-            --thingtalk_column 2 \
-            --gold_column 3 \
+            --input_column 2 \
+            --thingtalk_column 3 \
             $paraphrasing_arguments
           else
             genienlp run-paraphrase \
@@ -148,7 +152,7 @@ implementation:
 
       # Delete intermediate files that don't help debugging
       rm ${output_dir}/paraphrased.tsv
-      rm ${output_dir}/with_context.tsv
+      rm -f ${output_dir}/with_context.tsv
 
       # upload the new dataset to S3
       aws s3 sync --no-progress output_dataset/ "${s3_output_dir}"
