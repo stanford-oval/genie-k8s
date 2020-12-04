@@ -4,21 +4,19 @@ export AWS_PROFILE
 
 aws ecr get-login --no-include-email | bash
 
-. ../config
-
 cp ../lib.sh .
-. lib.sh
-
-check_config "IMAGE COMMON_IMAGE genie_version thingtalk_version bootleg_version genienlp_version "
 
 set -ex
+
+COMMON_IMAGE=$1
+IMAGE=$2
+JUPYTER_IMAGE=$3
 
 genienlp_version=${genienlp_version:-master}
 thingtalk_version=${thingtalk_version:-master}
 genie_version=${genie_version:-master}
 bootleg_version=${bootleg_version:-master}
 add_bootleg=${add_bootleg:-false}
-
 
 
 docker pull ${COMMON_IMAGE}
@@ -41,5 +39,3 @@ if test -n "${JUPYTER_IMAGE}" ; then
 fi
 
 rm lib.sh
-
-docker system prune -f
