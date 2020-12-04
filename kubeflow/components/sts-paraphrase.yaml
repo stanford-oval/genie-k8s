@@ -78,7 +78,8 @@ implementation:
               all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=false pivot_lang=${pivot_lang} paraphrase_gt_quoted_${tgt_lang}
           ;;
           *)
-            echo "Not a valid option"
+            echo "invalid ${nmt}+${paraphrasing_method} combo is provided"
+            exit 1
           ;;
           esac
       fi

@@ -86,7 +86,8 @@ implementation:
             make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} gt_project_id="multilanguage-273819" gt_project_number="211743822806" gt_credential_file="gt-json/multilanguage-a40fe9320f88.json" train_output_per_example=${train_output_per_example} skip_translation=false ${experiment}/gt/${tgt_lang}/unquoted-qpis-direct-translated
           ;;
           *)
-            echo "Not a valid nmt model"
+            echo "invalid ${nmt}+${do_alignment} combo is provided"
+            exit 1
           ;;
           esac
 

@@ -1,6 +1,6 @@
-name: Eval
+name: Eval SPL
 description: |
-  Evaluate
+  Evaluate models trained for SPL experiments
 inputs:
   - {name: image, description: '', default: ''}
   - {name: project, description: '', default: ''}
