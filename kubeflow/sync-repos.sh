@@ -14,7 +14,7 @@ if [ -d /opt/bootleg/ ] ; then
   if [ -n "${BOOTLEG_VERSION}" ] && [ "${BOOTLEG_VERSION}" != "${BOOTLEG_HEAD}" ]; then
     git fetch
     git checkout ${BOOTLEG_VERSION}
-    pip3 install --upgrade --use-feature=2020-resolver -e .
+    pip3 install --use-feature=2020-resolver -r requirements.txt && pip3 install --use-feature=2020-resolver -e .
   fi
 fi
 
