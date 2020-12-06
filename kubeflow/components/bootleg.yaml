@@ -1,6 +1,6 @@
 name: Bootleg
 description: |
-  Named Entity Disambiguation
+  Run a Bootleg model to extract and dump candidate features
 inputs:
   - {name: image, description: ''}
   - {name: s3_bucket, description: ''}
@@ -9,12 +9,10 @@ inputs:
   - {name: project, description: ''}
   - {name: experiment, description: ''}
   - {name: model, description: ''}
-  - {name: load_from, description: ''}
   - {name: eval_set, description: ''}
   - {name: s3_datadir, description: ''}
   - {name: s3_database_dir, description: ''}
   - {name: dataset_subfolder, description: ''}
-  - {name: skip_tensorboard, description: ''}
   - {name: train_languages, description: ''}
   - {name: eval_languages, description: ''}
   - {name: dlg_side, description: ''}
@@ -32,7 +30,7 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image s3_bucket owner task_name project experiment model load_from eval_set s3_datadir s3_database_dir dataset_subfolder skip_tensorboard train_languages eval_languages dlg_side s3_bootleg_prepped_data bootleg_model" "$@"
+      parse_args "$0" "image s3_bucket owner task_name project experiment model eval_set s3_datadir s3_database_dir dataset_subfolder train_languages eval_languages dlg_side s3_bootleg_prepped_data bootleg_model" "$@"
       shift $n 
       cd $HOME
 
@@ -50,11 +48,6 @@ implementation:
         aws s3 sync --no-progress ${s3_database_dir} ./database/ --exclude '*' --include '*.json' --include "*${bootleg_model}/*" --include '*emb_data*' --include '*entity_db*'
       fi
 
-      load_args=
-      if test "${load_from}" != None ; then 
-        aws s3 sync --no-progress "${load_from}" "$modeldir"/ --exclude "iteration_*.pth" --exclude "*eval/*"  --exclude "*.log"
-        load_args="--load best.pth"
-      fi
 
       rm -rf "$modeldir/dataset"
       mkdir "$modeldir/dataset"
@@ -86,18 +79,13 @@ implementation:
 
       ln -s $modeldir /home/genie-toolkit/current
       mkdir -p "/shared/tensorboard/${project}/${experiment}/${owner}/${model}"
-     
-      tensorboard_args=
-      if test "$skip_tensorboard" != "true" ; then
-        tensorboard_args="--tensorboard_dir /shared/tensorboard/${project}/${experiment}/${owner}/${model}"
-      fi
+
 
       ls -R
      
-      genienlp train \
+      genienlp bootleg-dump-features \
           --data "$modeldir/dataset" \
           --save "$modeldir" \
-          ${tensorboard_args} \
           --cache "$modeldir/cache" \
           --train_tasks ${task_name} \
           --preserve_case \
@@ -106,13 +94,9 @@ implementation:
           --eval_set_name $eval_set \
           --train_languages $train_languages \
           --eval_languages $eval_languages \
-          --do_ner \
-          --retrieve_method bootleg \
           --bootleg_input_dir ./database/ \
           --bootleg_model ${bootleg_model} \
-          --bootleg_dump_features \
-          ${load_args} \
-          $@ 
+          $@
 
       rm -fr "$modeldir/cache"
       rm -fr "$modeldir/dataset"
@@ -133,13 +117,11 @@ implementation:
       --project, {inputValue: project},
       --experiment, {inputValue: experiment},
       --model, {inputValue: model},
-      --load_from, {inputValue: load_from},
       --eval_set, {inputValue: eval_set},
       --s3_datadir, {inputValue: s3_datadir},
       --s3_database_dir, {inputValue: s3_database_dir},
       --dataset_subfolder, {inputValue: dataset_subfolder},
       --s3_bootleg_prepped_data, {outputPath: s3_bootleg_prepped_data},
-      --skip_tensorboard, {inputValue: skip_tensorboard},
       --train_languages, {inputValue: train_languages},
       --eval_languages, {inputValue: eval_languages},
       --dlg_side, {inputValue: dlg_side},

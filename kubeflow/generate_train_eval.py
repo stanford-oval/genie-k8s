@@ -1526,12 +1526,10 @@ def bootleg_step(
         image=default_image,
         genienlp_version='',
         bootleg_version='',
-        load_from='None',
         train_languages='es',
         eval_languages='es',
         eval_set='eval',
         dataset_subfolder='None',
-        skip_tensorboard='false',
         additional_args='',
 ):
     bootleg_env = {
@@ -1548,12 +1546,10 @@ def bootleg_step(
         project=project,
         experiment=experiment,
         model=model,
-        load_from=load_from,
         eval_set=eval_set,
         s3_datadir=s3_datadir,
         s3_database_dir=s3_database_dir,
         dataset_subfolder=dataset_subfolder,
-        skip_tensorboard=skip_tensorboard,
         train_languages=train_languages,
         eval_languages=eval_languages,
         dlg_side=dlg_side,
@@ -2262,7 +2258,7 @@ def prepare_for_translation(
 
 
 @dsl.pipeline(
-    name='Translate and Postprocess)',
+    name='Translate and Postprocess',
     description='Translate data and postprocess it'
 )
 def translate_and_postprocess(
