@@ -136,30 +136,49 @@ def train_step(
     model,
     task_name,
     load_from,
+    eval_set,
     s3_datadir,
+    s3_database_dir,
     dataset_subfolder,
     genienlp_version,
+    bootleg_version,
     train_iterations,
     skip_tensorboard,
-    additional_args
+    train_languages,
+    eval_languages,
+    dlg_side,
+    s3_bucket='geniehai',
+    do_ner='false',
+    s3_bootleg_prepped_data='None',
+    bootleg_model='',
+    additional_args=''
 ):
     train_env = {
         'GENIENLP_VERSION': genienlp_version,
+        'BOOTLEG_VERSION': bootleg_version,
     }
     train_num_gpus=1
     train_op = components.load_component_from_file('components/train.yaml')(
             image=image,
-            s3_bucket='geniehai',
+            s3_bucket=s3_bucket,
             owner=owner,
             task_name=task_name,
             project=project,
             experiment=experiment,
             model=model,
             load_from=load_from,
+            eval_set=eval_set,
             s3_datadir=s3_datadir,
+            s3_database_dir=s3_database_dir,
             dataset_subfolder=dataset_subfolder,
             train_iterations=train_iterations,
             skip_tensorboard=skip_tensorboard,
+            train_languages=train_languages,
+            eval_languages=eval_languages,
+            dlg_side=dlg_side,
+            do_ner=do_ner,
+            s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+            bootleg_model=bootleg_model,
             additional_args=additional_args)
     (train_op.container
         .set_memory_request('56Gi')
@@ -1441,75 +1460,6 @@ def train_eval_sumbt(
     add_env(add_ssh_volume(eval_op), eval_env)
 
 
-def train_spl_step(
-        owner='mehrad',
-        project='spl',
-        experiment='restaurants',
-        model='',
-        task_name='almond_multilingual',
-        s3_datadir='',
-        s3_bucket='geniehai',
-        s3_database_dir='None',
-        dlg_side='user',
-        s3_bootleg_prepped_data='None',
-        bootleg_model='',
-        image=default_image,
-        genienlp_version='',
-        bootleg_version='',
-        load_from='None',
-        train_languages='es',
-        eval_languages='es',
-        eval_set='eval',
-        dataset_subfolder='None',
-        skip_tensorboard='false',
-        train_iterations='',
-        additional_args='--dimension 768 --transformer_hidden 768 --trainable_decoder_embeddings 50 --encoder_embeddings=xlm-roberta-base --decoder_embeddings= --seq2seq_encoder=Identity --rnn_layers 1 --transformer_heads 12 --transformer_layers 0 --rnn_zero_state=average --train_encoder_embeddings --transformer_lr_multiply 0.08 --max_to_keep 1 --almond_has_multiple_programs --train_batch_tokens 5000',
-):
-    
-    train_env = {
-        'GENIENLP_VERSION': genienlp_version,
-        'BOOTLEG_VERSION': bootleg_version
-    }
-    
-    train_num_gpus = 1
-    train_op = components.load_component_from_file('components/train-spl.yaml')(
-        image=image,
-        s3_bucket=s3_bucket,
-        owner=owner,
-        task_name=task_name,
-        project=project,
-        experiment=experiment,
-        model=model,
-        load_from=load_from,
-        eval_set=eval_set,
-        s3_datadir=s3_datadir,
-        s3_database_dir=s3_database_dir,
-        dataset_subfolder=dataset_subfolder,
-        train_iterations=train_iterations,
-        skip_tensorboard=skip_tensorboard,
-        train_languages=train_languages,
-        eval_languages=eval_languages,
-        dlg_side=dlg_side,
-        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
-        bootleg_model=bootleg_model,
-        additional_args=additional_args,)
-    (train_op.container
-     .set_memory_request('56Gi')
-     .set_memory_limit('56Gi')
-     .set_cpu_request('7.5')
-     .set_cpu_limit('7.5')
-     .set_gpu_limit(str(train_num_gpus))
-     .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
-     )
-    (add_env(add_ssh_volume(train_op), train_env)
-     .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-     .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2 * train_num_gpus}xlarge')
-     .add_volume(V1Volume(name='tensorboard',
-                          persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
-    
-    return train_op
-
-
 def eval_spl_step(
         owner='mehrad',
         project='spl',
@@ -1707,7 +1657,7 @@ def train_eval_spl(
         eval_additional_args='--evaluate valid --overwrite'
 ):
     
-    train_op = train_spl_step(
+    train_op = train_step(
         owner=owner,
         project=project,
         experiment=experiment,
@@ -1810,7 +1760,7 @@ def ned_train_eval(
         additional_args=bootleg_additional_args
     )
 
-    train_op = train_spl_step(
+    train_op = train_step(
         owner=owner,
         project=project,
         experiment=experiment,
@@ -1896,7 +1846,7 @@ def train_eval_bootleg(
         eval_additional_args='--evaluate valid --overwrite'
 ):
 
-    train_op = train_spl_step(
+    train_op = train_step(
         owner=owner,
         project=project,
         experiment=experiment,
