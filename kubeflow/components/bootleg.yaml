@@ -57,18 +57,18 @@ implementation:
       case $task_name in
         *"multilingual"*)
           for lang in "${TLS[@]}" "${ELS[@]}" ; do
-            aws s3 sync --no-progress ${s3_datadir} dataset/ --exclude "*" --include "*$lang*"
+            aws s3 sync --no-progress ${s3_datadir} dataset/ --exclude "*/*" --include "*$lang*"
           done
           target_dataset_dir=$modeldir/dataset/almond/multilingual
         ;;
 
         *"dialog"* | *"contextual"*)
-          aws s3 sync --no-progress --exclude "synthetic*.txt" ${s3_datadir} dataset/
+          aws s3 sync --no-progress --exclude "synthetic*.txt" ${s3_datadir} dataset/ --exclude "*/*"
           target_dataset_dir=$modeldir/dataset/almond/${dlg_side}
         ;;
 
         *)
-          aws s3 sync --no-progress ${s3_datadir} dataset/
+          aws s3 sync --no-progress ${s3_datadir} dataset/ --exclude "*/*"
           target_dataset_dir=$modeldir/dataset/almond/
         ;;
       esac
