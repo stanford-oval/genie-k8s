@@ -1,24 +1,20 @@
 import os
-from datetime import datetime
 
-import kfp
 from kfp import dsl
 from kfp import components
 
-from kubernetes.client import V1Toleration, V1Affinity
+from kubernetes.client import V1Toleration
 from kubernetes.client.models import (
     V1VolumeMount,
     V1Volume,
     V1PersistentVolumeClaimVolumeSource,
     V1SecretVolumeSource
 )
-from kubernetes import client as k8s_client
 
-from utils import upload_pipeline
 from utils import add_env
 
 # Get the Thingpedia key from environment variable
-default_developer_key = os.environ['THINGPEDIA_DEVELOPER_KEY']
+default_developer_key = os.getenv('THINGPEDIA_DEVELOPER_KEY')
 
 default_image = '932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit-kf:20201113.1-next'
 GENIENLP_VERSION = 'd04ed4a2c38788eab9a9f4694a20fddeba62ea7d'
