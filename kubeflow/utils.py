@@ -26,7 +26,6 @@ def list_experiments(client):
         experiments.extend(resp.pipelines)
     return experiments
 
-
 def list_pipelines(client):
     resp = client.list_pipelines(page_size=100)
     pipelines = resp.pipelines
@@ -34,6 +33,14 @@ def list_pipelines(client):
         resp = client.list_pipelines(page_token=resp.next_page_token, page_size=100)
         pipelines.extend(resp.pipelines)
     return pipelines
+
+def list_pipeline_versions(client, pipeline_id):
+    resp = client.pipelines.list_pipeline_versions(resource_key_type="PIPELINE", resource_key_id=pipeline_id, page_size=100)
+    pipeline_versions = resp.versions
+    while resp.next_page_token:
+        resp = client.pipelines.list_pipeline_versions(resource_key_type="PIPELINE", resource_key_id=pipeline_id, page_size=100, page_token=resp.next_page_token)
+        pipeline_versions.extend(resp.versions)
+    return pipeline_versions
 
 
 def upload_pipeline(name, pipeline):

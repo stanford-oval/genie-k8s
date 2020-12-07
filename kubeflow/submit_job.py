@@ -1,7 +1,7 @@
 import kfp
 import os
 import argparse
-from utils import list_pipelines, list_experiments, prepare_unknown_args
+from utils import list_pipelines, list_pipeline_versions, list_experiments, prepare_unknown_args
 from generate_train_eval import default_image, GENIE_VERSION, GENIENLP_VERSION, WORKDIR_REPO, WORKDIR_VERSION, THINGTALK_VERSION, BOOTLEG_VERSION
 
 
@@ -51,11 +51,7 @@ for p in pipelines:
 if our_pipeline is None:
     raise ValueError('No pipelines with this name were found')
 
-pipeline_versions = client.pipelines.list_pipeline_versions(
-    resource_key_type="PIPELINE",
-    resource_key_id=our_pipeline.id,
-    page_token='',
-).versions
+pipeline_versions = list_pipeline_versions(client, our_pipeline.id)
 
 our_pipeline_version = None
 
