@@ -70,9 +70,12 @@ def upload_pipeline(name, pipeline):
 
 
 def prepare_unknown_args(args_list):
+    
     assert len(args_list) % 2 == 0
     assert all(args_list[i].startswith(("-", "--")) for i in range(0, len(args_list), 2))
-    assert all(not args_list[i].startswith(("-", "--")) for i in range(1, len(args_list), 2))
+    
+    # relax following assertion since we may pass several arguments as value (e.g. xxx_additional_args)
+    # assert all(not args_list[i].startswith(("-", "--")) for i in range(1, len(args_list), 2))
     
     cleaned_args = {}
     for i in range(0, len(args_list), 2):
