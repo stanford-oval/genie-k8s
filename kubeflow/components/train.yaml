@@ -88,7 +88,7 @@ implementation:
       esac
 
       mkdir -p $target_dataset_dir
-      ln -s dataset/* $target_dataset_dir
+      mv dataset/* $target_dataset_dir
 
       ln -s $modeldir /home/genie-toolkit/current
       mkdir -p "/shared/tensorboard/${project}/${experiment}/${owner}/${model}"
@@ -116,7 +116,7 @@ implementation:
           --eval_languages $eval_languages \
           ${tensorboard_args} \
           ${load_args} \
-          ${bootleg_args}
+          ${bootleg_args} \
           $@
 
       rm -fr "$modeldir/cache"
