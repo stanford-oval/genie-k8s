@@ -11,6 +11,7 @@ parser.add_argument('--experiment', type=str)
 parser.add_argument('--image', type=str)
 parser.add_argument('--model', type=str)
 parser.add_argument('--s3_datadir', type=str)
+parser.add_argument('--bootleg_additional_args', type=str)
 parser.add_argument('--train_additional_args', type=str)
 parser.add_argument('--eval_additional_args', type=str)
 parser.add_argument('--pipeline_name', type=str)
@@ -20,7 +21,9 @@ parser.add_argument('--kf_job_name', type=str)
 
 args, unknown_args = parser.parse_known_args()
 
-extra_param_args = prepare_unknown_args(unknown_args)
+extra_param_args = {}
+if len(unknown_args):
+    extra_param_args = prepare_unknown_args(unknown_args)
 
 kfp_dir = os.path.expanduser('~/.config/kfp/')
 if not os.path.isdir(kfp_dir):
