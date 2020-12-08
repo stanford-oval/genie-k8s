@@ -1,26 +1,39 @@
-# Kubernetes scripts for Genie
+# Kubeflow pipelines for Genie
 
 These scripts are useful to generate datasets and train models with Genie
-on a Kubernetes cluster. They are taylored towards our internal use, but
-maybe you'll find them useful too!
+on a [Kubeflow](https://kubeflow.org) cluster. They are taylored towards our
+internal use, but maybe you'll find them useful too!
 
 This is not officially released software. Please **do not file** issues, sorry.
 
 ## Setup
 
-Copy `config.sample` to `config`, and edit the data in as described in the wiki.
+Copy `config.sample` to `config`, and edit the data in as described inside.
 
-## Spawning a job
+## Building the docker image
+
+The docker images are split into a base image and a regular Kubeflow image,
+which is used by each step. There is an additional image that includes the
+Jupyter notebook code.
+
+To build the base image, set the `COMMON_IMAGE` field in the config file, then
+run `./rebuild-common-image.sh`.
+
+To build the regular image, use `./rebuild-image.sh`. See `./rebuild-image.sh --help`
+for options.
+
+The scripts will build the images and upload to AWS ECR.
+
+## Uploading pipelines
 
 Use:
+```bash
+python3 upload_pipeline.py ${pipeline_function} ${pipeline_name}
 ```
-./generate-dataset.sh --experiment <experiment> --dataset <dataset-name>
-./train.sh --experiment <experiment> --dataset <dataset-name> --model <model-name> --load_from <[load_path|None]>
-./evaluate.sh --experiment <experiment> --dataset <dataset-name> --model <model-name>
-./paraphrase.sh --experiment <experiment> --input_dataset <input-dataset-name> --output_dataset <output-dataset-name> --filtering_model <parser-name> --paraphrasing_model_full_path <path-to-paraphrasing-model>
-```
-(use `--help` to learn all commandline options; all options are required)
+to upload a pipeline to your Kubeflow cluster. `${pipeline_function}` should be
+the name of a Python function in `pipelines.py`.
 
-Experiment should be one of `thingtalk`, `spotify`, `multiwoz`.
-Dataset and model name should be anything, and will be mapped to subdirectories
-of your S3 research directory.
+## Running jobs
+
+Refer to the Kubeflow documentation to learn how to run jobs after uploading
+the pipeline.

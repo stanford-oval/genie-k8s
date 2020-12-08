@@ -1,26 +1,26 @@
 #!/bin/bash
 
+. lib.sh
+. config
+
+check_config "COMMON_IMAGE genie_version thingtalk_version bootleg_version genienlp_version"
 export AWS_PROFILE
+
+parse_args "$0" "image jupyter_image=None add_bootleg=true" "$@"
+shift $n
 
 aws ecr get-login --no-include-email | bash
 
-cp ../lib.sh .
-
 set -ex
-
-COMMON_IMAGE=$1
-IMAGE=$2
-JUPYTER_IMAGE=$3
 
 genienlp_version=${genienlp_version:-master}
 thingtalk_version=${thingtalk_version:-master}
 genie_version=${genie_version:-master}
 bootleg_version=${bootleg_version:-master}
-add_bootleg=${add_bootleg:-false}
-
+add_bootleg=${add_bootleg:-true}
 
 docker pull ${COMMON_IMAGE}
-docker build -t ${IMAGE} \
+docker build -t ${image} \
   --build-arg COMMON_IMAGE=${COMMON_IMAGE} \
   --build-arg GENIENLP_VERSION=${genienlp_version} \
   --build-arg THINGTALK_VERSION=${thingtalk_version} \
@@ -28,14 +28,14 @@ docker build -t ${IMAGE} \
   --build-arg BOOTLEG_VERSION=${bootleg_version} \
   --build-arg ADD_BOOTLEG=${add_bootleg} \
   .
-docker push ${IMAGE}
+docker push ${image}
 
-if test -n "${JUPYTER_IMAGE}" ; then
-  docker build -t ${JUPYTER_IMAGE} \
-    --build-arg BASE_IMAGE=${IMAGE} \
+if test "${jupyter_image}" != None ; then
+  docker build -t ${jupyter_image} \
+    --build-arg BASE_IMAGE=${image} \
     -f Dockerfile.jupyter \
     .
-  docker push ${JUPYTER_IMAGE}
+  docker push ${jupyter_image}
 fi
 
 rm lib.sh

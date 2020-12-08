@@ -1,8 +1,9 @@
 import kfp
 import os
 import argparse
+
 from utils import list_pipelines, list_pipeline_versions, list_experiments, prepare_unknown_args
-from generate_train_eval import default_image, GENIE_VERSION, GENIENLP_VERSION, WORKDIR_REPO, WORKDIR_VERSION, THINGTALK_VERSION, BOOTLEG_VERSION
+from pipelines.common import default_image, GENIE_VERSION, GENIENLP_VERSION, WORKDIR_REPO, WORKDIR_VERSION, THINGTALK_VERSION, BOOTLEG_VERSION
 
 
 parser = argparse.ArgumentParser()
@@ -58,10 +59,10 @@ if not args.kf_pipeline_version:
 for v in pipeline_versions:
     if v.name == args.kf_pipeline_version:
         our_pipeline_version = v
-        
+
 if our_pipeline_version is None:
     raise ValueError('No pipelines with this version were found')
-    
+
 
 experiments = list_experiments(client)
 
