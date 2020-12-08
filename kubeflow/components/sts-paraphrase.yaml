@@ -1,0 +1,117 @@
+name: STS Paraphrase
+description: |
+  Paraphrase and filter based on STS
+inputs:
+  - {name: image, description: ''}
+  - {name: project, description: ''}
+  - {name: owner, description: ''}
+  - {name: experiment, description: ''}
+  - {name: s3_bucket, description: ''}
+  - {name: model_name_or_path, description: ''}
+  - {name: input_splits, description: ''}
+  - {name: train_output_per_example, description: ''}
+  - {name: nmt, description: ''}
+  - {name: pivot_lang, description: ''}
+  - {name: do_alignment, description: ''}
+  - {name: src_lang, description: ''}
+  - {name: tgt_lang, description: ''}
+  - {name: dlg_side, description: ''}
+  - {name: do_paraphrasing, description: ''}
+  - {name: paraphrasing_method, description: ''}
+  - {name: filter_sts_paraphrase, description: ''}
+  - {name: task_name, description: ''}
+  - {name: s3_datadir, description: ''}
+  - {name: additional_args, description: ''}
+outputs:
+
+implementation:
+  container:
+    image: '{{inputs.parameters.image}}'
+    command:
+    - /bin/bash
+    - -ex
+    - -c 
+    - |
+      . /opt/genie-toolkit/lib.sh
+
+      parse_args "$0" "image owner project experiment s3_bucket model_name_or_path input_splits train_output_per_example nmt pivot_lang do_alignment src_lang tgt_lang dlg_side do_paraphrasing paraphrasing_method filter_sts_paraphrase task_name s3_datadir" "$@"
+      shift $n
+
+      . /opt/genie-toolkit/sync-repos.sh
+
+      cd $HOME
+
+      if [ -f workdir/Makefile ] ; then
+        MAKEDIR='.'
+      else
+        MAKEDIR=${project}
+      fi
+
+      cd workdir/${MAKEDIR}
+
+      export paraphrase_arguments="$@"
+
+      aws s3 sync --no-progress ${s3_datadir} dataset/${experiment}/ --exclude '*/*'
+      aws s3 sync --no-progress ${s3_datadir} ${experiment}/ --exclude '*' --include 'translated/en/*' --include "translated/marian/${tgt_lang}/*" --include "translated/gt/${tgt_lang}/*"
+
+      mv ${experiment}/translated/* ${experiment}/
+      rm -rf ${experiment}/translated
+
+      IFS='+'; read -ra input_splits_array <<<"$input_splits"; IFS=' '
+
+      # generate paraphrases
+      if ${do_paraphrasing} ; then
+        case ${nmt}+${paraphrasing_method} in
+          marian+masked)
+              make -B -j2 geniedir=/opt/genie-toolkit \
+                default_masked_paraphrase_hparams="${paraphrase_arguments} --model_name_or_path ${model_name_or_path}" \
+                all_names="${input_splits_array[*]}" experiment=${experiment} train_output_per_example=${train_output_per_example} masked_paraphrase_marian_unquoted_${tgt_lang}
+          ;;
+          marian+round_trip)
+            make -B -j2 geniedir=/opt/genie-toolkit \
+              default_translation_hparams="${paraphrase_arguments} --model_name_or_path ${model_name_or_path} --replace_qp --force_replace_qp" \
+              all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=false pivot_lang=${pivot_lang} paraphrase_marian_unquoted_${tgt_lang}
+          ;;
+          gt+round_trip)
+            make -B -j2 geniedir=/opt/genie-toolkit \
+              default_translation_hparams="${paraphrase_arguments} --model_name_or_path ${model_name_or_path} --replace_qp --force_replace_qp" \
+              all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=false pivot_lang=${pivot_lang} paraphrase_gt_quoted_${tgt_lang}
+          ;;
+          *)
+            echo "invalid ${nmt}+${paraphrasing_method} combo is provided"
+            exit 1
+          ;;
+          esac
+      fi
+
+      # prepare paraphrased files
+      make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true pivot_lang=${pivot_lang} nmt_model=${nmt} para_method=${paraphrasing_method} prepare_paraphrases_${tgt_lang}
+
+      # filter paraphrases based on sts score
+      make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true pivot_lang=${pivot_lang} nmt_model=${nmt} para_method=${paraphrasing_method} filtering_metric=${filtering_metric} filter_paraphrase_${tgt_lang}
+
+      aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${s3_datadir}paraphrased/${nmt}/${tgt_lang}
+
+    args: [
+      'cmd',
+      --image, {inputValue: image},
+      --owner, {inputValue: owner},
+      --project, {inputValue: project},
+      --experiment, {inputValue: experiment},
+      --s3_bucket, {inputValue: s3_bucket},
+      --model_name_or_path, {inputValue: model_name_or_path},
+      --input_splits, {inputValue: input_splits},
+      --train_output_per_example, {inputValue: train_output_per_example},
+      --nmt, {inputValue: nmt},
+      --pivot_lang, {inputValue: pivot_lang},
+      --do_alignment, {inputValue: do_alignment},
+      --src_lang, {inputValue: src_lang},
+      --tgt_lang, {inputValue: tgt_lang},
+      --dlg_side, {inputValue: dlg_side},
+      --do_paraphrasing, {inputValue: do_paraphrasing},
+      --paraphrasing_method, {inputValue: paraphrasing_method},
+      --filter_sts_paraphrase, {inputValue: filter_sts_paraphrase},
+      --task_name, {inputValue: task_name},
+      --s3_datadir, {inputValue: s3_datadir},
+      --, {inputValue: additional_args}
+    ]

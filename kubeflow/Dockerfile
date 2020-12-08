@@ -2,13 +2,19 @@ ARG COMMON_IMAGE=
 FROM ${COMMON_IMAGE}
 MAINTAINER Thingpedia Admins <thingpedia-admins@lists.stanford.edu>
 
+ARG ADD_BOOTLEG=false
+RUN echo ${ADD_BOOTLEG}
+ARG BOOTLEG_VERSION=master
+RUN if [ ${ADD_BOOTLEG} == true ]; then \
+		git clone https://github.com/Mehrad0711/bootleg.git /opt/bootleg/ ; \
+		cd /opt/bootleg/ ; \
+		git checkout ${BOOTLEG_VERSION} && pip3 install --use-feature=2020-resolver -r requirements.txt && pip3 install --use-feature=2020-resolver -e . ; \
+	fi
+
 WORKDIR /opt/genienlp/
 ARG GENIENLP_VERSION=master
 RUN git fetch && git checkout ${GENIENLP_VERSION} && pip3 install --use-feature=2020-resolver -e .
 
-# uncomment the models you want to use
-# RUN genienlp cache-embeddings --destdir /usr/local/share/genienlp/embeddings --embeddings bert-large-uncased-whole-word-masking
-# RUN genienlp cache-embeddings --destdir /usr/local/share/genienlp/embeddings --embeddings bert-large-uncased-whole-word-masking-finetuned-squad
 
 # uncomment it you need Apex (for mixed precision training)
 # RUN yum install -y \

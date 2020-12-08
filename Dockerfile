@@ -9,10 +9,6 @@ ARG GENIENLP_VERSION=master
 RUN pip3 install --upgrade pip
 RUN git fetch && git checkout ${GENIENLP_VERSION} && pip3 install --use-feature=2020-resolver -e .
 
-# uncomment the models you want to use
-# RUN genienlp cache-embeddings --destdir /usr/local/share/genienlp/embeddings --embeddings bert-large-uncased-whole-word-masking
-# RUN genienlp cache-embeddings --destdir /usr/local/share/genienlp/embeddings --embeddings bert-large-uncased-whole-word-masking-finetuned-squad
-
 # uncomment it you need Apex (for mixed precision training)
 # RUN yum install -y \
 #        cuda-nvml-dev-$CUDA_PKG_VERSION \
