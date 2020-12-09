@@ -528,7 +528,7 @@ def everything(
     paraphrase_subfolder='user',
     paraphrase_additional_args='',
     filtering_additional_args='',
-    eval_set='dev',
+    eval_set='',
     eval_additional_args=''):
 
     if do_generate:
@@ -621,7 +621,7 @@ def generate_train_eval_pipeline(
     train_load_from='None',
     train_additional_args='',
     train_iterations='80000',
-    eval_set='dev',
+    eval_set='',
     eval_additional_args=''
 ):
     everything(do_generate=True,
@@ -671,7 +671,7 @@ def train_eval_only_pipeline(
     train_load_from='None',
     train_iterations='80000',
     train_additional_args='',
-    eval_set='dev',
+    eval_set='',
     eval_additional_args=''
 ):
     everything(do_generate=False,
@@ -729,7 +729,7 @@ def generate_paraphrase_train_eval_pipeline(
     paraphrase_subfolder='user',
     paraphrase_additional_args='',
     filtering_additional_args='',
-    eval_set='dev',
+    eval_set='',
     eval_additional_args=''
 ):
     everything(do_generate=True,
@@ -789,7 +789,7 @@ def generate_train_fewshot_eval_pipeline(
     train_additional_args='',
     train_iterations='80000',
     fewshot_train_iterations='20000',
-    eval_set='dev',
+    eval_set='',
     eval_additional_args=''
 ):
     everything(do_generate=True,
@@ -850,7 +850,7 @@ def generate_paraphrase_train_fewshot_eval_pipeline(
     paraphrase_subfolder='user',
     paraphrase_additional_args='',
     filtering_additional_args='',
-    eval_set='dev',
+    eval_set='',
     eval_additional_args=''
 ):
     everything(do_generate=True,
@@ -918,7 +918,7 @@ def paraphrase_train_fewshot_eval_pipeline(
     paraphrase_subfolder='user',
     paraphrase_additional_args='',
     filtering_additional_args='',
-    eval_set='dev',
+    eval_set='',
     eval_additional_args=''
 ):
     everything(do_generate=False,
@@ -985,7 +985,7 @@ def paraphrase_train_eval_pipeline(
     paraphrase_subfolder='user',
     paraphrase_additional_args='',
     filtering_additional_args='',
-    eval_set='dev',
+    eval_set='',
     eval_additional_args=''
 ):
     everything(do_generate=False,
@@ -1059,7 +1059,7 @@ def selftrain_pipeline(
     paraphrase_additional_args='',
     filtering_additional_args='',
     auto_annotate_additional_args='',
-    eval_set='dev',
+    eval_set='',
     eval_additional_args=''
 ):
     # first, generate the dataset
@@ -1241,7 +1241,7 @@ def selftrain_nopara_pipeline(
     fewshot_train_iterations='20000',
     selftrain_train_iterations='20000',
     auto_annotate_additional_args='',
-    eval_set='dev',
+    eval_set='',
     eval_additional_args=''
 ):
     # first, generate the dataset
@@ -1408,7 +1408,7 @@ def eval_only_pipeline(
     workdir_repo=WORKDIR_REPO,
     workdir_version=WORKDIR_VERSION,
     thingpedia_developer_key=default_developer_key,
-    eval_set='dev',
+    eval_set='',
     additional_args=''
 ):
     eval_step(
@@ -1605,7 +1605,7 @@ def eval_spl_step(
         workdir_repo=GENIE_WORKDIR_REPO,
         workdir_version=GENIE_WORKDIR_VERSION,
         pred_languages='es',
-        eval_set='eval',
+        eval_set='',
         annotated_set_name='annotated',
         is_oracle='false',
         additional_args='--evaluate valid --overwrite'
@@ -1658,7 +1658,7 @@ def bootleg_step(
         bootleg_version='',
         train_languages='es',
         eval_languages='es',
-        eval_set='eval',
+        eval_set='',
         dataset_subfolder='None',
         additional_args='',
 ):
@@ -1722,7 +1722,7 @@ def eval_spl(
         workdir_repo='git@github.com:stanford-oval/SPL.git',
         workdir_version=GENIE_WORKDIR_VERSION,
         pred_languages='es',
-        eval_set='eval',
+        eval_set='',
         annotated_set_name='annotated',
         is_oracle='false',
         eval_additional_args='--evaluate valid --overwrite'
@@ -1773,7 +1773,7 @@ def train_eval_spl(
         train_languages='es',
         eval_languages='es',
         pred_languages='es',
-        eval_set='eval',
+        eval_set='',
         dataset_subfolder='None',
         annotated_set_name='annotated',
         is_oracle='false',
@@ -1853,7 +1853,7 @@ def bootleg(
         train_languages='en',
         eval_languages='en',
         dlg_side='None',
-        eval_set='eval',
+        eval_set='',
         dataset_subfolder='None',
         bootleg_additional_args=''
 ):
