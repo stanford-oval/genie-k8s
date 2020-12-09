@@ -19,9 +19,12 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 # OR OTHER DEALINGS IN THE SOFTWARE.
 
+import os
+
 from kubernetes.client.models import (
     V1VolumeMount,
     V1Volume,
+    V1EnvVar,
     V1SecretVolumeSource
 )
 

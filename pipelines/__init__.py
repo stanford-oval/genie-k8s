@@ -20,7 +20,7 @@
 # OR OTHER DEALINGS IN THE SOFTWARE.
 
 from .training import *
-from .seltfrain import *
+from .selftrain import *
 from .spl import *
 from .bootleg import *
 from .other_models import *

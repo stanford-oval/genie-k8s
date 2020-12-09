@@ -19,6 +19,8 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 # OR OTHER DEALINGS IN THE SOFTWARE.
 
+from kfp import dsl
+from kfp import components
 from kubernetes.client import V1Toleration
 from kubernetes.client.models import (
     V1VolumeMount,
@@ -27,8 +29,7 @@ from kubernetes.client.models import (
     V1SecretVolumeSource
 )
 
-from utils import add_env
-from common import *
+from .common import *
 
 
 def paraphrase_generation_step(
