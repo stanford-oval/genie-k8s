@@ -188,3 +188,37 @@ def train_eval_sumbt(
         .set_cpu_limit('4')
         .set_cpu_request('4'))
     add_env(add_ssh_volume(eval_op), eval_env)
+
+    
+@dsl.pipeline(
+    name='Eval SUMBT',
+    description='Train and evaluate a SUMBT model'
+)
+def eval_sumbt(
+    owner,
+    project,
+    experiment,
+    model,
+    s3_datadir,
+    s3_model_dir,
+    image='932360549041.dkr.ecr.us-west-2.amazonaws.com/sumbt:20201122.2',
+    eval_additional_args=''
+):
+    eval_env = {}
+
+    eval_op = components.load_component_from_file('components/evaluate-sumbt.yaml')(
+            owner=owner,
+            project=project,
+            experiment=experiment,
+            s3_datadir=s3_datadir,
+            s3_model_dir=s3_model_dir,
+            image=image,
+            additional_args=eval_additional_args)
+    (eval_op.container
+        .set_memory_limit('12Gi')
+        .set_memory_request('12Gi')
+        .set_cpu_limit('7.5')
+        .set_cpu_request('7.5'))
+    (add_env(add_ssh_volume(eval_op), eval_env)
+        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.2xlarge'))
