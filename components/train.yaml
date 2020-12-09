@@ -63,34 +63,20 @@ implementation:
         load_args="--load best.pth"
       fi
 
-      rm -fr "$modeldir/dataset"
-      mkdir "$modeldir/dataset"
-      rm -fr "$modeldir/cache"
-      mkdir -p "$modeldir/cache"
+      mkdir -p cache
 
       case $task_name in
         *"multilingual"*)
           for lang in "${TLS[@]}" "${ELS[@]}" ; do
-            aws s3 sync --no-progress ${s3_datadir} dataset/ --exclude "*/*" --include "*$lang*"
+            aws s3 sync --no-progress ${s3_datadir} dataset/almond/multilingual --exclude "*/*" --include "*$lang*"
           done
-          target_dataset_dir=$modeldir/dataset/almond/multilingual
-        ;;
-
-        *"dialog"* | *"contextual"*)
-          aws s3 sync --no-progress --exclude "synthetic*.txt" ${s3_datadir} dataset/ --exclude "*/*"
-          target_dataset_dir=$modeldir/dataset/almond/${dlg_side}
         ;;
 
         *)
-          aws s3 sync --no-progress ${s3_datadir} dataset/ --exclude "*/*"
-          target_dataset_dir=$modeldir/dataset/almond/
+          aws s3 sync --no-progress --exclude "synthetic*.txt" ${s3_datadir} dataset/almond
         ;;
       esac
 
-      mkdir -p $target_dataset_dir
-      mv dataset/* $target_dataset_dir
-
-      ln -s $modeldir /home/genie-toolkit/current
       mkdir -p "/shared/tensorboard/${project}/${experiment}/${owner}/${model}"
 
       tensorboard_args=
@@ -104,9 +90,9 @@ implementation:
       fi
 
       genienlp train \
-          --data "$modeldir/dataset" \
+          --data "dataset" \
           --save "$modeldir" \
-          --cache "$modeldir/cache" \
+          --cache "cache" \
           --train_tasks ${task_name} \
           --preserve_case \
           --exist_ok \
