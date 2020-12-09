@@ -15,7 +15,6 @@ inputs:
   - {name: do_alignment, description: ''}
   - {name: src_lang, description: ''}
   - {name: tgt_lang, description: ''}
-  - {name: dlg_side, description: ''}
   - {name: do_paraphrasing, description: ''}
   - {name: paraphrasing_method, description: ''}
   - {name: filter_sts_paraphrase, description: ''}
@@ -34,7 +33,7 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image owner project experiment s3_bucket model_name_or_path input_splits train_output_per_example nmt pivot_lang do_alignment src_lang tgt_lang dlg_side do_paraphrasing paraphrasing_method filter_sts_paraphrase task_name s3_datadir" "$@"
+      parse_args "$0" "image owner project experiment s3_bucket model_name_or_path input_splits train_output_per_example nmt pivot_lang do_alignment src_lang tgt_lang do_paraphrasing paraphrasing_method filter_sts_paraphrase task_name s3_datadir" "$@"
       shift $n
 
       . /opt/genie-toolkit/sync-repos.sh
@@ -107,7 +106,6 @@ implementation:
       --do_alignment, {inputValue: do_alignment},
       --src_lang, {inputValue: src_lang},
       --tgt_lang, {inputValue: tgt_lang},
-      --dlg_side, {inputValue: dlg_side},
       --do_paraphrasing, {inputValue: do_paraphrasing},
       --paraphrasing_method, {inputValue: paraphrasing_method},
       --filter_sts_paraphrase, {inputValue: filter_sts_paraphrase},

@@ -51,7 +51,6 @@ def bootleg(
         bootleg_model='',
         train_languages='en',
         eval_languages='en',
-        dlg_side='None',
         eval_set='',
         dataset_subfolder='None',
         bootleg_additional_args=''
@@ -76,7 +75,6 @@ def bootleg(
         dataset_subfolder=dataset_subfolder,
         train_languages=train_languages,
         eval_languages=eval_languages,
-        dlg_side=dlg_side,
         bootleg_model=bootleg_model,
         additional_args=bootleg_additional_args
     )
