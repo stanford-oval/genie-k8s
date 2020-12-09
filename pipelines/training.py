@@ -85,19 +85,18 @@ def train_step(
     load_from,
     eval_set,
     s3_datadir,
-    s3_database_dir,
     dataset_subfolder,
     genienlp_version,
-    bootleg_version,
     train_iterations,
     skip_tensorboard,
-    train_languages,
-    eval_languages,
-    dlg_side,
+    s3_database_dir='None',
+    bootleg_version='',
+    train_languages='en',
+    eval_languages='en',
     s3_bucket='geniehai',
-    do_ner='false',
+    use_bootleg='false',
     s3_bootleg_prepped_data='None',
-    bootleg_model='',
+    bootleg_model='None',
     additional_args=''
 ):
     train_env = {
@@ -122,8 +121,7 @@ def train_step(
             skip_tensorboard=skip_tensorboard,
             train_languages=train_languages,
             eval_languages=eval_languages,
-            dlg_side=dlg_side,
-            do_ner=do_ner,
+            use_bootleg=use_bootleg,
             s3_bootleg_prepped_data=s3_bootleg_prepped_data,
             bootleg_model=bootleg_model,
             additional_args=additional_args)
@@ -364,7 +362,7 @@ def everything(
     s3_bootleg_prepped_data='',
     generate_dataset_parallel='6',
     generate_dataset_additional_args='',
-    train_task_name='almond_dialogue_nlu',
+    train_task_name='',
     train_load_from='None',
     train_additional_args='',
     train_iterations='80000',
@@ -379,7 +377,7 @@ def everything(
     paraphrase_subfolder='user',
     paraphrase_additional_args='',
     filtering_additional_args='',
-    eval_set='dev',
+    eval_set='',
     eval_additional_args=''):
 
     if do_generate:
@@ -468,11 +466,11 @@ def generate_train_eval_pipeline(
     thingpedia_developer_key=default_developer_key,
     generate_dataset_parallel='6',
     generate_dataset_additional_args='',
-    train_task_name='almond_dialogue_nlu',
+    train_task_name='',
     train_load_from='None',
     train_additional_args='',
     train_iterations='80000',
-    eval_set='dev',
+    eval_set='',
     eval_additional_args=''
 ):
     everything(do_generate=True,
@@ -518,11 +516,11 @@ def train_eval_only_pipeline(
     workdir_repo=WORKDIR_REPO,
     workdir_version=WORKDIR_VERSION,
     thingpedia_developer_key=default_developer_key,
-    train_task_name='almond_dialogue_nlu',
+    train_task_name='',
     train_load_from='None',
     train_iterations='80000',
     train_additional_args='',
-    eval_set='dev',
+    eval_set='',
     eval_additional_args=''
 ):
     everything(do_generate=False,
@@ -568,7 +566,7 @@ def generate_paraphrase_train_eval_pipeline(
     thingpedia_developer_key=default_developer_key,
     generate_dataset_parallel='6',
     generate_dataset_additional_args='',
-    train_task_name='almond_dialogue_nlu',
+    train_task_name='',
     train_load_from='None',
     train_additional_args='',
     train_iterations='80000',
@@ -580,7 +578,7 @@ def generate_paraphrase_train_eval_pipeline(
     paraphrase_subfolder='user',
     paraphrase_additional_args='',
     filtering_additional_args='',
-    eval_set='dev',
+    eval_set='',
     eval_additional_args=''
 ):
     everything(do_generate=True,
@@ -635,12 +633,12 @@ def generate_train_fewshot_eval_pipeline(
     thingpedia_developer_key=default_developer_key,
     generate_dataset_parallel='6',
     generate_dataset_additional_args='',
-    train_task_name='almond_dialogue_nlu',
+    train_task_name='',
     train_load_from='None',
     train_additional_args='',
     train_iterations='80000',
     fewshot_train_iterations='20000',
-    eval_set='dev',
+    eval_set='',
     eval_additional_args=''
 ):
     everything(do_generate=True,
@@ -688,7 +686,7 @@ def generate_paraphrase_train_fewshot_eval_pipeline(
     thingpedia_developer_key=default_developer_key,
     generate_dataset_parallel='6',
     generate_dataset_additional_args='',
-    train_task_name='almond_dialogue_nlu',
+    train_task_name='',
     train_load_from='None',
     train_additional_args='',
     train_iterations='80000',
@@ -701,7 +699,7 @@ def generate_paraphrase_train_fewshot_eval_pipeline(
     paraphrase_subfolder='user',
     paraphrase_additional_args='',
     filtering_additional_args='',
-    eval_set='dev',
+    eval_set='',
     eval_additional_args=''
 ):
     everything(do_generate=True,
@@ -756,7 +754,7 @@ def paraphrase_train_fewshot_eval_pipeline(
     workdir_repo=WORKDIR_REPO,
     workdir_version=WORKDIR_VERSION,
     thingpedia_developer_key=default_developer_key,
-    train_task_name='almond_dialogue_nlu',
+    train_task_name='',
     train_load_from='None',
     train_additional_args='',
     train_iterations='80000',
@@ -769,7 +767,7 @@ def paraphrase_train_fewshot_eval_pipeline(
     paraphrase_subfolder='user',
     paraphrase_additional_args='',
     filtering_additional_args='',
-    eval_set='dev',
+    eval_set='',
     eval_additional_args=''
 ):
     everything(do_generate=False,
@@ -824,7 +822,7 @@ def paraphrase_train_eval_pipeline(
     workdir_repo=WORKDIR_REPO,
     workdir_version=WORKDIR_VERSION,
     thingpedia_developer_key=default_developer_key,
-    train_task_name='almond_dialogue_nlu',
+    train_task_name='',
     train_load_from='None',
     train_additional_args='',
     train_iterations='80000',
@@ -836,7 +834,7 @@ def paraphrase_train_eval_pipeline(
     paraphrase_subfolder='user',
     paraphrase_additional_args='',
     filtering_additional_args='',
-    eval_set='dev',
+    eval_set='',
     eval_additional_args=''
 ):
     everything(do_generate=False,
@@ -888,7 +886,7 @@ def eval_only_pipeline(
     workdir_repo=WORKDIR_REPO,
     workdir_version=WORKDIR_VERSION,
     thingpedia_developer_key=default_developer_key,
-    eval_set='dev',
+    eval_set='',
     additional_args=''
 ):
     eval_step(
