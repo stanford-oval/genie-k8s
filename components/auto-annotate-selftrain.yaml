@@ -35,25 +35,39 @@ implementation:
       EOF
       cd workdir/${MAKEDIR}
       
-      experiment=multidomain
-      make experiment="${experiment}" \
+      make \
+        geniedir=/opt/genie-toolkit \
+        "owner=${owner}" \
+        "genie_k8s_owner=${owner}" \
+        "genie_k8s_project=${project}" \
+        "s3_bucket=geniehai" \
+        thingpedia_cli=thingpedia \
+        experiment="${experiment}" \
         "${experiment}/schema.tt" \
         "${experiment}/database-map.tsv"
       mkdir -p "${experiment}/${eval_set}_auto_${target}"
 
-      aws s3 cp s3://geniehai/gcampax/dataset/multiwoz/baseline21/train_dials.json train_dials.json
-      aws s3 sync --no-progress "${user_model}" ${experiment}/models/nlu-user
-      aws s3 sync --no-progress "${agent_model}" ${experiment}/models/nlu-agent
+      aws s3 cp --no-progress s3://geniehai/gcampax/dataset/multiwoz/baseline21/train_dials.json train_dials.json
+      aws s3 sync --no-progress --exclude '*/dataset/*' --exclude '*/cache/*' --exclude 'iteration_*.pth' --exclude '*_optim.pth' "${user_model}" ${experiment}/models/nlu-user
+      aws s3 sync --no-progress --exclude '*/dataset/*' --exclude '*/cache/*' --exclude 'iteration_*.pth' --exclude '*_optim.pth' "${agent_model}" ${experiment}/models/nlu-agent
 
       node --experimental_worker "${GENIE}" auto-annotate-multiwoz \
         -o "${experiment}/train_auto_selftrain/annotated.txt" \
         --user-nlu-server "file://$(realpath ${experiment}/models/nlu-user)" --agent-nlu-server "file://$(realpath ${experiment}/models/nlu-agent)" \
         --thingpedia "${experiment}/schema.tt" --database-file "${experiment}/database-map.tsv" \
-        train_dials.json --no-use-existing "$@"
-      make experiment="${experiment}" datadir/selftrain
+        train_dials.json --no-use-existing $@
+      make \
+        geniedir=/opt/genie-toolkit \
+        "owner=${owner}" \
+        "genie_k8s_owner=${owner}" \
+        "genie_k8s_project=${project}" \
+        "s3_bucket=geniehai" \
+        thingpedia_cli=thingpedia \
+        experiment="${experiment}" \
+        datadir/selftrain
       
       S3_DATADIR=s3://${s3_bucket}/${owner}/dataset/${project}/${experiment}/${dataset}-selftrain/`date +%s`/
-      aws s3 sync --no-progress datadir/selftrain ${S3_DATADIR}/user
+      aws s3 sync --no-progress datadir/selftrain ${S3_DATADIR}user
       mkdir -p `dirname $s3_datadir`
       echo ${S3_DATADIR}  > $s3_datadir
 
