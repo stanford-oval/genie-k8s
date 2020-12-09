@@ -12,7 +12,7 @@ parser.add_argument('--project', type=str)
 parser.add_argument('--experiment', type=str)
 parser.add_argument('--image', type=str, default=default_image)
 parser.add_argument('--genienlp_version', type=str, default=GENIENLP_VERSION)
-parser.add_argument('--bootleg_version', type=str, default=BOOTLEG_VERSION)
+parser.add_argument('--bootleg_version', type=str)
 parser.add_argument('--genie_version', type=str, default=GENIE_VERSION)
 parser.add_argument('--thingtalk_version', type=str, default=THINGTALK_VERSION)
 parser.add_argument('--workdir_repo', type=str, default=WORKDIR_REPO)
@@ -77,8 +77,11 @@ if our_experiment is None:
 params = {}
 args_vars = vars(args)
 for k, v in args_vars.items():
-    if not k.startswith('kf_'):
-        params[k] = args_vars[k]
+    # drop kf specific args, drop empty args
+    if k.startswith('kf_') or v is None:
+        continue
+    params[k] = args_vars[k]
+
 
 params.update(extra_param_args)
 
