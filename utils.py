@@ -1,22 +1,30 @@
+#
+# Copyright 2020 The Board of Trustees of the Leland Stanford Junior University
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+# OR OTHER DEALINGS IN THE SOFTWARE.
+
 from datetime import datetime
 import os
 
 from kubernetes.client.models import V1EnvVar
 import kfp
 
-def disable_caching(op):
-    """Disable caching by setting the staleness to 0.
-    By default kubeflow will cache operation if the inputs are the same.
-    even if the underlying datafiles have changed.
-    """
-    op.execution_options.caching_strategy.max_cache_staleness = 'P0D'
-    return op
-
-def add_env(op, envs):
-    """Add a dict of environments to container"""
-    for k, v in envs.items():
-        op.container.add_env_variable(V1EnvVar(name=k, value=v))
-    return op
 
 def list_experiments(client):
     resp = client.list_experiments(page_size=100)
@@ -26,6 +34,7 @@ def list_experiments(client):
         experiments.extend(resp.pipelines)
     return experiments
 
+
 def list_pipelines(client):
     resp = client.list_pipelines(page_size=100)
     pipelines = resp.pipelines
@@ -33,6 +42,7 @@ def list_pipelines(client):
         resp = client.list_pipelines(page_token=resp.next_page_token, page_size=100)
         pipelines.extend(resp.pipelines)
     return pipelines
+
 
 def list_pipeline_versions(client, pipeline_id):
     resp = client.pipelines.list_pipeline_versions(resource_key_type="PIPELINE", resource_key_id=pipeline_id, page_size=100)
@@ -70,16 +80,16 @@ def upload_pipeline(name, pipeline):
 
 
 def prepare_unknown_args(args_list):
-    
+
     assert len(args_list) % 2 == 0
     assert all(args_list[i].startswith(("-", "--")) for i in range(0, len(args_list), 2))
-    
+
     # relax following assertion since we may pass several arguments as value (e.g. xxx_additional_args)
     # assert all(not args_list[i].startswith(("-", "--")) for i in range(1, len(args_list), 2))
-    
+
     cleaned_args = {}
     for i in range(0, len(args_list), 2):
         arg, value = args_list[i], args_list[i+1]
         cleaned_args[arg.strip('-')] = value
-        
+
     return cleaned_args

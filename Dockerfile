@@ -2,12 +2,19 @@ ARG COMMON_IMAGE=
 FROM ${COMMON_IMAGE}
 MAINTAINER Thingpedia Admins <thingpedia-admins@lists.stanford.edu>
 
-RUN npm install -g thingpedia-cli
+ARG ADD_BOOTLEG=false
+RUN echo ${ADD_BOOTLEG}
+ARG BOOTLEG_VERSION=master
+RUN if [ ${ADD_BOOTLEG} == true ]; then \
+		git clone https://github.com/Mehrad0711/bootleg.git /opt/bootleg/ ; \
+		cd /opt/bootleg/ ; \
+		git checkout ${BOOTLEG_VERSION} && pip3 install --use-feature=2020-resolver -r requirements.txt && pip3 install --use-feature=2020-resolver -e . ; \
+	fi
 
 WORKDIR /opt/genienlp/
 ARG GENIENLP_VERSION=master
-RUN pip3 install --upgrade pip
 RUN git fetch && git checkout ${GENIENLP_VERSION} && pip3 install --use-feature=2020-resolver -e .
+
 
 # uncomment it you need Apex (for mixed precision training)
 # RUN yum install -y \
@@ -22,26 +29,64 @@ RUN git fetch && git checkout ${GENIENLP_VERSION} && pip3 install --use-feature=
 # WORKDIR /opt/apex/
 # RUN pip3 install -v --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./
 
+# add user genie-toolkit
+RUN useradd -ms /bin/bash genie-toolkit
+
 ARG THINGTALK_VERSION=master
+# npm *really* does not like running as root, and will misbehave badly when
+# run as root, so we run it as a separate user
+RUN mkdir /opt/thingtalk/ && chown genie-toolkit:genie-toolkit /opt/thingtalk
+RUN mkdir /opt/genie-toolkit/ && chown genie-toolkit:genie-toolkit /opt/genie-toolkit
+
+USER genie-toolkit
 RUN git clone https://github.com/stanford-oval/thingtalk /opt/thingtalk/
 WORKDIR /opt/thingtalk/
 RUN git checkout ${THINGTALK_VERSION}
-RUN yarn install
-RUN yarn link
+RUN if test -f yarn.lock ; then \
+   yarn install  ; \
+   else \
+   npm install ; \
+   fi
+USER root
+# normally, this would be done by npm link, but when running as root, npm
+# link will mess up everything because it will rerun "npm install", which
+# will undo the build step we just did, so we open-code npm link ourselves
+RUN if test -f yarn.lock ; then \
+   yarn link ; \
+ else \
+   rm -f /usr/local/lib/node_modules/thingtalk ; \
+   ln -s /opt/thingtalk /usr/local/lib/node_modules/thingtalk ; \
+ fi
+USER genie-toolkit
 
 ARG GENIE_VERSION=master
 RUN git clone https://github.com/stanford-oval/genie-toolkit /opt/genie-toolkit/
 WORKDIR /opt/genie-toolkit/
 RUN git checkout ${GENIE_VERSION}
-RUN yarn link thingtalk
-RUN yarn install
+RUN if test -f yarn.lock ; then \
+   yarn install ; \
+ else \
+   npm install ; \
+ fi
+USER root
+# normally, this would be done by npm link, but when running as root, npm
+# link will mess up everything because it will rerun "npm install", which
+# will undo the build step we just did, so we open-code npm link ourselves
+RUN if test -f yarn.lock ; then \
+    yarn link thingtalk ; \
+    yarn link ; \
+  else \
+   npm link thingtalk ; \
+   rm -f /usr/local/lib/node_modules/genie-toolkit ; \
+   ln -s /opt/genie-toolkit /usr/local/lib/node_modules/genie-toolkit ; \
+   ln -s /opt/genie-toolkit/dist/tool/genie.js /usr/local/bin/genie ; \
+   chmod +x /usr/local/bin/genie ; \
+ fi
+USER genie-toolkit
 
-COPY lib.sh generate-dataset-job.sh train-job.sh evaluate-job.sh paraphrase-job.sh train-paraphrase-job.sh translate-job.sh ./
+COPY lib.sh sync-repos.sh ./
 
-# add user genie-toolkit
-RUN useradd -ms /bin/bash -r genie-toolkit
-#USER genie-toolkit
+# Use root for now until https://github.com/aws/amazon-eks-pod-identity-webhook/issues/8 is fixed.
+# There is a workaround by changing pod fsgroup but kubeflow does not provide to api to modify pod securityContext.
+USER root
 WORKDIR /home/genie-toolkit
-
-# ensures python sys.std* encoding is always utf-8
-ENV PYTHONIOENCODING=UTF-8

@@ -7,6 +7,7 @@ inputs:
   - {name: experiment, description: ''}
   - {name: s3_datadir, description: ''}
   - {name: s3_model_dir, description: ''}
+  - {name: image, description: ''}
   - {name: additional_args, description: ''}
 outputs:
   - {name: metrics_output}
@@ -14,7 +15,7 @@ outputs:
   #- {name: MLPipeline Metrics, type: Metrics}
 implementation:
   container:
-    image: '932360549041.dkr.ecr.us-west-2.amazonaws.com/sumbt:20201117.1'
+    image: '{{inputs.parameters.image}}'
     command:
     - /bin/bash
     - -e
@@ -22,7 +23,7 @@ implementation:
     - |
       . k8s/lib.sh
       
-      parse_args "$0" "owner project experiment s3_datadir s3_model_dir metrics_output" "$@"
+      parse_args "$0" "image owner project experiment s3_datadir s3_model_dir metrics_output" "$@"
       shift $n
       set -x
       
@@ -32,11 +33,15 @@ implementation:
          --target_slot all --experiment multiwoz2.1 --bert_model bert-base-uncased --task_name bert-gru-sumbt --nbt rnn \
          --num_train_epochs 300 --do_lower_case --task_name bert-gru-sumbt --warmup_proportion 0.1 --learning_rate 1e-4 \
          --train_batch_size 3 --distance_metric euclidean --patience 15 --tf_dir tensorboard --hidden_dim 300 \
-         --max_label_length 32 --max_seq_length 64 --do_eval $@
-      cp "save/eval_all_accuracies.txt" "save/results"
+         --max_label_length 32 --max_seq_length 64 --do_eval --save_inference_results $@
+      mkdir -p $metrics_output
+      ls -al save/
+      cp "save/prediction_test.json.txt" $metrics_output
+      cp "save/eval_all_accuracies.txt" $metrics_output
 
     args: [
       'cmd',
+      --image, {inputValue: image},
       --owner, {inputValue: owner},
       --project, {inputValue: project},
       --experiment, {inputValue: experiment},

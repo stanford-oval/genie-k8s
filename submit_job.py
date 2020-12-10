@@ -1,8 +1,9 @@
 import kfp
 import os
 import argparse
+
 from utils import list_pipelines, list_pipeline_versions, list_experiments, prepare_unknown_args
-from generate_train_eval import default_image, GENIE_VERSION, GENIENLP_VERSION, WORKDIR_REPO, WORKDIR_VERSION, THINGTALK_VERSION, BOOTLEG_VERSION
+from pipelines.common import default_image, GENIE_VERSION, GENIENLP_VERSION, WORKDIR_REPO, WORKDIR_VERSION, THINGTALK_VERSION, BOOTLEG_VERSION
 
 
 parser = argparse.ArgumentParser()
@@ -12,7 +13,7 @@ parser.add_argument('--project', type=str)
 parser.add_argument('--experiment', type=str)
 parser.add_argument('--image', type=str, default=default_image)
 parser.add_argument('--genienlp_version', type=str, default=GENIENLP_VERSION)
-parser.add_argument('--bootleg_version', type=str, default=BOOTLEG_VERSION)
+parser.add_argument('--bootleg_version', type=str)
 parser.add_argument('--genie_version', type=str, default=GENIE_VERSION)
 parser.add_argument('--thingtalk_version', type=str, default=THINGTALK_VERSION)
 parser.add_argument('--workdir_repo', type=str, default=WORKDIR_REPO)
@@ -58,10 +59,10 @@ if not args.kf_pipeline_version:
 for v in pipeline_versions:
     if v.name == args.kf_pipeline_version:
         our_pipeline_version = v
-        
+
 if our_pipeline_version is None:
     raise ValueError('No pipelines with this version were found')
-    
+
 
 experiments = list_experiments(client)
 
@@ -77,8 +78,11 @@ if our_experiment is None:
 params = {}
 args_vars = vars(args)
 for k, v in args_vars.items():
-    if not k.startswith('kf_'):
-        params[k] = args_vars[k]
+    # drop kf specific args, drop empty args
+    if k.startswith('kf_') or v is None:
+        continue
+    params[k] = args_vars[k]
+
 
 params.update(extra_param_args)
 

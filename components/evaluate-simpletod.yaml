@@ -1,12 +1,13 @@
 name: Eval
 description: |
-  Evaluate a TRADE model
+  Evaluate a SimpleTOD model
 inputs:
   - {name: owner, description: ''}
   - {name: project, description: ''}
   - {name: experiment, description: ''}
   - {name: s3_datadir, description: ''}
   - {name: s3_model_dir, description: ''}
+  - {name: image, description: ''}
   - {name: additional_args, description: ''}
 outputs:
   - {name: metrics_output}
@@ -14,7 +15,7 @@ outputs:
   #- {name: MLPipeline Metrics, type: Metrics}
 implementation:
   container:
-    image: '932360549041.dkr.ecr.us-west-2.amazonaws.com/simpletod:20201121.4'
+    image: '{{inputs.parameters.image}}'
     command:
     - /bin/bash
     - -e
@@ -22,19 +23,30 @@ implementation:
     - |
       . k8s/lib.sh
       
-      parse_args "$0" "owner project experiment s3_datadir s3_model_dir metrics_output" "$@"
+      parse_args "$0" "image owner project experiment s3_datadir s3_model_dir metrics_output" "$@"
       shift $n
       set -x
       
       aws s3 sync --no-progress ${s3_datadir} resources/
-      aws s3 sync --no-progress ${s3_model_dir} save/
+      aws s3 sync --no-progress ${s3_model_dir} output/
+      
+      checkpoints=$(ls output/distilgpt2/ | grep -o '[0-9]*')
       
       mkdir -p `dirname $metrics_output`
-      python3 compute_joint_accuracy.py save/*.json > $metrics_output
-      cat results
+      touch $metrics_output
+      
+      for f in output/distilgpt2/checkpoint-* ; do
+          echo $f >> $metrics_output
+          python3 generate_dialogue.py --checkpoint $f --split_set test
+          python3 compute_joint_acc.py --eval_file *.json >> $metrics_output
+          cat $metrics_output
+      done
+      echo 'done'
+      cat $metrics_output
 
     args: [
       'cmd',
+      --image, {inputValue: image},
       --owner, {inputValue: owner},
       --project, {inputValue: project},
       --experiment, {inputValue: experiment},
