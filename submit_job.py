@@ -24,7 +24,7 @@ import os
 import argparse
 
 from utils import list_pipelines, list_pipeline_versions, list_experiments, prepare_unknown_args
-from pipelines.common import default_image, GENIE_VERSION, GENIENLP_VERSION, WORKDIR_REPO, WORKDIR_VERSION, THINGTALK_VERSION
+from pipelines.common import default_image
 
 
 parser = argparse.ArgumentParser()
@@ -33,12 +33,12 @@ parser.add_argument('--owner', type=str)
 parser.add_argument('--project', type=str)
 parser.add_argument('--experiment', type=str)
 parser.add_argument('--image', type=str, default=default_image)
-parser.add_argument('--genienlp_version', type=str, default=GENIENLP_VERSION)
+parser.add_argument('--genienlp_version', type=str)
 parser.add_argument('--bootleg_version', type=str)
-parser.add_argument('--genie_version', type=str, default=GENIE_VERSION)
-parser.add_argument('--thingtalk_version', type=str, default=THINGTALK_VERSION)
-parser.add_argument('--workdir_repo', type=str, default=WORKDIR_REPO)
-parser.add_argument('--workdir_version', type=str, default=WORKDIR_VERSION)
+parser.add_argument('--genie_version', type=str)
+parser.add_argument('--thingtalk_version', type=str)
+parser.add_argument('--workdir_repo', type=str)
+parser.add_argument('--workdir_version', type=str)
 parser.add_argument('--model', type=str)
 parser.add_argument('--s3_datadir', type=str)
 
