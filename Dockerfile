@@ -18,18 +18,21 @@ ARG GENIENLP_VERSION=master
 RUN git fetch && git checkout ${GENIENLP_VERSION} && pip3 install -e .
 
 
-# uncomment it you need Apex (for mixed precision training)
-# RUN yum install -y \
-#        cuda-nvml-dev-$CUDA_PKG_VERSION \
-#        cuda-command-line-tools-$CUDA_PKG_VERSION \
-#	cuda-libraries-dev-$CUDA_PKG_VERSION \
-#        cuda-minimal-build-$CUDA_PKG_VERSION \
-#        libcublas-devel-10.2.2.89-1 \
-#        && \
-#    	rm -rf /var/cache/yum/*
-# RUN git clone https://github.com/NVIDIA/apex /opt/apex/
-# WORKDIR /opt/apex/
-# RUN pip3 install -v --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./
+ARG ADD_APEX=false
+RUN echo ${ADD_APEX}
+RUN if [ ${ADD_APEX} == true ]; then \
+		yum install -y \
+			cuda-nvml-dev-$CUDA_PKG_VERSION \
+			cuda-command-line-tools-$CUDA_PKG_VERSION \
+			cuda-libraries-dev-$CUDA_PKG_VERSION \
+			cuda-minimal-build-$CUDA_PKG_VERSION \
+			libcublas-devel-10.2.2.89-1 \
+			&& \
+			rm -rf /var/cache/yum/* ; \
+		git clone https://github.com/NVIDIA/apex /opt/apex/ ; \
+		cd /opt/apex/ ; \
+		pip3 install -v --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./ ; \
+	fi
 
 # add user genie-toolkit
 RUN useradd -ms /bin/bash genie-toolkit
