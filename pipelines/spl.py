@@ -157,9 +157,10 @@ def train_eval_spl(
         is_oracle='false',
         skip_tensorboard='false',
         train_iterations='',
+        use_bootleg='false',
         bootleg_model='',
         bootleg_version='',
-        s3_bootleg_prepped_data='',
+        s3_bootleg_prepped_data='None',
         train_additional_args='--dimension 768 --transformer_hidden 768 --trainable_decoder_embeddings 50 --encoder_embeddings=xlm-roberta-base --decoder_embeddings= --seq2seq_encoder=Identity --rnn_layers 1 --transformer_heads 12 --transformer_layers 0 --rnn_zero_state=average --train_encoder_embeddings --transformer_lr_multiply 0.08 --max_to_keep 1 --almond_has_multiple_programs --train_batch_tokens 5000',
         eval_additional_args='--evaluate valid --overwrite'
 ):
@@ -183,6 +184,7 @@ def train_eval_spl(
         dataset_subfolder=dataset_subfolder,
         skip_tensorboard=skip_tensorboard,
         train_iterations=train_iterations,
+        use_bootleg=use_bootleg,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
         additional_args=train_additional_args
     )
