@@ -2,18 +2,20 @@ ARG COMMON_IMAGE=
 FROM ${COMMON_IMAGE}
 MAINTAINER Thingpedia Admins <thingpedia-admins@lists.stanford.edu>
 
+RUN pip3 install -U pip
+
 ARG ADD_BOOTLEG=false
 RUN echo ${ADD_BOOTLEG}
 ARG BOOTLEG_VERSION=master
 RUN if [ ${ADD_BOOTLEG} == true ]; then \
 		git clone https://github.com/Mehrad0711/bootleg.git /opt/bootleg/ ; \
 		cd /opt/bootleg/ ; \
-		git checkout ${BOOTLEG_VERSION} && pip3 install --use-feature=2020-resolver -r requirements.txt && pip3 install --use-feature=2020-resolver -e . ; \
+		git checkout ${BOOTLEG_VERSION} && pip3 install -r requirements.txt && pip3 install -e . ; \
 	fi
 
 WORKDIR /opt/genienlp/
 ARG GENIENLP_VERSION=master
-RUN git fetch && git checkout ${GENIENLP_VERSION} && pip3 install --use-feature=2020-resolver -e .
+RUN git fetch && git checkout ${GENIENLP_VERSION} && pip3 install -e .
 
 
 # uncomment it you need Apex (for mixed precision training)
@@ -37,6 +39,8 @@ ARG THINGTALK_VERSION=master
 # run as root, so we run it as a separate user
 RUN mkdir /opt/thingtalk/ && chown genie-toolkit:genie-toolkit /opt/thingtalk
 RUN mkdir /opt/genie-toolkit/ && chown genie-toolkit:genie-toolkit /opt/genie-toolkit
+#RUN chown genie-toolkit:genie-toolkit /opt/thingtalk
+#RUN chown genie-toolkit:genie-toolkit /opt/genie-toolkit
 
 USER genie-toolkit
 RUN git clone https://github.com/stanford-oval/thingtalk /opt/thingtalk/
@@ -82,11 +86,12 @@ RUN if test -f yarn.lock ; then \
    ln -s /opt/genie-toolkit/dist/tool/genie.js /usr/local/bin/genie ; \
    chmod +x /usr/local/bin/genie ; \
  fi
-USER genie-toolkit
 
+USER genie-toolkit
 COPY lib.sh sync-repos.sh ./
 
 # Use root for now until https://github.com/aws/amazon-eks-pod-identity-webhook/issues/8 is fixed.
 # There is a workaround by changing pod fsgroup but kubeflow does not provide to api to modify pod securityContext.
 USER root
+RUN chown genie-toolkit:genie-toolkit /opt/genie-toolkit/sync-repos.sh
 WORKDIR /home/genie-toolkit
