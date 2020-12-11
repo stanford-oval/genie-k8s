@@ -19,18 +19,14 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 # OR OTHER DEALINGS IN THE SOFTWARE.
 
-from kfp import dsl
 from kfp import components
+from kfp import dsl
 from kubernetes.client import V1Toleration
 from kubernetes.client.models import (
-    V1VolumeMount,
-    V1Volume,
-    V1PersistentVolumeClaimVolumeSource,
-    V1SecretVolumeSource
+    V1PersistentVolumeClaimVolumeSource
 )
 
 from .common import *
-
 from .training import train_step
 
 
@@ -61,7 +57,7 @@ def eval_spl_step(
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
     }
-
+    
     eval_op = components.load_component_from_file('components/evaluate-spl.yaml')(
         image=image,
         owner=owner,
@@ -82,7 +78,7 @@ def eval_spl_step(
      .set_cpu_limit('4')
      .set_cpu_request('4'))
     add_env(add_ssh_volume(eval_op), eval_env)
-
+    
     return eval_op
 
 
@@ -167,7 +163,6 @@ def train_eval_spl(
         train_additional_args='--dimension 768 --transformer_hidden 768 --trainable_decoder_embeddings 50 --encoder_embeddings=xlm-roberta-base --decoder_embeddings= --seq2seq_encoder=Identity --rnn_layers 1 --transformer_heads 12 --transformer_layers 0 --rnn_zero_state=average --train_encoder_embeddings --transformer_lr_multiply 0.08 --max_to_keep 1 --almond_has_multiple_programs --train_batch_tokens 5000',
         eval_additional_args='--evaluate valid --overwrite'
 ):
-
     train_op = train_step(
         owner=owner,
         project=project,
@@ -191,7 +186,7 @@ def train_eval_spl(
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
         additional_args=train_additional_args
     )
-
+    
     eval_op = eval_spl_step(
         owner=owner,
         project=project,
@@ -244,7 +239,7 @@ def prepare_for_translation_step(
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
     }
-
+    
     prepare_for_translation_op = components.load_component_from_file('components/translate.yaml')(
         image=image,
         owner=owner,
@@ -270,9 +265,9 @@ def prepare_for_translation_step(
      .set_cpu_limit('4')
      .set_cpu_request('4'))
     add_env(add_ssh_volume(prepare_for_translation_op), prepare_for_translation_env)
-
+    
     prepare_for_translation_op.name = 'prepare-for-translation'
-
+    
     return prepare_for_translation_op
 
 
@@ -305,8 +300,8 @@ def do_translation_step(
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
     }
-
-    do_translation_num_gpus=1
+    
+    do_translation_num_gpus = 1
     do_translation_op = components.load_component_from_file('components/translate.yaml')(
         image=image,
         owner=owner,
@@ -339,9 +334,9 @@ def do_translation_step(
      .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2 * do_translation_num_gpus}xlarge')
      .add_volume(V1Volume(name='tensorboard',
                           persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
-
+    
     do_translation_op.name = 'translation'
-
+    
     return do_translation_op
 
 
@@ -375,7 +370,7 @@ def post_process_translation_step(
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
     }
-
+    
     post_process_translation_op = components.load_component_from_file('components/translate.yaml')(
         image=image,
         owner=owner,
@@ -401,9 +396,9 @@ def post_process_translation_step(
      .set_cpu_limit('4')
      .set_cpu_request('4'))
     add_env(add_ssh_volume(post_process_translation_op), post_process_translation_env)
-
+    
     post_process_translation_op.name = 'post-process-translation'
-
+    
     return post_process_translation_op
 
 
@@ -457,7 +452,7 @@ def all_translation_steps(
             additional_args=''
         )
         prepare_for_translation_op.container.set_image_pull_policy('Always')
-
+    
     if do_translation:
         do_translation_op = do_translation_step(
             owner=owner,
@@ -482,39 +477,40 @@ def all_translation_steps(
             additional_args=additional_args
         )
         do_translation_op.container.set_image_pull_policy('Always')
-
+        
         if prepare_for_translation:
             do_translation_op.after(prepare_for_translation_op)
-
+    
     if post_process_translation:
         post_process_translation_op = post_process_translation_step(
-                owner=owner,
-                project=project,
-                experiment=experiment,
-                s3_bucket=s3_bucket,
-                task_name=task_name,
-                s3_datadir=s3_datadir,
-                model_name_or_path=model_name_or_path,
-                input_splits=input_splits,
-                train_output_per_example=train_output_per_example,
-                nmt=nmt,
-                do_alignment=do_alignment,
-                src_lang=src_lang,
-                tgt_lang=tgt_lang,
-                image=image,
-                genienlp_version=genienlp_version,
-                genie_version=genie_version,
-                thingtalk_version=thingtalk_version,
-                workdir_repo=workdir_repo,
-                workdir_version=workdir_version,
-                additional_args=''
-            )
+            owner=owner,
+            project=project,
+            experiment=experiment,
+            s3_bucket=s3_bucket,
+            task_name=task_name,
+            s3_datadir=s3_datadir,
+            model_name_or_path=model_name_or_path,
+            input_splits=input_splits,
+            train_output_per_example=train_output_per_example,
+            nmt=nmt,
+            do_alignment=do_alignment,
+            src_lang=src_lang,
+            tgt_lang=tgt_lang,
+            image=image,
+            genienlp_version=genienlp_version,
+            genie_version=genie_version,
+            thingtalk_version=thingtalk_version,
+            workdir_repo=workdir_repo,
+            workdir_version=workdir_version,
+            additional_args=''
+        )
         post_process_translation_op.container.set_image_pull_policy('Always')
-
+        
         if prepare_for_translation and do_translation:
             post_process_translation_op.after(do_translation_op, prepare_for_translation_op)
         elif do_translation:
             post_process_translation_op.after(do_translation_op)
+
 
 @dsl.pipeline(
     name='Translate a dataset',
@@ -543,29 +539,29 @@ def translate(
         additional_args='--temperature 0.4 --repetition_penalty 1.0 --num_samples 1 --batch_size 512  --skip_heuristics --att_pooling mean --task translate'
 ):
     all_translation_steps(
-            owner=owner,
-            project=project,
-            experiment=experiment,
-            s3_bucket=s3_bucket,
-            task_name=task_name,
-            s3_datadir=s3_datadir,
-            model_name_or_path=model_name_or_path,
-            input_splits=input_splits,
-            train_output_per_example=train_output_per_example,
-            nmt=nmt,
-            do_alignment=do_alignment,
-            src_lang=src_lang,
-            tgt_lang=tgt_lang,
-            prepare_for_translation=True,
-            do_translation=True,
-            post_process_translation=True,
-            image=image,
-            genienlp_version=genienlp_version,
-            genie_version=genie_version,
-            thingtalk_version=thingtalk_version,
-            workdir_repo=workdir_repo,
-            workdir_version=workdir_version,
-            additional_args=additional_args
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        s3_bucket=s3_bucket,
+        task_name=task_name,
+        s3_datadir=s3_datadir,
+        model_name_or_path=model_name_or_path,
+        input_splits=input_splits,
+        train_output_per_example=train_output_per_example,
+        nmt=nmt,
+        do_alignment=do_alignment,
+        src_lang=src_lang,
+        tgt_lang=tgt_lang,
+        prepare_for_translation=True,
+        do_translation=True,
+        post_process_translation=True,
+        image=image,
+        genienlp_version=genienlp_version,
+        genie_version=genie_version,
+        thingtalk_version=thingtalk_version,
+        workdir_repo=workdir_repo,
+        workdir_version=workdir_version,
+        additional_args=additional_args
     )
 
 
@@ -593,7 +589,6 @@ def paraphrase_step(
         workdir_version=GENIE_WORKDIR_VERSION,
         additional_args=''
 ):
-
     paraphrase_env = {
         'GENIENLP_VERSION': genienlp_version,
         'GENIE_VERSION': genie_version,
@@ -601,7 +596,7 @@ def paraphrase_step(
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
     }
-
+    
     paraphrase_num_gpus = 1
     paraphrase_op = components.load_component_from_file('components/sts-paraphrase.yaml')(
         image=image,
@@ -636,9 +631,9 @@ def paraphrase_step(
      .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2 * paraphrase_num_gpus}xlarge')
      .add_volume(V1Volume(name='tensorboard',
                           persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
-
+    
     paraphrase_op.name = 'sts-paraphrasing'
-
+    
     return paraphrase_op
 
 
@@ -672,7 +667,7 @@ def sts_filtering_step(
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
     }
-
+    
     sts_filtering_num_gpus = 1
     sts_filtering_op = components.load_component_from_file('components/sts-paraphrase.yaml')(
         image=image,
@@ -707,10 +702,11 @@ def sts_filtering_step(
      .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2 * sts_filtering_num_gpus}xlarge')
      .add_volume(V1Volume(name='tensorboard',
                           persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
-
+    
     sts_filtering_op.name = 'sts-filtering'
-
+    
     return sts_filtering_op
+
 
 def all_paraphrasing_steps(
         owner='mehrad',
@@ -764,7 +760,7 @@ def all_paraphrasing_steps(
             additional_args=additional_args
         )
         paraphrase_op.container.set_image_pull_policy('Always')
-
+    
     if filter_sts_paraphrase:
         sts_filtering_op = sts_filtering_step(
             owner=owner,
@@ -789,7 +785,7 @@ def all_paraphrasing_steps(
             additional_args=additional_args
         )
         sts_filtering_op.container.set_image_pull_policy('Always')
-
+        
         if do_paraphrasing:
             sts_filtering_op.after(paraphrase_op)
 
@@ -822,31 +818,32 @@ def round_trip_paraphrasing(
         additional_args='--temperature 0.4 --repetition_penalty 1.0 --num_samples 1 --batch_size 512  --skip_heuristics --att_pooling mean --id_column 0  --input_column 1 --gold_column 1 --return_attentions --output_example_ids_too --task translate --return_attentions'
 ):
     all_paraphrasing_steps(
-            owner=owner,
-            project=project,
-            experiment=experiment,
-            s3_bucket=s3_bucket,
-            task_name=task_name,
-            s3_datadir=s3_datadir,
-            model_name_or_path=model_name_or_path,
-            input_splits=input_splits,
-            train_output_per_example=train_output_per_example,
-            nmt=nmt,
-            pivot_lang=pivot_lang,
-            do_alignment=do_alignment,
-            src_lang=src_lang,
-            tgt_lang=tgt_lang,
-            do_paraphrasing=True,
-            paraphrasing_method='round_trip',
-            filter_sts_paraphrase=True,
-            image=image,
-            genienlp_version=genienlp_version,
-            genie_version=genie_version,
-            thingtalk_version=thingtalk_version,
-            workdir_repo=workdir_repo,
-            workdir_version=workdir_version,
-            additional_args=additional_args
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        s3_bucket=s3_bucket,
+        task_name=task_name,
+        s3_datadir=s3_datadir,
+        model_name_or_path=model_name_or_path,
+        input_splits=input_splits,
+        train_output_per_example=train_output_per_example,
+        nmt=nmt,
+        pivot_lang=pivot_lang,
+        do_alignment=do_alignment,
+        src_lang=src_lang,
+        tgt_lang=tgt_lang,
+        do_paraphrasing=True,
+        paraphrasing_method='round_trip',
+        filter_sts_paraphrase=True,
+        image=image,
+        genienlp_version=genienlp_version,
+        genie_version=genie_version,
+        thingtalk_version=thingtalk_version,
+        workdir_repo=workdir_repo,
+        workdir_version=workdir_version,
+        additional_args=additional_args
     )
+
 
 @dsl.pipeline(
     name='Masked Paraphrasing',
@@ -876,28 +873,28 @@ def masked_paraphrasing(
         additional_args='--infill_text --num_text_spans 1 --temperature 0.4 --repetition_penalty 1.0 --num_samples 1 --batch_size 512  --skip_heuristics --att_pooling mean --id_column 0  --input_column 1 --gold_column 1 --return_attentions --output_example_ids_too --task paraphrase --return_attentions'
 ):
     all_paraphrasing_steps(
-            owner=owner,
-            project=project,
-            experiment=experiment,
-            s3_bucket=s3_bucket,
-            task_name=task_name,
-            s3_datadir=s3_datadir,
-            model_name_or_path=model_name_or_path,
-            input_splits=input_splits,
-            train_output_per_example=train_output_per_example,
-            nmt=nmt,
-            pivot_lang=pivot_lang,
-            do_alignment=do_alignment,
-            src_lang=src_lang,
-            tgt_lang=tgt_lang,
-            do_paraphrasing=True,
-            paraphrasing_method='masked',
-            filter_sts_paraphrase=True,
-            image=image,
-            genienlp_version=genienlp_version,
-            genie_version=genie_version,
-            thingtalk_version=thingtalk_version,
-            workdir_repo=workdir_repo,
-            workdir_version=workdir_version,
-            additional_args=additional_args
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        s3_bucket=s3_bucket,
+        task_name=task_name,
+        s3_datadir=s3_datadir,
+        model_name_or_path=model_name_or_path,
+        input_splits=input_splits,
+        train_output_per_example=train_output_per_example,
+        nmt=nmt,
+        pivot_lang=pivot_lang,
+        do_alignment=do_alignment,
+        src_lang=src_lang,
+        tgt_lang=tgt_lang,
+        do_paraphrasing=True,
+        paraphrasing_method='masked',
+        filter_sts_paraphrase=True,
+        image=image,
+        genienlp_version=genienlp_version,
+        genie_version=genie_version,
+        thingtalk_version=thingtalk_version,
+        workdir_repo=workdir_repo,
+        workdir_version=workdir_version,
+        additional_args=additional_args
     )

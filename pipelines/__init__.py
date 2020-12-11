@@ -19,8 +19,8 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 # OR OTHER DEALINGS IN THE SOFTWARE.
 
-from .training import *
-from .selftrain import *
-from .spl import *
 from .bootleg import *
 from .other_models import *
+from .selftrain import *
+from .spl import *
+from .training import *

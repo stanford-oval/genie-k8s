@@ -19,34 +19,30 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 # OR OTHER DEALINGS IN THE SOFTWARE.
 
-from kfp import dsl
 from kfp import components
+from kfp import dsl
 from kubernetes.client import V1Toleration
 from kubernetes.client.models import (
-    V1VolumeMount,
-    V1Volume,
-    V1PersistentVolumeClaimVolumeSource,
-    V1SecretVolumeSource
+    V1PersistentVolumeClaimVolumeSource
 )
 
 from .common import *
-
 from .paraphrase import paraphrase_generation_step, paraphrase_filtering_step
 
 
 def generate_dataset_step(
-    image,
-    owner,
-    project,
-    experiment,
-    dataset,
-    parallel,
-    genie_version,
-    thingtalk_version,
-    workdir_repo,
-    workdir_version,
-    thingpedia_developer_key,
-    additional_args
+        image,
+        owner,
+        project,
+        experiment,
+        dataset,
+        parallel,
+        genie_version,
+        thingtalk_version,
+        workdir_repo,
+        workdir_version,
+        thingpedia_developer_key,
+        additional_args
 ):
     gen_dataset_env = {
         'GENIE_VERSION': genie_version,
@@ -56,107 +52,107 @@ def generate_dataset_step(
         'THINGPEDIA_DEVELOPER_KEY': thingpedia_developer_key,
     }
     generate_dataset_op = components.load_component_from_file('components/generate-dataset.yaml')(
-            image=image,
-            s3_bucket='geniehai',
-            owner=owner,
-            project=project,
-            experiment=experiment,
-            dataset=dataset,
-            parallel=parallel,
-            additional_args=additional_args)
+        image=image,
+        s3_bucket='geniehai',
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        dataset=dataset,
+        parallel=parallel,
+        additional_args=additional_args)
     (generate_dataset_op.container
-        .set_memory_limit('55Gi')
-        .set_memory_request('55Gi')
-        .set_cpu_limit('15.5')
-        .set_cpu_request('15.5')
-    )
+     .set_memory_limit('55Gi')
+     .set_memory_request('55Gi')
+     .set_cpu_limit('15.5')
+     .set_cpu_request('15.5')
+     )
     (add_env(add_ssh_volume(generate_dataset_op), gen_dataset_env))
-
+    
     return generate_dataset_op
 
 
 def train_step(
-    image,
-    owner,
-    project,
-    experiment,
-    model,
-    task_name,
-    load_from,
-    eval_set,
-    s3_datadir,
-    dataset_subfolder,
-    genienlp_version,
-    train_iterations,
-    skip_tensorboard,
-    s3_database_dir='None',
-    bootleg_version='',
-    train_languages='en',
-    eval_languages='en',
-    s3_bucket='geniehai',
-    use_bootleg='false',
-    s3_bootleg_prepped_data='None',
-    bootleg_model='None',
-    additional_args=''
+        image,
+        owner,
+        project,
+        experiment,
+        model,
+        task_name,
+        load_from,
+        eval_set,
+        s3_datadir,
+        dataset_subfolder,
+        genienlp_version,
+        train_iterations,
+        skip_tensorboard,
+        s3_database_dir='None',
+        bootleg_version='',
+        train_languages='en',
+        eval_languages='en',
+        s3_bucket='geniehai',
+        use_bootleg='false',
+        s3_bootleg_prepped_data='None',
+        bootleg_model='None',
+        additional_args=''
 ):
     train_env = {
         'GENIENLP_VERSION': genienlp_version,
         'BOOTLEG_VERSION': bootleg_version,
     }
-    train_num_gpus=1
+    train_num_gpus = 1
     train_op = components.load_component_from_file('components/train.yaml')(
-            image=image,
-            s3_bucket=s3_bucket,
-            owner=owner,
-            task_name=task_name,
-            project=project,
-            experiment=experiment,
-            model=model,
-            load_from=load_from,
-            eval_set=eval_set,
-            s3_datadir=s3_datadir,
-            s3_database_dir=s3_database_dir,
-            dataset_subfolder=dataset_subfolder,
-            train_iterations=train_iterations,
-            skip_tensorboard=skip_tensorboard,
-            train_languages=train_languages,
-            eval_languages=eval_languages,
-            use_bootleg=use_bootleg,
-            s3_bootleg_prepped_data=s3_bootleg_prepped_data,
-            bootleg_model=bootleg_model,
-            additional_args=additional_args)
+        image=image,
+        s3_bucket=s3_bucket,
+        owner=owner,
+        task_name=task_name,
+        project=project,
+        experiment=experiment,
+        model=model,
+        load_from=load_from,
+        eval_set=eval_set,
+        s3_datadir=s3_datadir,
+        s3_database_dir=s3_database_dir,
+        dataset_subfolder=dataset_subfolder,
+        train_iterations=train_iterations,
+        skip_tensorboard=skip_tensorboard,
+        train_languages=train_languages,
+        eval_languages=eval_languages,
+        use_bootleg=use_bootleg,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+        bootleg_model=bootleg_model,
+        additional_args=additional_args)
     (train_op.container
-        .set_memory_request('56Gi')
-        .set_memory_limit('56Gi')
-        .set_cpu_request('7.5')
-        .set_cpu_limit('7.5')
-        .set_gpu_limit(str(train_num_gpus))
-        .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
-    )
+     .set_memory_request('56Gi')
+     .set_memory_limit('56Gi')
+     .set_cpu_request('7.5')
+     .set_cpu_limit('7.5')
+     .set_gpu_limit(str(train_num_gpus))
+     .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
+     )
     (add_env(add_ssh_volume(train_op), train_env)
-        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*train_num_gpus}xlarge')
-        .add_volume(V1Volume(name='tensorboard',
-            persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
-
+     .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+     .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2 * train_num_gpus}xlarge')
+     .add_volume(V1Volume(name='tensorboard',
+                          persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
+    
     return train_op
 
 
 def eval_step(
-    image,
-    owner,
-    project,
-    experiment,
-    model,
-    s3_model_dir,
-    eval_set,
-    genienlp_version,
-    genie_version,
-    thingtalk_version,
-    workdir_repo,
-    workdir_version,
-    thingpedia_developer_key,
-    additional_args
+        image,
+        owner,
+        project,
+        experiment,
+        model,
+        s3_model_dir,
+        eval_set,
+        genienlp_version,
+        genie_version,
+        thingtalk_version,
+        workdir_repo,
+        workdir_version,
+        thingpedia_developer_key,
+        additional_args
 ):
     eval_env = {
         'GENIENLP_VERSION': genienlp_version,
@@ -166,62 +162,62 @@ def eval_step(
         'WORKDIR_VERSION': workdir_version,
         'THINGPEDIA_DEVELOPER_KEY': thingpedia_developer_key,
     }
-
+    
     eval_op = components.load_component_from_file('components/evaluate.yaml')(
-            image=image,
-            owner=owner,
-            project=project,
-            experiment=experiment,
-            model=model,
-            model_owner=owner,
-            eval_set=eval_set,
-            s3_model_dir=s3_model_dir,
-            additional_args=additional_args)
+        image=image,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        model=model,
+        model_owner=owner,
+        eval_set=eval_set,
+        s3_model_dir=s3_model_dir,
+        additional_args=additional_args)
     (eval_op.container
-        .set_memory_limit('12Gi')
-        .set_memory_request('12Gi')
-        .set_cpu_limit('7.5')
-        .set_cpu_request('7.5'))
+     .set_memory_limit('12Gi')
+     .set_memory_request('12Gi')
+     .set_cpu_limit('7.5')
+     .set_cpu_request('7.5'))
     (add_env(add_ssh_volume(eval_op), eval_env)
-        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.2xlarge'))
-
+     .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+     .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.2xlarge'))
+    
     return eval_op
 
 
 def paraphrase_fewshot_step(
-    do_paraphrase,
-    do_fewshot,
-    owner,
-    project,
-    experiment,
-    model,
-    dataset,
-    image,
-    genienlp_version,
-    train_task_name,
-    train_load_from,
-    train_additional_args,
-    train_iterations,
-    train_s3_datadir,
-    s3_bucket,
-    s3_database_dir,
-    bootleg_model,
-    bootleg_version,
-    train_languages,
-    eval_languages,
-    eval_set,
-    s3_bootleg_prepped_data,
-    train_dataset_subfolder,
-    filtering_train_iterations,
-    filtering_batch_size,
-    fewshot_train_iterations,
-    ignore_context,
-    keep_original_duplicates,
-    paraphrasing_model,
-    paraphrase_subfolder,
-    paraphrase_additional_args,
-    filtering_additional_args,
+        do_paraphrase,
+        do_fewshot,
+        owner,
+        project,
+        experiment,
+        model,
+        dataset,
+        image,
+        genienlp_version,
+        train_task_name,
+        train_load_from,
+        train_additional_args,
+        train_iterations,
+        train_s3_datadir,
+        s3_bucket,
+        s3_database_dir,
+        bootleg_model,
+        bootleg_version,
+        train_languages,
+        eval_languages,
+        eval_set,
+        s3_bootleg_prepped_data,
+        train_dataset_subfolder,
+        filtering_train_iterations,
+        filtering_batch_size,
+        fewshot_train_iterations,
+        ignore_context,
+        keep_original_duplicates,
+        paraphrasing_model,
+        paraphrase_subfolder,
+        paraphrase_additional_args,
+        filtering_additional_args,
 ):
     if do_paraphrase:
         pretrain_op = train_step(
@@ -247,61 +243,62 @@ def paraphrase_fewshot_step(
             s3_bootleg_prepped_data=s3_bootleg_prepped_data,
             additional_args=train_additional_args
         )
-
+        
         paraphrase_generation_op = paraphrase_generation_step(image=image,
-                                        owner=owner,
-                                        project=project,
-                                        experiment=experiment,
-                                        dataset=dataset,
-                                        s3_input_datadir=train_s3_datadir,
-                                        train_task_name=train_task_name,
-                                        paraphrasing_model=paraphrasing_model,
-                                        keep_original_duplicates=keep_original_duplicates,
-                                        ignore_context=ignore_context,
-                                        genienlp_version=genienlp_version,
-                                        paraphrase_subfolder=paraphrase_subfolder,
-                                        additional_args=paraphrase_additional_args)
-
+                                                              owner=owner,
+                                                              project=project,
+                                                              experiment=experiment,
+                                                              dataset=dataset,
+                                                              s3_input_datadir=train_s3_datadir,
+                                                              train_task_name=train_task_name,
+                                                              paraphrasing_model=paraphrasing_model,
+                                                              keep_original_duplicates=keep_original_duplicates,
+                                                              ignore_context=ignore_context,
+                                                              genienlp_version=genienlp_version,
+                                                              paraphrase_subfolder=paraphrase_subfolder,
+                                                              additional_args=paraphrase_additional_args)
+        
         paraphrase_filtering_op = paraphrase_filtering_step(image=image,
-                                        owner=owner,
-                                        project=project,
-                                        experiment=experiment,
-                                        dataset=dataset,
-                                        s3_input_datadir=paraphrase_generation_op.outputs['s3_output_datadir'],
-                                        train_task_name=train_task_name,
-                                        filtering_model=pretrain_op.outputs['s3_model_dir'],
-                                        filtering_batch_size=filtering_batch_size,
-                                        genienlp_version=genienlp_version,
-                                        paraphrase_subfolder=paraphrase_subfolder,
-                                        additional_args=filtering_additional_args)
-
+                                                            owner=owner,
+                                                            project=project,
+                                                            experiment=experiment,
+                                                            dataset=dataset,
+                                                            s3_input_datadir=paraphrase_generation_op.outputs[
+                                                                's3_output_datadir'],
+                                                            train_task_name=train_task_name,
+                                                            filtering_model=pretrain_op.outputs['s3_model_dir'],
+                                                            filtering_batch_size=filtering_batch_size,
+                                                            genienlp_version=genienlp_version,
+                                                            paraphrase_subfolder=paraphrase_subfolder,
+                                                            additional_args=filtering_additional_args)
+        
         train_s3_datadir = paraphrase_filtering_op.outputs['s3_output_datadir']
-
+    
     train_op = train_step(
-            owner=owner,
-            project=project,
-            experiment=experiment,
-            model=model,
-            task_name=train_task_name,
-            s3_datadir=train_s3_datadir,
-            s3_bucket=s3_bucket,
-            s3_database_dir=s3_database_dir,
-            bootleg_model=bootleg_model,
-            image=image,
-            genienlp_version=genienlp_version,
-            bootleg_version=bootleg_version,
-            load_from=train_load_from,
-            train_languages=train_languages,
-            eval_languages=eval_languages,
-            eval_set=eval_set,
-            dataset_subfolder=train_dataset_subfolder,
-            skip_tensorboard='false',
-            train_iterations=train_iterations,
-            s3_bootleg_prepped_data=s3_bootleg_prepped_data,
-            additional_args=train_additional_args,
-            )
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        model=model,
+        task_name=train_task_name,
+        s3_datadir=train_s3_datadir,
+        s3_bucket=s3_bucket,
+        s3_database_dir=s3_database_dir,
+        bootleg_model=bootleg_model,
+        image=image,
+        genienlp_version=genienlp_version,
+        bootleg_version=bootleg_version,
+        load_from=train_load_from,
+        train_languages=train_languages,
+        eval_languages=eval_languages,
+        eval_set=eval_set,
+        dataset_subfolder=train_dataset_subfolder,
+        skip_tensorboard='false',
+        train_iterations=train_iterations,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+        additional_args=train_additional_args,
+    )
     eval_model = train_op.outputs['s3_model_dir']
-
+    
     if do_fewshot:
         model = '%s-fs' % (model,)
         fewshot_op = train_step(
@@ -328,53 +325,52 @@ def paraphrase_fewshot_step(
             additional_args=train_additional_args,
         )
         eval_model = fewshot_op.outputs['s3_model_dir']
-
+    
     return train_s3_datadir, eval_model
 
 
 def everything(
-    do_generate,
-    do_paraphrase,
-    do_fewshot,
-    owner,
-    project,
-    experiment,
-    model,
-    dataset='',
-    image=default_image,
-    genienlp_version=GENIENLP_VERSION,
-    genie_version=GENIE_VERSION,
-    thingtalk_version=THINGTALK_VERSION,
-    workdir_repo=WORKDIR_REPO,
-    workdir_version=WORKDIR_VERSION,
-    thingpedia_developer_key=default_developer_key,
-    s3_bucket='geniehai',
-    s3_database_dir='None',
-    bootleg_model='None',
-    bootleg_version='',
-    train_languages='en',
-    eval_languages='en',
-    s3_bootleg_prepped_data='None',
-    generate_dataset_parallel='6',
-    generate_dataset_additional_args='',
-    train_task_name='',
-    train_load_from='None',
-    train_additional_args='',
-    train_iterations='80000',
-    train_s3_datadir='',
-    train_dataset_subfolder='None',
-    filtering_train_iterations='10000',
-    filtering_batch_size='4000',
-    fewshot_train_iterations='20000',
-    ignore_context='true',
-    keep_original_duplicates='false',
-    paraphrasing_model=PARAPHRASING_MODEL,
-    paraphrase_subfolder='user',
-    paraphrase_additional_args='',
-    filtering_additional_args='',
-    eval_set='',
-    eval_additional_args=''):
-
+        do_generate,
+        do_paraphrase,
+        do_fewshot,
+        owner,
+        project,
+        experiment,
+        model,
+        dataset='',
+        image=default_image,
+        genienlp_version=GENIENLP_VERSION,
+        genie_version=GENIE_VERSION,
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo=WORKDIR_REPO,
+        workdir_version=WORKDIR_VERSION,
+        thingpedia_developer_key=default_developer_key,
+        s3_bucket='geniehai',
+        s3_database_dir='None',
+        bootleg_model='None',
+        bootleg_version='',
+        train_languages='en',
+        eval_languages='en',
+        s3_bootleg_prepped_data='None',
+        generate_dataset_parallel='6',
+        generate_dataset_additional_args='',
+        train_task_name='',
+        train_load_from='None',
+        train_additional_args='',
+        train_iterations='80000',
+        train_s3_datadir='',
+        train_dataset_subfolder='None',
+        filtering_train_iterations='10000',
+        filtering_batch_size='4000',
+        fewshot_train_iterations='20000',
+        ignore_context='true',
+        keep_original_duplicates='false',
+        paraphrasing_model=PARAPHRASING_MODEL,
+        paraphrase_subfolder='user',
+        paraphrase_additional_args='',
+        filtering_additional_args='',
+        eval_set='',
+        eval_additional_args=''):
     if do_generate:
         generate_dataset_op = generate_dataset_step(image=image,
                                                     owner=owner,
@@ -389,7 +385,7 @@ def everything(
                                                     thingpedia_developer_key=thingpedia_developer_key,
                                                     additional_args=generate_dataset_additional_args)
         train_s3_datadir = generate_dataset_op.outputs['s3_datadir']
-
+    
     train_s3_datadir, eval_model = paraphrase_fewshot_step(
         do_paraphrase=do_paraphrase,
         do_fewshot=do_fewshot,
@@ -424,7 +420,7 @@ def everything(
         paraphrase_additional_args=paraphrase_additional_args,
         filtering_additional_args=filtering_additional_args,
     )
-
+    
     eval_op = eval_step(image=image,
                         owner=owner,
                         project=project,
@@ -446,26 +442,26 @@ def everything(
     description='The minimal training pipeline'
 )
 def generate_train_eval_pipeline(
-    owner,
-    project,
-    experiment,
-    model,
-    dataset,
-    image=default_image,
-    genienlp_version=GENIENLP_VERSION,
-    genie_version=GENIE_VERSION,
-    thingtalk_version=THINGTALK_VERSION,
-    workdir_repo=WORKDIR_REPO,
-    workdir_version=WORKDIR_VERSION,
-    thingpedia_developer_key=default_developer_key,
-    generate_dataset_parallel='6',
-    generate_dataset_additional_args='',
-    train_task_name='',
-    train_load_from='None',
-    train_additional_args='',
-    train_iterations='80000',
-    eval_set='',
-    eval_additional_args=''
+        owner,
+        project,
+        experiment,
+        model,
+        dataset,
+        image=default_image,
+        genienlp_version=GENIENLP_VERSION,
+        genie_version=GENIE_VERSION,
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo=WORKDIR_REPO,
+        workdir_version=WORKDIR_VERSION,
+        thingpedia_developer_key=default_developer_key,
+        generate_dataset_parallel='6',
+        generate_dataset_additional_args='',
+        train_task_name='',
+        train_load_from='None',
+        train_additional_args='',
+        train_iterations='80000',
+        eval_set='',
+        eval_additional_args=''
 ):
     everything(do_generate=True,
                do_paraphrase=False,
@@ -497,25 +493,25 @@ def generate_train_eval_pipeline(
     description='Trains and evaluate on an existing dataset'
 )
 def train_eval_only_pipeline(
-    owner,
-    project,
-    experiment,
-    model,
-    s3_datadir,
-    dataset_subfolder='None',
-    image=default_image,
-    genienlp_version=GENIENLP_VERSION,
-    genie_version=GENIE_VERSION,
-    thingtalk_version=THINGTALK_VERSION,
-    workdir_repo=WORKDIR_REPO,
-    workdir_version=WORKDIR_VERSION,
-    thingpedia_developer_key=default_developer_key,
-    train_task_name='',
-    train_load_from='None',
-    train_iterations='80000',
-    train_additional_args='',
-    eval_set='',
-    eval_additional_args=''
+        owner,
+        project,
+        experiment,
+        model,
+        s3_datadir,
+        dataset_subfolder='None',
+        image=default_image,
+        genienlp_version=GENIENLP_VERSION,
+        genie_version=GENIE_VERSION,
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo=WORKDIR_REPO,
+        workdir_version=WORKDIR_VERSION,
+        thingpedia_developer_key=default_developer_key,
+        train_task_name='',
+        train_load_from='None',
+        train_iterations='80000',
+        train_additional_args='',
+        eval_set='',
+        eval_additional_args=''
 ):
     everything(do_generate=False,
                do_paraphrase=False,
@@ -546,34 +542,34 @@ def train_eval_only_pipeline(
     description='Runs the whole training pipeline, including autoparaphrasing'
 )
 def generate_paraphrase_train_eval_pipeline(
-    owner,
-    project,
-    experiment,
-    model,
-    dataset,
-    image=default_image,
-    genienlp_version=GENIENLP_VERSION,
-    genie_version=GENIE_VERSION,
-    thingtalk_version=THINGTALK_VERSION,
-    workdir_repo=WORKDIR_REPO,
-    workdir_version=WORKDIR_VERSION,
-    thingpedia_developer_key=default_developer_key,
-    generate_dataset_parallel='6',
-    generate_dataset_additional_args='',
-    train_task_name='',
-    train_load_from='None',
-    train_additional_args='',
-    train_iterations='80000',
-    filtering_train_iterations='10000',
-    filtering_batch_size='4000',
-    ignore_context='true',
-    keep_original_duplicates='false',
-    paraphrasing_model=PARAPHRASING_MODEL,
-    paraphrase_subfolder='user',
-    paraphrase_additional_args='',
-    filtering_additional_args='',
-    eval_set='',
-    eval_additional_args=''
+        owner,
+        project,
+        experiment,
+        model,
+        dataset,
+        image=default_image,
+        genienlp_version=GENIENLP_VERSION,
+        genie_version=GENIE_VERSION,
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo=WORKDIR_REPO,
+        workdir_version=WORKDIR_VERSION,
+        thingpedia_developer_key=default_developer_key,
+        generate_dataset_parallel='6',
+        generate_dataset_additional_args='',
+        train_task_name='',
+        train_load_from='None',
+        train_additional_args='',
+        train_iterations='80000',
+        filtering_train_iterations='10000',
+        filtering_batch_size='4000',
+        ignore_context='true',
+        keep_original_duplicates='false',
+        paraphrasing_model=PARAPHRASING_MODEL,
+        paraphrase_subfolder='user',
+        paraphrase_additional_args='',
+        filtering_additional_args='',
+        eval_set='',
+        eval_additional_args=''
 ):
     everything(do_generate=True,
                do_paraphrase=True,
@@ -613,27 +609,27 @@ def generate_paraphrase_train_eval_pipeline(
     description='Runs the whole training pipeline, with fewshot finetuning'
 )
 def generate_train_fewshot_eval_pipeline(
-    owner,
-    project,
-    experiment,
-    model,
-    dataset,
-    image=default_image,
-    genienlp_version=GENIENLP_VERSION,
-    genie_version=GENIE_VERSION,
-    thingtalk_version=THINGTALK_VERSION,
-    workdir_repo=WORKDIR_REPO,
-    workdir_version=WORKDIR_VERSION,
-    thingpedia_developer_key=default_developer_key,
-    generate_dataset_parallel='6',
-    generate_dataset_additional_args='',
-    train_task_name='',
-    train_load_from='None',
-    train_additional_args='',
-    train_iterations='80000',
-    fewshot_train_iterations='20000',
-    eval_set='',
-    eval_additional_args=''
+        owner,
+        project,
+        experiment,
+        model,
+        dataset,
+        image=default_image,
+        genienlp_version=GENIENLP_VERSION,
+        genie_version=GENIE_VERSION,
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo=WORKDIR_REPO,
+        workdir_version=WORKDIR_VERSION,
+        thingpedia_developer_key=default_developer_key,
+        generate_dataset_parallel='6',
+        generate_dataset_additional_args='',
+        train_task_name='',
+        train_load_from='None',
+        train_additional_args='',
+        train_iterations='80000',
+        fewshot_train_iterations='20000',
+        eval_set='',
+        eval_additional_args=''
 ):
     everything(do_generate=True,
                do_paraphrase=False,
@@ -666,35 +662,35 @@ def generate_train_fewshot_eval_pipeline(
     description='Runs the whole training pipeline, with autoparaphrasing and fewshot finetuning'
 )
 def generate_paraphrase_train_fewshot_eval_pipeline(
-    owner,
-    project,
-    experiment,
-    model,
-    dataset,
-    image=default_image,
-    genienlp_version=GENIENLP_VERSION,
-    genie_version=GENIE_VERSION,
-    thingtalk_version=THINGTALK_VERSION,
-    workdir_repo=WORKDIR_REPO,
-    workdir_version=WORKDIR_VERSION,
-    thingpedia_developer_key=default_developer_key,
-    generate_dataset_parallel='6',
-    generate_dataset_additional_args='',
-    train_task_name='',
-    train_load_from='None',
-    train_additional_args='',
-    train_iterations='80000',
-    fewshot_train_iterations='20000',
-    filtering_train_iterations='10000',
-    filtering_batch_size='4000',
-    ignore_context='true',
-    keep_original_duplicates='false',
-    paraphrasing_model=PARAPHRASING_MODEL,
-    paraphrase_subfolder='user',
-    paraphrase_additional_args='',
-    filtering_additional_args='',
-    eval_set='',
-    eval_additional_args=''
+        owner,
+        project,
+        experiment,
+        model,
+        dataset,
+        image=default_image,
+        genienlp_version=GENIENLP_VERSION,
+        genie_version=GENIE_VERSION,
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo=WORKDIR_REPO,
+        workdir_version=WORKDIR_VERSION,
+        thingpedia_developer_key=default_developer_key,
+        generate_dataset_parallel='6',
+        generate_dataset_additional_args='',
+        train_task_name='',
+        train_load_from='None',
+        train_additional_args='',
+        train_iterations='80000',
+        fewshot_train_iterations='20000',
+        filtering_train_iterations='10000',
+        filtering_batch_size='4000',
+        ignore_context='true',
+        keep_original_duplicates='false',
+        paraphrasing_model=PARAPHRASING_MODEL,
+        paraphrase_subfolder='user',
+        paraphrase_additional_args='',
+        filtering_additional_args='',
+        eval_set='',
+        eval_additional_args=''
 ):
     everything(do_generate=True,
                do_paraphrase=True,
@@ -729,40 +725,41 @@ def generate_paraphrase_train_fewshot_eval_pipeline(
                eval_set=eval_set,
                eval_additional_args=eval_additional_args)
 
+
 @dsl.pipeline(
     name='Paraphrase, train, fewshot, and eval',
     description='Runs the whole training pipeline on an existing dataset folder, with autoparaphrasing and fewshot finetuning'
 )
 def paraphrase_train_fewshot_eval_pipeline(
-    owner,
-    project,
-    experiment,
-    model,
-    s3_datadir,
-    dataset_subfolder='None',
-    dataset='',
-    image=default_image,
-    genienlp_version=GENIENLP_VERSION,
-    genie_version=GENIE_VERSION,
-    thingtalk_version=THINGTALK_VERSION,
-    workdir_repo=WORKDIR_REPO,
-    workdir_version=WORKDIR_VERSION,
-    thingpedia_developer_key=default_developer_key,
-    train_task_name='',
-    train_load_from='None',
-    train_additional_args='',
-    train_iterations='80000',
-    fewshot_train_iterations='20000',
-    filtering_train_iterations='10000',
-    filtering_batch_size='4000',
-    ignore_context='true',
-    keep_original_duplicates='false',
-    paraphrasing_model=PARAPHRASING_MODEL,
-    paraphrase_subfolder='user',
-    paraphrase_additional_args='',
-    filtering_additional_args='',
-    eval_set='',
-    eval_additional_args=''
+        owner,
+        project,
+        experiment,
+        model,
+        s3_datadir,
+        dataset_subfolder='None',
+        dataset='',
+        image=default_image,
+        genienlp_version=GENIENLP_VERSION,
+        genie_version=GENIE_VERSION,
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo=WORKDIR_REPO,
+        workdir_version=WORKDIR_VERSION,
+        thingpedia_developer_key=default_developer_key,
+        train_task_name='',
+        train_load_from='None',
+        train_additional_args='',
+        train_iterations='80000',
+        fewshot_train_iterations='20000',
+        filtering_train_iterations='10000',
+        filtering_batch_size='4000',
+        ignore_context='true',
+        keep_original_duplicates='false',
+        paraphrasing_model=PARAPHRASING_MODEL,
+        paraphrase_subfolder='user',
+        paraphrase_additional_args='',
+        filtering_additional_args='',
+        eval_set='',
+        eval_additional_args=''
 ):
     everything(do_generate=False,
                do_paraphrase=True,
@@ -802,34 +799,34 @@ def paraphrase_train_fewshot_eval_pipeline(
     description='Runs the whole auto-paraphrasing pipeline on an existing dataset folder, and trains a model'
 )
 def paraphrase_train_eval_pipeline(
-    owner,
-    project,
-    experiment,
-    model,
-    s3_datadir,
-    dataset_subfolder='None',
-    dataset='',
-    image=default_image,
-    genienlp_version=GENIENLP_VERSION,
-    genie_version=GENIE_VERSION,
-    thingtalk_version=THINGTALK_VERSION,
-    workdir_repo=WORKDIR_REPO,
-    workdir_version=WORKDIR_VERSION,
-    thingpedia_developer_key=default_developer_key,
-    train_task_name='',
-    train_load_from='None',
-    train_additional_args='',
-    train_iterations='80000',
-    filtering_train_iterations='10000',
-    filtering_batch_size='4000',
-    ignore_context='true',
-    keep_original_duplicates='false',
-    paraphrasing_model=PARAPHRASING_MODEL,
-    paraphrase_subfolder='user',
-    paraphrase_additional_args='',
-    filtering_additional_args='',
-    eval_set='',
-    eval_additional_args=''
+        owner,
+        project,
+        experiment,
+        model,
+        s3_datadir,
+        dataset_subfolder='None',
+        dataset='',
+        image=default_image,
+        genienlp_version=GENIENLP_VERSION,
+        genie_version=GENIE_VERSION,
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo=WORKDIR_REPO,
+        workdir_version=WORKDIR_VERSION,
+        thingpedia_developer_key=default_developer_key,
+        train_task_name='',
+        train_load_from='None',
+        train_additional_args='',
+        train_iterations='80000',
+        filtering_train_iterations='10000',
+        filtering_batch_size='4000',
+        ignore_context='true',
+        keep_original_duplicates='false',
+        paraphrasing_model=PARAPHRASING_MODEL,
+        paraphrase_subfolder='user',
+        paraphrase_additional_args='',
+        filtering_additional_args='',
+        eval_set='',
+        eval_additional_args=''
 ):
     everything(do_generate=False,
                do_paraphrase=True,
@@ -868,20 +865,20 @@ def paraphrase_train_eval_pipeline(
     description='Evaluate a previously trained model'
 )
 def eval_only_pipeline(
-    owner,
-    project,
-    experiment,
-    model,
-    s3_model_dir,
-    image=default_image,
-    genienlp_version=GENIENLP_VERSION,
-    genie_version=GENIE_VERSION,
-    thingtalk_version=THINGTALK_VERSION,
-    workdir_repo=WORKDIR_REPO,
-    workdir_version=WORKDIR_VERSION,
-    thingpedia_developer_key=default_developer_key,
-    eval_set='',
-    additional_args=''
+        owner,
+        project,
+        experiment,
+        model,
+        s3_model_dir,
+        image=default_image,
+        genienlp_version=GENIENLP_VERSION,
+        genie_version=GENIE_VERSION,
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo=WORKDIR_REPO,
+        workdir_version=WORKDIR_VERSION,
+        thingpedia_developer_key=default_developer_key,
+        eval_set='',
+        additional_args=''
 ):
     eval_step(
         owner=owner,

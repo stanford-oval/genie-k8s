@@ -19,14 +19,11 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 # OR OTHER DEALINGS IN THE SOFTWARE.
 
-from kfp import dsl
 from kfp import components
+from kfp import dsl
 from kubernetes.client import V1Toleration
 from kubernetes.client.models import (
-    V1VolumeMount,
-    V1Volume,
-    V1PersistentVolumeClaimVolumeSource,
-    V1SecretVolumeSource
+    V1PersistentVolumeClaimVolumeSource
 )
 
 from .common import *
