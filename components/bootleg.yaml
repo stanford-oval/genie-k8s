@@ -64,7 +64,7 @@ implementation:
       mkdir -p "/shared/tensorboard/${project}/${experiment}/${owner}/${model}"
      
       genienlp bootleg-dump-features \
-          --data "$modeldir/dataset" \
+          --data "dataset" \
           --save "$modeldir" \
           --cache "$modeldir/cache" \
           --train_tasks ${task_name} \
