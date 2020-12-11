@@ -37,5 +37,3 @@ if test "${jupyter_image}" != None ; then
     .
   docker push ${jupyter_image}
 fi
-
-rm lib.sh
