@@ -50,8 +50,6 @@ implementation:
       IFS='+'; read -ra PLS <<<"$pred_languages"; IFS=' '
       echo "${PLS[@]}"
 
-      aws s3 sync --no-progress ${s3_datadir} data/
-
       export TZ=America/Los_Angeles
 
       ls -R
