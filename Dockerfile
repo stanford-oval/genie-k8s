@@ -4,7 +4,11 @@ MAINTAINER Thingpedia Admins <thingpedia-admins@lists.stanford.edu>
 
 RUN pip3 install -U pip
 
-ARG ADD_BOOTLEG=false
+WORKDIR /opt/genienlp/
+ARG GENIENLP_VERSION=master
+RUN git fetch && git checkout ${GENIENLP_VERSION} && pip3 install -e .
+
+ARG ADD_BOOTLEG=
 RUN echo ${ADD_BOOTLEG}
 ARG BOOTLEG_VERSION=master
 RUN if [ ${ADD_BOOTLEG} == true ]; then \
@@ -13,12 +17,7 @@ RUN if [ ${ADD_BOOTLEG} == true ]; then \
 		git checkout ${BOOTLEG_VERSION} && pip3 install -r requirements.txt && pip3 install -e . ; \
 	fi
 
-WORKDIR /opt/genienlp/
-ARG GENIENLP_VERSION=master
-RUN git fetch && git checkout ${GENIENLP_VERSION} && pip3 install -e .
-
-
-ARG ADD_APEX=false
+ARG ADD_APEX=
 RUN echo ${ADD_APEX}
 RUN if [ ${ADD_APEX} == true ]; then \
 		yum install -y \
