@@ -13,13 +13,15 @@ inputs:
   - {name: nmt, description: ''}
   - {name: pivot_lang, description: ''}
   - {name: do_alignment, description: ''}
-  - {name: src_lang, description: ''}
   - {name: tgt_lang, description: ''}
   - {name: do_paraphrasing, description: ''}
   - {name: paraphrasing_method, description: ''}
-  - {name: filter_sts_paraphrase, description: ''}
   - {name: task_name, description: ''}
   - {name: s3_datadir, description: ''}
+  - {name: sts_batch_size, description: ''}
+  - {name: sts_model, description: ''}
+  - {name: filtering_metric, description: ''}
+  - {name: filtering_threshold, description: ''}
   - {name: additional_args, description: ''}
 outputs:
 
@@ -33,7 +35,7 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image owner project experiment s3_bucket model_name_or_path input_splits train_output_per_example nmt pivot_lang do_alignment src_lang tgt_lang do_paraphrasing paraphrasing_method filter_sts_paraphrase task_name s3_datadir" "$@"
+      parse_args "$0" "image owner project experiment s3_bucket model_name_or_path input_splits train_output_per_example nmt pivot_lang do_alignment tgt_lang do_paraphrasing paraphrasing_method task_name s3_datadir sts_batch_size sts_model filtering_metric filtering_threshold" "$@"
       shift $n
 
       . /opt/genie-toolkit/sync-repos.sh
@@ -68,12 +70,12 @@ implementation:
           ;;
           marian+round_trip)
             make -B -j2 geniedir=/opt/genie-toolkit \
-              default_translation_hparams="${paraphrase_arguments} --model_name_or_path ${model_name_or_path} --replace_qp --force_replace_qp" \
+              default_translation_hparams="${paraphrase_arguments} --replace_qp --force_replace_qp" \
               all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=false pivot_lang=${pivot_lang} paraphrase_marian_unquoted_${tgt_lang}
           ;;
           gt+round_trip)
             make -B -j2 geniedir=/opt/genie-toolkit \
-              default_translation_hparams="${paraphrase_arguments} --model_name_or_path ${model_name_or_path} --replace_qp --force_replace_qp" \
+              default_translation_hparams="${paraphrase_arguments} --replace_qp --force_replace_qp" \
               all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=false pivot_lang=${pivot_lang} paraphrase_gt_quoted_${tgt_lang}
           ;;
           *)
@@ -84,10 +86,12 @@ implementation:
       fi
 
       # prepare paraphrased files
-      make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true pivot_lang=${pivot_lang} nmt_model=${nmt} para_method=${paraphrasing_method} prepare_paraphrases_${tgt_lang}
+      paraphrase_sts_hparams="--batch_size ${sts_batch_size} --model_name ${sts_model}"
+      make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true pivot_lang=${pivot_lang} nmt_model=${nmt} para_method=${paraphrasing_method} paraphrase_sts_hparams=${paraphrase_sts_hparams} prepare_paraphrases_${tgt_lang}
 
       # filter paraphrases based on sts score
-      make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true pivot_lang=${pivot_lang} nmt_model=${nmt} para_method=${paraphrasing_method} filtering_metric=${filtering_metric} filter_paraphrase_${tgt_lang}
+      filtering_sts_hparams="--filtering_metric ${filtering_metric} --filtering_threshold ${filtering_threshold}"
+      make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true pivot_lang=${pivot_lang} nmt_model=${nmt} para_method=${paraphrasing_method} filtering_sts_hparams=${filtering_sts_hparams} filter_paraphrase_${tgt_lang}
 
       aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${s3_datadir}paraphrased/${nmt}/${tgt_lang}
 
@@ -104,12 +108,16 @@ implementation:
       --nmt, {inputValue: nmt},
       --pivot_lang, {inputValue: pivot_lang},
       --do_alignment, {inputValue: do_alignment},
-      --src_lang, {inputValue: src_lang},
       --tgt_lang, {inputValue: tgt_lang},
       --do_paraphrasing, {inputValue: do_paraphrasing},
       --paraphrasing_method, {inputValue: paraphrasing_method},
-      --filter_sts_paraphrase, {inputValue: filter_sts_paraphrase},
       --task_name, {inputValue: task_name},
       --s3_datadir, {inputValue: s3_datadir},
+      --sts_batch_size, {inputValue: sts_batch_size},
+      --sts_model, {inputValue: sts_model},
+      --filtering_metric, {inputValue: filtering_metric},
+      --filtering_threshold, {inputValue: filtering_threshold},
       --, {inputValue: additional_args}
     ]
+
+
