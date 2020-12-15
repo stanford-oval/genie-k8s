@@ -538,7 +538,7 @@ def translate(
         thingtalk_version=THINGTALK_VERSION,
         workdir_repo=GENIE_WORKDIR_REPO,
         workdir_version=GENIE_WORKDIR_VERSION,
-        additional_args='--temperature 0.4 --repetition_penalty 1.0 --num_samples 1 --batch_size 512  --skip_heuristics --att_pooling mean --task translate'
+        additional_args='--temperature 0.4 --repetition_penalty 1.0 --num_samples 1 --batch_size 512  --skip_heuristics --att_pooling mean --task translate --output_attentions'
 ):
     all_translation_steps(
         owner=owner,
@@ -575,7 +575,7 @@ def paraphrase_step(
         task_name='almond',
         s3_datadir='',
         model_name_or_path='',
-        input_splits='test+eval+train',
+        input_splits='train',
         train_output_per_example='1',
         nmt='marian',
         pivot_lang='',
@@ -654,7 +654,7 @@ def round_trip_paraphrasing(
         s3_bucket='geniehai',
         task_name='almond',
         s3_datadir='',
-        input_splits='test+eval+train',
+        input_splits='train',
         train_output_per_example='1',
         nmt='marian',
         pivot_lang='',
@@ -713,7 +713,7 @@ def masked_paraphrasing(
         task_name='almond',
         s3_datadir='',
         model_name_or_path='facebook/mbart-large-cc25',
-        input_splits='test+eval+train',
+        input_splits='train',
         train_output_per_example='1',
         nmt='marian',
         pivot_lang='None',
@@ -773,7 +773,7 @@ def sts_filtering(
         task_name='almond',
         s3_datadir='',
         model_name_or_path='facebook/mbart-large-cc25',
-        input_splits='test+eval+train',
+        input_splits='train',
         train_output_per_example='1',
         nmt='marian',
         pivot_lang='',
