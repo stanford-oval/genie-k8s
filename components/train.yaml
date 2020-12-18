@@ -10,7 +10,6 @@ inputs:
   - {name: experiment, description: ''}
   - {name: model, description: ''}
   - {name: load_from, description: ''}
-  - {name: eval_set, description: ''}
   - {name: s3_datadir, description: ''}
   - {name: s3_database_dir, description: ''}
   - {name: dataset_subfolder, description: ''}
@@ -34,7 +33,7 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image s3_bucket owner task_name project experiment model load_from s3_datadir s3_database_dir dataset_subfolder s3_model_dir skip_tensorboard train_languages eval_languages eval_set use_bootleg s3_bootleg_prepped_data bootleg_model" "$@"
+      parse_args "$0" "image s3_bucket owner task_name project experiment model load_from s3_datadir s3_database_dir dataset_subfolder s3_model_dir skip_tensorboard train_languages eval_languages use_bootleg s3_bootleg_prepped_data bootleg_model" "$@"
       shift $n
       cd $HOME
 
@@ -63,16 +62,20 @@ implementation:
       fi
 
       mkdir -p cache
+      
+      if test "${dataset_subfolder}" = "None" ; then
+        dataset_subfolder=
+      fi
 
       case $task_name in
         *"multilingual"*)
           for lang in "${TLS[@]}" "${ELS[@]}" ; do
-            aws s3 sync --no-progress ${s3_datadir} dataset/almond/multilingual --exclude "*/*" --include "*$lang*"
+            aws s3 sync --no-progress ${s3_datadir}${dataset_subfolder} dataset/almond/multilingual --exclude "*/*" --include "*$lang*"
           done
         ;;
 
         *)
-          aws s3 sync --no-progress --exclude "*/*" --exclude "synthetic*.txt" ${s3_datadir} dataset/almond
+          aws s3 sync --no-progress --exclude "synthetic*.txt" ${s3_datadir}${dataset_subfolder} dataset/almond
         ;;
       esac
 
@@ -96,7 +99,6 @@ implementation:
           --preserve_case \
           --exist_ok \
           --skip_cache \
-          --eval_set_name $eval_set \
           --train_languages $train_languages \
           --eval_languages $eval_languages \
           ${tensorboard_args} \
@@ -122,7 +124,6 @@ implementation:
       --project, {inputValue: project},
       --experiment, {inputValue: experiment},
       --model, {inputValue: model},
-      --eval_set, {inputValue: eval_set},
       --load_from, {inputValue: load_from},
       --s3_datadir, {inputValue: s3_datadir},
       --s3_database_dir, {inputValue: s3_database_dir},

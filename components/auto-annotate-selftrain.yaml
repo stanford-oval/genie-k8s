@@ -45,7 +45,7 @@ implementation:
         experiment="${experiment}" \
         "${experiment}/schema.tt" \
         "${experiment}/database-map.tsv"
-      mkdir -p "${experiment}/${eval_set}_auto_${target}"
+      mkdir -p "${experiment}/train_auto_selftrain"
 
       aws s3 cp --no-progress s3://geniehai/gcampax/dataset/multiwoz/baseline21/train_dials.json train_dials.json
       aws s3 sync --no-progress --exclude '*/dataset/*' --exclude '*/cache/*' --exclude 'iteration_*.pth' --exclude '*_optim.pth' "${user_model}" ${experiment}/models/nlu-user
@@ -67,7 +67,7 @@ implementation:
         datadir/selftrain
       
       S3_DATADIR=s3://${s3_bucket}/${owner}/dataset/${project}/${experiment}/${dataset}-selftrain/`date +%s`/
-      aws s3 sync --no-progress datadir/selftrain ${S3_DATADIR}user
+      aws s3 sync --no-progress datadir/selftrain ${S3_DATADIR}user/
       mkdir -p `dirname $s3_datadir`
       echo ${S3_DATADIR}  > $s3_datadir
 
