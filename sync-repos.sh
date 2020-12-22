@@ -46,7 +46,7 @@ if [ -n "${GENIE_VERSION}" ] && [ "${GENIE_VERSION}" != "${GENIE_HEAD}" ]; then
   git fetch
   git checkout -f ${GENIE_VERSION}
   if test -f yarn.lock ; then
-    yarn link thingtalk
+#    yarn link thingtalk
     yarn install
     yarn link
   else
