@@ -79,6 +79,8 @@ def eval_spl_step(
      .set_cpu_request('4'))
     add_env(add_ssh_volume(eval_op), eval_env)
     
+    eval_op.container.set_image_pull_policy('Always')
+    
     return eval_op
 
 
