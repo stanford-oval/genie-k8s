@@ -84,7 +84,7 @@ implementation:
           esac
       fi
 
-      aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${s3_datadir}paraphrased/${nmt}/${tgt_lang}
+      aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${s3_datadir}translated/${nmt}/${tgt_lang}
 
       # prepare paraphrased files
       paraphrase_sts_hparams="--batch_size ${sts_batch_size} --model_name ${sts_model}"
@@ -94,7 +94,7 @@ implementation:
       filtering_sts_hparams="--filtering_metric ${filtering_metric} --filtering_threshold ${filtering_threshold}"
       make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true pivot_lang=${pivot_lang} nmt_model=${nmt} para_method=${paraphrasing_method} filtering_sts_hparams="${filtering_sts_hparams}" filter_paraphrase_${tgt_lang}
 
-      aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${s3_datadir}paraphrased/${nmt}/${tgt_lang}
+      aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${s3_datadir}translated/${nmt}/${tgt_lang}
 
     args: [
       'cmd',
