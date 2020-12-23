@@ -272,6 +272,8 @@ def prepare_for_translation_step(
     
     prepare_for_translation_op.name = 'prepare-for-translation'
     
+    prepare_for_translation_op.container.set_image_pull_policy('Always')
+    
     return prepare_for_translation_op
 
 
@@ -341,6 +343,8 @@ def do_translation_step(
     
     do_translation_op.name = 'translation'
     
+    do_translation_op.container.set_image_pull_policy('Always')
+    
     return do_translation_op
 
 
@@ -403,6 +407,8 @@ def post_process_translation_step(
     
     post_process_translation_op.name = 'post-process-translation'
     
+    post_process_translation_op.container.set_image_pull_policy('Always')
+    
     return post_process_translation_op
 
 
@@ -455,7 +461,6 @@ def all_translation_steps(
             workdir_version=workdir_version,
             additional_args=''
         )
-        prepare_for_translation_op.container.set_image_pull_policy('Always')
     
     if do_translation:
         do_translation_op = do_translation_step(
@@ -480,7 +485,6 @@ def all_translation_steps(
             workdir_version=workdir_version,
             additional_args=additional_args
         )
-        do_translation_op.container.set_image_pull_policy('Always')
         
         if prepare_for_translation:
             do_translation_op.after(prepare_for_translation_op)
@@ -508,7 +512,6 @@ def all_translation_steps(
             workdir_version=workdir_version,
             additional_args=''
         )
-        post_process_translation_op.container.set_image_pull_policy('Always')
         
         if prepare_for_translation and do_translation:
             post_process_translation_op.after(do_translation_op, prepare_for_translation_op)
@@ -641,6 +644,8 @@ def paraphrase_step(
      .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2 * paraphrase_num_gpus}xlarge')
      .add_volume(V1Volume(name='tensorboard',
                           persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
+    
+    paraphrase_op.container.set_image_pull_policy('Always')
         
     return paraphrase_op
 
@@ -743,6 +748,7 @@ def masked_paraphrasing(
         input_splits=input_splits,
         train_output_per_example=train_output_per_example,
         nmt=nmt,
+        pivot_lang='masked',
         do_alignment=do_alignment,
         tgt_lang=tgt_lang,
         sts_batch_size=sts_batch_size,

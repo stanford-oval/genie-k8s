@@ -133,6 +133,9 @@ def train_step(
      .add_volume(V1Volume(name='tensorboard',
                           persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
     
+    
+    train_op.container.set_image_pull_policy('Always')
+    
     return train_op
 
 

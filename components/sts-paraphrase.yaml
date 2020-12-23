@@ -52,7 +52,6 @@ implementation:
 
       export paraphrase_arguments="$@"
 
-      aws s3 sync --no-progress ${s3_datadir} dataset/${experiment}/ --exclude '*/*'
       aws s3 sync --no-progress ${s3_datadir} ${experiment}/ --exclude '*' --include 'translated/en/*' --include "translated/marian/${tgt_lang}/*" --include "translated/gt/${tgt_lang}/*"
 
       mv ${experiment}/translated/* ${experiment}/
