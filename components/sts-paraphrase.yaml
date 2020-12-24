@@ -22,9 +22,10 @@ inputs:
   - {name: sts_model, description: ''}
   - {name: filtering_metric, description: ''}
   - {name: filtering_threshold, description: ''}
+  - {name: append_fewshot, description: ''}
   - {name: additional_args, description: ''}
 outputs:
-
+  - {name: s3_output_datadir}
 implementation:
   container:
     image: '{{inputs.parameters.image}}'
@@ -35,7 +36,7 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image owner project experiment s3_bucket model_name_or_path input_splits train_output_per_example nmt pivot_lang do_alignment tgt_lang do_paraphrasing paraphrasing_method task_name s3_datadir sts_batch_size sts_model filtering_metric filtering_threshold" "$@"
+      parse_args "$0" "image owner project experiment s3_bucket model_name_or_path input_splits train_output_per_example nmt pivot_lang do_alignment tgt_lang do_paraphrasing paraphrasing_method task_name s3_datadir sts_batch_size sts_model filtering_metric filtering_threshold append_fewshot" "$@"
       shift $n
 
       . /opt/genie-toolkit/sync-repos.sh
@@ -49,6 +50,11 @@ implementation:
       fi
 
       cd workdir/${MAKEDIR}
+
+      s3_output_dir="${s3_datadir}translated/${nmt}/${tgt_lang}/sts/${pivot_lang}/data-final-merged"
+
+      mkdir -p `dirname $s3_output_datadir`
+      echo ${s3_output_dir} > $s3_output_datadir
 
       export paraphrase_arguments="$@"
 
@@ -94,6 +100,10 @@ implementation:
       filtering_sts_hparams="--filtering_metric ${filtering_metric} --filtering_threshold ${filtering_threshold}"
       make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true pivot_lang=${pivot_lang} nmt_model=${nmt} para_method=${paraphrasing_method} filtering_sts_hparams="${filtering_sts_hparams}" filter_paraphrase_${tgt_lang}
 
+      # Join paraphrase files with original data
+      # optionally join human eval set to train for fewshot experiments
+      make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true pivot_lang=${pivot_lang} nmt_model=${nmt} para_method=${paraphrasing_method} append_fewshot="{append_fewshot}" joing_para_data_${tgt_lang}
+
       aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${s3_datadir}translated/${nmt}/${tgt_lang}
 
     args: [
@@ -114,10 +124,12 @@ implementation:
       --paraphrasing_method, {inputValue: paraphrasing_method},
       --task_name, {inputValue: task_name},
       --s3_datadir, {inputValue: s3_datadir},
+      --s3_output_datadir, { outputPath: s3_output_datadir},
       --sts_batch_size, {inputValue: sts_batch_size},
       --sts_model, {inputValue: sts_model},
       --filtering_metric, {inputValue: filtering_metric},
       --filtering_threshold, {inputValue: filtering_threshold},
+      --append_fewshot, {inputValue: append_fewshot},
       --, {inputValue: additional_args}
     ]
 
