@@ -27,7 +27,7 @@ from kubernetes.client.models import (
 )
 
 from .common import *
-from .training import train_step
+from .training import train_step, train_step_4gpu
 
 
 def eval_spl_step(
@@ -168,6 +168,88 @@ def train_eval_spl(
 ):
 
     train_op = train_step(
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        model=model,
+        task_name=task_name,
+        s3_datadir=s3_datadir,
+        s3_bucket=s3_bucket,
+        s3_database_dir=s3_database_dir,
+        bootleg_model=bootleg_model,
+        image=image,
+        genienlp_version=genienlp_version,
+        bootleg_version=bootleg_version,
+        load_from=load_from,
+        train_languages=train_languages,
+        eval_languages=eval_languages,
+        dataset_subfolder=dataset_subfolder,
+        skip_tensorboard=skip_tensorboard,
+        train_iterations=train_iterations,
+        use_bootleg=use_bootleg,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+        additional_args=train_additional_args
+    )
+    
+    eval_op = eval_spl_step(
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        model=model,
+        task_name=task_name,
+        s3_datadir=s3_datadir,
+        image=image,
+        genienlp_version=genienlp_version,
+        genie_version=genie_version,
+        thingtalk_version=thingtalk_version,
+        workdir_repo=workdir_repo,
+        workdir_version=workdir_version,
+        pred_languages=pred_languages,
+        eval_set=eval_set,
+        annotated_set_name=annotated_set_name,
+        is_oracle=is_oracle,
+        s3_model_dir=train_op.outputs['s3_model_dir'],
+        additional_args=eval_additional_args
+    )
+
+
+@dsl.pipeline(
+    name='Train and eval SPL on 4 gpus',
+    description='Train and evaluate pipeline for SPL experiments'
+)
+def train_eval_spl_4gpus(
+        owner='mehrad',
+        project='spl',
+        experiment='',
+        model='',
+        task_name='almond_multilingual',
+        s3_datadir='',
+        s3_bucket='geniehai',
+        s3_database_dir='None',
+        image=default_image,
+        genienlp_version='',
+        genie_version='',
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo=GENIE_WORKDIR_REPO,
+        workdir_version=GENIE_WORKDIR_VERSION,
+        load_from='None',
+        train_languages='',
+        eval_languages='',
+        pred_languages='',
+        eval_set='',
+        dataset_subfolder='None',
+        annotated_set_name='annotated',
+        is_oracle='false',
+        skip_tensorboard='false',
+        train_iterations='',
+        use_bootleg='false',
+        bootleg_model='None',
+        bootleg_version='None',
+        s3_bootleg_prepped_data='None',
+        train_additional_args='--dimension 768 --transformer_hidden 768 --trainable_decoder_embeddings 50 --encoder_embeddings=xlm-roberta-base --decoder_embeddings= --seq2seq_encoder=Identity --rnn_layers 1 --transformer_heads 12 --transformer_layers 0 --rnn_zero_state=average --train_encoder_embeddings --transformer_lr_multiply 0.08 --max_to_keep 1 --almond_has_multiple_programs --train_batch_tokens 5000',
+        eval_additional_args='--evaluate valid --overwrite'
+):
+    train_op = train_step_4gpu(
         owner=owner,
         project=project,
         experiment=experiment,
