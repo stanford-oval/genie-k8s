@@ -36,7 +36,7 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image owner project experiment s3_bucket model_name_or_path input_splits train_output_per_example nmt pivot_lang do_alignment tgt_lang do_paraphrasing paraphrasing_method task_name s3_datadir sts_batch_size sts_model filtering_metric filtering_threshold train_fewshot" "$@"
+      parse_args "$0" "image owner project experiment s3_bucket model_name_or_path input_splits train_output_per_example nmt pivot_lang do_alignment tgt_lang do_paraphrasing paraphrasing_method task_name s3_datadir sts_batch_size sts_model filtering_metric filtering_threshold train_fewshot s3_output_datadir" "$@"
       shift $n
 
       . /opt/genie-toolkit/sync-repos.sh
