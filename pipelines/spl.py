@@ -672,6 +672,7 @@ def paraphrase_step(
         sts_model='',
         filtering_metric='',
         filtering_threshold='',
+        append_fewshot='',
         do_paraphrasing='true',
         paraphrasing_method='',
         image=default_image,
@@ -708,6 +709,7 @@ def paraphrase_step(
         sts_model=sts_model,
         filtering_metric=filtering_metric,
         filtering_threshold=filtering_threshold,
+        append_fewshot=append_fewshot,
         do_paraphrasing=do_paraphrasing,
         paraphrasing_method=paraphrasing_method,
         task_name=task_name,
@@ -733,7 +735,132 @@ def paraphrase_step(
 
 
 @dsl.pipeline(
-    name='Round-trip Paraphrasing',
+    name='Paraphrase + STS filter + train + eval',
+    description='Full multilingual paraphrase pipeline'
+)
+def multilingual_paraphrasing(
+        owner='mehrad',
+        project='spl',
+        experiment='',
+        s3_bucket='geniehai',
+        task_name='almond',
+        s3_datadir='',
+        s3_database_dir='None',
+        model_name_or_path='None',
+        model='',
+        bootleg_model='None',
+        load_from='None',
+        dataset_subfolder='None',
+        input_splits='train',
+        train_output_per_example='1',
+        nmt='marian',
+        pivot_lang='None',
+        do_alignment='true',
+        tgt_lang='',
+        sts_batch_size='',
+        sts_model='',
+        filtering_metric='',
+        filtering_threshold='',
+        append_fewshot='',
+        do_paraphrasing='true',
+        paraphrasing_method='',
+        image=default_image,
+        genienlp_version='',
+        genie_version='',
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo=GENIE_WORKDIR_REPO,
+        workdir_version=GENIE_WORKDIR_VERSION,
+        bootleg_version='None',
+        skip_tensorboard='false',
+        train_iterations='',
+        use_bootleg='false',
+        s3_bootleg_prepped_data='None',
+        annotated_set_name='annotated',
+        eval_set='',
+        is_oracle='false',
+        paraphrase_additional_args='',
+        train_additional_args='',
+        eval_additional_args=''
+):
+    paraphrase_op = paraphrase_step(
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        s3_bucket=s3_bucket,
+        task_name=task_name,
+        s3_datadir=s3_datadir,
+        model_name_or_path=model_name_or_path,
+        input_splits=input_splits,
+        train_output_per_example=train_output_per_example,
+        nmt=nmt,
+        pivot_lang=pivot_lang,
+        do_alignment=do_alignment,
+        tgt_lang=tgt_lang,
+        sts_batch_size=sts_batch_size,
+        sts_model=sts_model,
+        filtering_metric=filtering_metric,
+        filtering_threshold=filtering_threshold,
+        append_fewshot=append_fewshot,
+        do_paraphrasing=do_paraphrasing,
+        paraphrasing_method=paraphrasing_method,
+        image=image,
+        genienlp_version=genienlp_version,
+        genie_version=genie_version,
+        thingtalk_version=thingtalk_version,
+        workdir_repo=workdir_repo,
+        workdir_version=workdir_version,
+        additional_args=paraphrase_additional_args
+    )
+
+    train_op = train_step(
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        model=model,
+        task_name=task_name,
+        s3_datadir=paraphrase_op.outputs['s3_output_datadir'],
+        s3_bucket=s3_bucket,
+        s3_database_dir=s3_database_dir,
+        bootleg_model=bootleg_model,
+        image=image,
+        genienlp_version=genienlp_version,
+        bootleg_version=bootleg_version,
+        load_from=load_from,
+        train_languages=tgt_lang,
+        eval_languages=tgt_lang,
+        dataset_subfolder=dataset_subfolder,
+        skip_tensorboard=skip_tensorboard,
+        train_iterations=train_iterations,
+        use_bootleg=use_bootleg,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+        additional_args=train_additional_args
+    )
+
+    eval_op = eval_spl_step(
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        model=model,
+        task_name=task_name,
+        s3_datadir=s3_datadir,
+        image=image,
+        genienlp_version=genienlp_version,
+        genie_version=genie_version,
+        thingtalk_version=thingtalk_version,
+        workdir_repo=workdir_repo,
+        workdir_version=workdir_version,
+        pred_languages=tgt_lang,
+        eval_set=eval_set,
+        annotated_set_name=annotated_set_name,
+        is_oracle=is_oracle,
+        s3_model_dir=train_op.outputs['s3_model_dir'],
+        additional_args=eval_additional_args
+    )
+
+
+
+@dsl.pipeline(
+    name='Round-trip Paraphrasing + STS filtering',
     description='Use round-trip translation to generate paraphrases and use STS to filter them'
 )
 def round_trip_paraphrasing(
@@ -753,6 +880,7 @@ def round_trip_paraphrasing(
         sts_model='xlm-r-distilroberta-base-paraphrase-v1',
         filtering_metric='',
         filtering_threshold='',
+        append_fewshot='',
         image=default_image,
         genienlp_version='',
         genie_version='',
@@ -778,6 +906,7 @@ def round_trip_paraphrasing(
         sts_model=sts_model,
         filtering_metric=filtering_metric,
         filtering_threshold=filtering_threshold,
+        append_fewshot=append_fewshot,
         do_paraphrasing='true',
         paraphrasing_method='round_trip',
         image=image,
@@ -791,7 +920,7 @@ def round_trip_paraphrasing(
 
 
 @dsl.pipeline(
-    name='Masked Paraphrasing',
+    name='Masked Paraphrasing + STS filtering',
     description='Use denoisng models (e.g. BART family) to generate paraphrases and use STS to filter them'
 )
 def masked_paraphrasing(
@@ -811,6 +940,7 @@ def masked_paraphrasing(
         sts_model='xlm-r-distilroberta-base-paraphrase-v1',
         filtering_metric='',
         filtering_threshold='',
+        append_fewshot='',
         image=default_image,
         genienlp_version='',
         genie_version='',
@@ -837,6 +967,7 @@ def masked_paraphrasing(
         sts_model=sts_model,
         filtering_metric=filtering_metric,
         filtering_threshold=filtering_threshold,
+        append_fewshot=append_fewshot,
         do_paraphrasing='true',
         paraphrasing_method='masked',
         image=image,
