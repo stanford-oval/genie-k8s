@@ -51,7 +51,8 @@ implementation:
 
       cd workdir/${MAKEDIR}
 
-      s3_output_dir="${s3_datadir}translated/${nmt}/${tgt_lang}/sts/${pivot_lang}/data-final-merged`if ${train_fewshot} ; then echo "-fewshot" ; fi`"
+      s3_output_dir="${s3_datadir}translated/${nmt}/${tgt_lang}/sts/${pivot_lang}/s3-data-final-merged`if ${train_fewshot} ; then echo "-fewshot" ; fi`"
+      output_dir="${s3_datadir}translated/${nmt}/${tgt_lang}/sts/${pivot_lang}/data-final-merged`if ${train_fewshot} ; then echo "-fewshot" ; fi`"
 
       mkdir -p `dirname $s3_output_datadir`
       echo ${s3_output_dir} > $s3_output_datadir
@@ -103,7 +104,13 @@ implementation:
       # Join paraphrase files with original data
       make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true pivot_lang=${pivot_lang} nmt_model=${nmt} para_method=${paraphrasing_method} joing_para_data_${tgt_lang}
 
+      # sync local files
       aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${s3_datadir}translated/${nmt}/${tgt_lang}
+
+      # sync all original input splits to s3_output_dir that is passed to training step
+      aws s3 sync --no-progress ${experiment}/${nmt}/${tgt_lang}/final/ ${s3_output_dir}
+      # overwrite splits with new generated files
+      aws s3 sync --no-progress ${output_dir} ${s3_output_dir}
 
     args: [
       'cmd',
