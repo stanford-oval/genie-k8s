@@ -52,8 +52,6 @@ implementation:
 
       export TZ=America/Los_Angeles
 
-      ls -R
-
       for lang in "${PLS[@]}"; do
         mkdir -p $experiment/${eval_set}/${lang}
         if [[ "$task_name" == *"contextual"* || "$task_name" == *"dialog"* ]] ; then
