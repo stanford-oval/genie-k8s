@@ -40,10 +40,6 @@ RUN if id "genie-toolkit" &>/dev/null; then \
 		useradd -ms /bin/bash genie-toolkit ; \
 	fi
 
-ARG THINGTALK_VERSION=master
-# npm *really* does not like running as root, and will misbehave badly when
-# run as root, so we run it as a separate user
-
 USER genie-toolkit
 
 RUN if [ ! -d /opt/thingtalk/ ]; then \
@@ -63,6 +59,9 @@ RUN if [ -z "$(ls -A /opt/genie-toolkit/)" ]; then \
 		git clone https://github.com/stanford-oval/genie-toolkit /opt/genie-toolkit/; \
 	fi
 
+ARG THINGTALK_VERSION=master
+# npm *really* does not like running as root, and will misbehave badly when
+# run as root, so we run it as a separate user
 WORKDIR /opt/thingtalk/
 RUN git fetch
 RUN git checkout ${THINGTALK_VERSION}
