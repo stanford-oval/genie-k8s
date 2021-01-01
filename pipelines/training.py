@@ -139,7 +139,7 @@ def train_step(
     return train_op
 
 
-def train_step_4gpu(
+def train_step_4gpus(
         image,
         owner,
         project,

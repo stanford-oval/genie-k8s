@@ -27,7 +27,7 @@ from kubernetes.client.models import (
 )
 
 from .common import *
-from .training import train_step, train_step_4gpu
+from .training import train_step, train_step_4gpus
 
 
 def eval_spl_step(
@@ -249,7 +249,7 @@ def train_eval_spl_4gpus(
         train_additional_args='',
         eval_additional_args='--evaluate valid --overwrite'
 ):
-    train_op = train_step_4gpu(
+    train_op = train_step_4gpus(
         owner=owner,
         project=project,
         experiment=experiment,
@@ -734,6 +734,86 @@ def paraphrase_step(
     return paraphrase_op
 
 
+def paraphrase_step_4gpus(
+        owner='mehrad',
+        project='spl',
+        experiment='',
+        s3_bucket='geniehai',
+        task_name='almond',
+        s3_datadir='',
+        model_name_or_path='None',
+        input_splits='train',
+        train_output_per_example='1',
+        nmt='marian',
+        pivot_langs='None',
+        do_alignment='true',
+        tgt_lang='',
+        sts_batch_size='',
+        sts_model='',
+        filtering_metric='',
+        filtering_threshold='',
+        train_fewshot='false',
+        do_paraphrasing='true',
+        paraphrasing_method='',
+        image=default_image,
+        genienlp_version='',
+        genie_version='',
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo=GENIE_WORKDIR_REPO,
+        workdir_version=GENIE_WORKDIR_VERSION,
+        additional_args=''
+):
+    paraphrase_env = {
+        'GENIENLP_VERSION': genienlp_version,
+        'GENIE_VERSION': genie_version,
+        'THINGTALK_VERSION': thingtalk_version,
+        'WORKDIR_REPO': workdir_repo,
+        'WORKDIR_VERSION': workdir_version,
+    }
+    
+    paraphrase_num_gpus = 4
+    paraphrase_op = components.load_component_from_file('components/sts-paraphrase.yaml')(
+        image=image,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        s3_bucket=s3_bucket,
+        model_name_or_path=model_name_or_path,
+        input_splits=input_splits,
+        train_output_per_example=train_output_per_example,
+        nmt=nmt,
+        pivot_langs=pivot_langs,
+        do_alignment=do_alignment,
+        tgt_lang=tgt_lang,
+        sts_batch_size=sts_batch_size,
+        sts_model=sts_model,
+        filtering_metric=filtering_metric,
+        filtering_threshold=filtering_threshold,
+        train_fewshot=train_fewshot,
+        do_paraphrasing=do_paraphrasing,
+        paraphrasing_method=paraphrasing_method,
+        task_name=task_name,
+        s3_datadir=s3_datadir,
+        additional_args=additional_args)
+    (paraphrase_op.container
+     .set_memory_request('56Gi')
+     .set_memory_limit('56Gi')
+     .set_cpu_request('7.5')
+     .set_cpu_limit('7.5')
+     .set_gpu_limit(str(paraphrase_num_gpus))
+     .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
+     )
+    (add_env(add_ssh_volume(paraphrase_op), paraphrase_env)
+     .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+     .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2 * paraphrase_num_gpus}xlarge')
+     .add_volume(V1Volume(name='tensorboard',
+                          persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
+    
+    paraphrase_op.container.set_image_pull_policy('Always')
+    
+    return paraphrase_op
+
+
 @dsl.pipeline(
     name='Paraphrase + STS filter + train + eval',
     description='Full multilingual paraphrase pipeline'
@@ -974,6 +1054,67 @@ def masked_paraphrasing(
         workdir_version=workdir_version,
         additional_args=additional_args
     )
+
+
+
+@dsl.pipeline(
+    name='Masked Paraphrasing + STS filtering on 4 gpus',
+    description='Use denoisng models (e.g. BART family) to generate paraphrases and use STS to filter them'
+)
+def masked_paraphrasing_4gpus(
+        owner='mehrad',
+        project='spl',
+        experiment='',
+        s3_bucket='geniehai',
+        task_name='almond',
+        s3_datadir='',
+        model_name_or_path='facebook/mbart-large-cc25',
+        input_splits='train',
+        train_output_per_example='1',
+        nmt='marian',
+        do_alignment='true',
+        tgt_lang='',
+        sts_batch_size='250',
+        sts_model='xlm-r-distilroberta-base-paraphrase-v1',
+        filtering_metric='',
+        filtering_threshold='',
+        image=default_image,
+        genienlp_version='',
+        genie_version='',
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo=GENIE_WORKDIR_REPO,
+        workdir_version=GENIE_WORKDIR_VERSION,
+        additional_args=''
+):
+    paraphrase_step_4gpus(
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        s3_bucket=s3_bucket,
+        task_name=task_name,
+        s3_datadir=s3_datadir,
+        model_name_or_path=model_name_or_path,
+        input_splits=input_splits,
+        train_output_per_example=train_output_per_example,
+        nmt=nmt,
+        pivot_langs='masked',
+        do_alignment=do_alignment,
+        tgt_lang=tgt_lang,
+        sts_batch_size=sts_batch_size,
+        sts_model=sts_model,
+        filtering_metric=filtering_metric,
+        filtering_threshold=filtering_threshold,
+        do_paraphrasing='true',
+        paraphrasing_method='masked',
+        image=image,
+        genienlp_version=genienlp_version,
+        genie_version=genie_version,
+        thingtalk_version=thingtalk_version,
+        workdir_repo=workdir_repo,
+        workdir_version=workdir_version,
+        additional_args=additional_args
+    )
+
 
 
 @dsl.pipeline(
