@@ -163,7 +163,7 @@ def train_eval_spl(
         bootleg_model='None',
         bootleg_version='None',
         s3_bootleg_prepped_data='None',
-        train_additional_args='--dimension 768 --transformer_hidden 768 --trainable_decoder_embeddings 50 --encoder_embeddings=xlm-roberta-base --decoder_embeddings= --seq2seq_encoder=Identity --rnn_layers 1 --transformer_heads 12 --transformer_layers 0 --rnn_zero_state=average --train_encoder_embeddings --transformer_lr_multiply 0.08 --max_to_keep 1 --almond_has_multiple_programs --train_batch_tokens 5000',
+        train_additional_args='',
         eval_additional_args='--evaluate valid --overwrite'
 ):
 
@@ -246,7 +246,7 @@ def train_eval_spl_4gpus(
         bootleg_model='None',
         bootleg_version='None',
         s3_bootleg_prepped_data='None',
-        train_additional_args='--dimension 768 --transformer_hidden 768 --trainable_decoder_embeddings 50 --encoder_embeddings=xlm-roberta-base --decoder_embeddings= --seq2seq_encoder=Identity --rnn_layers 1 --transformer_heads 12 --transformer_layers 0 --rnn_zero_state=average --train_encoder_embeddings --transformer_lr_multiply 0.08 --max_to_keep 1 --almond_has_multiple_programs --train_batch_tokens 5000',
+        train_additional_args='',
         eval_additional_args='--evaluate valid --overwrite'
 ):
     train_op = train_step_4gpu(
@@ -517,7 +517,7 @@ def all_translation_steps(
         thingtalk_version=THINGTALK_VERSION,
         workdir_repo=GENIE_WORKDIR_REPO,
         workdir_version=GENIE_WORKDIR_VERSION,
-        additional_args='--temperature 0.4 --repetition_penalty 1.0 --num_samples 1 --batch_size 512  --skip_heuristics --att_pooling mean --task translate'
+        additional_args=''
 
 ):
     if prepare_for_translation:
@@ -625,7 +625,7 @@ def translate(
         thingtalk_version=THINGTALK_VERSION,
         workdir_repo=GENIE_WORKDIR_REPO,
         workdir_version=GENIE_WORKDIR_VERSION,
-        additional_args='--temperature 0.4 --repetition_penalty 1.0 --num_samples 1 --batch_size 512  --skip_heuristics --att_pooling mean --task translate --output_attentions'
+        additional_args=''
 ):
     all_translation_steps(
         owner=owner,
@@ -886,7 +886,7 @@ def round_trip_paraphrasing(
         thingtalk_version=THINGTALK_VERSION,
         workdir_repo=GENIE_WORKDIR_REPO,
         workdir_version=GENIE_WORKDIR_VERSION,
-        additional_args='--temperature 0.4 --repetition_penalty 1.0 --num_samples 1 --batch_size 512  --skip_heuristics --att_pooling mean --id_column 0  --input_column 1 --gold_column 1 --thingtalk_column 2 --output_example_ids_too --task translate --output_attentions'
+        additional_args=''
 ):
     paraphrase_step(
         owner=owner,
@@ -944,7 +944,7 @@ def masked_paraphrasing(
         thingtalk_version=THINGTALK_VERSION,
         workdir_repo=GENIE_WORKDIR_REPO,
         workdir_version=GENIE_WORKDIR_VERSION,
-        additional_args='--infill_text --num_text_spans 1 --temperature 0.4 --repetition_penalty 1.0 --num_samples 1 --batch_size 512  --skip_heuristics --att_pooling mean --id_column 0  --input_column 1 --gold_column 1 --thingtalk_column 2 --output_example_ids_too --task paraphrase --output_attentions'
+        additional_args=''
 ):
     paraphrase_step(
         owner=owner,
@@ -1005,7 +1005,7 @@ def sts_filtering(
         thingtalk_version=THINGTALK_VERSION,
         workdir_repo=GENIE_WORKDIR_REPO,
         workdir_version=GENIE_WORKDIR_VERSION,
-        additional_args='--infill_text --num_text_spans 1 --temperature 0.4 --repetition_penalty 1.0 --num_samples 1 --batch_size 512  --skip_heuristics --att_pooling mean --id_column 0  --input_column 1 --gold_column 1 --thingtalk_column 2 --output_example_ids_too --task paraphrase --output_attentions'
+        additional_args=''
 ):
     paraphrase_step(
         owner=owner,
