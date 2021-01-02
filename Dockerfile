@@ -70,6 +70,7 @@ RUN if test -f yarn.lock ; then \
    else \
    npm install ; \
    fi
+
 USER root
 # normally, this would be done by npm link, but when running as root, npm
 # link will mess up everything because it will rerun "npm install", which
@@ -100,7 +101,6 @@ RUN if test -f yarn.lock ; then \
     yarn link thingtalk ; \
     yarn link ; \
   else \
-    npm link thingtalk ; \
    rm -f /usr/local/bin/genie ; \
    rm -f /usr/local/lib/node_modules/genie-toolkit ; \
    ln -s /opt/genie-toolkit /usr/local/lib/node_modules/genie-toolkit ; \
