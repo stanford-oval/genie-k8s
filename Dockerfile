@@ -80,8 +80,8 @@ RUN if test -f yarn.lock ; then \
    rm -f /usr/local/lib/node_modules/thingtalk ; \
    ln -s /opt/thingtalk /usr/local/lib/node_modules/thingtalk ; \
  fi
-USER genie-toolkit
 
+USER genie-toolkit
 ARG GENIE_VERSION=master
 WORKDIR /opt/genie-toolkit/
 RUN git fetch
@@ -91,6 +91,7 @@ RUN if test -f yarn.lock ; then \
  else \
    npm install ; \
  fi
+
 USER root
 # normally, this would be done by npm link, but when running as root, npm
 # link will mess up everything because it will rerun "npm install", which
@@ -99,12 +100,14 @@ RUN if test -f yarn.lock ; then \
     yarn link thingtalk ; \
     yarn link ; \
   else \
-   npm link thingtalk ; \
+    npm link thingtalk ; \
+   rm -f /usr/local/bin/genie ; \
    rm -f /usr/local/lib/node_modules/genie-toolkit ; \
    ln -s /opt/genie-toolkit /usr/local/lib/node_modules/genie-toolkit ; \
    ln -s /opt/genie-toolkit/dist/tool/genie.js /usr/local/bin/genie ; \
    chmod +x /usr/local/bin/genie ; \
  fi
+
 
 USER genie-toolkit
 COPY lib.sh sync-repos.sh ./
