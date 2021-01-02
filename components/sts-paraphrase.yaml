@@ -76,14 +76,14 @@ implementation:
                 all_names="${input_splits_array[*]}" experiment=${experiment} train_output_per_example=${train_output_per_example} masked_paraphrase_marian_unquoted_${tgt_lang}
           ;;
           marian+round_trip)
-            for pivot_lang in $pivot_langs_array ; do
+            for pivot_lang in ${pivot_langs_array[*]} ; do
               make -B -j2 geniedir=/opt/genie-toolkit \
                 default_translation_hparams="${paraphrase_arguments} --replace_qp --force_replace_qp" \
                 all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=false pivot_lang=$pivot_lang paraphrase_marian_unquoted_${tgt_lang}
             done
           ;;
           gt+round_trip)
-            for pivot_lang in $pivot_langs_array ; do
+            for pivot_lang in ${pivot_langs_array[*]} ; do
               make -B -j2 geniedir=/opt/genie-toolkit \
                 default_translation_hparams="${paraphrase_arguments} --replace_qp --force_replace_qp" \
                 all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=false pivot_lang=$pivot_lang paraphrase_gt_quoted_${tgt_lang}
@@ -98,7 +98,7 @@ implementation:
         aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${s3_datadir}translated/${nmt}/${tgt_lang}
       fi
 
-      for pivot_lang in $pivot_langs_array ; do
+      for pivot_lang in ${pivot_langs_array[*]} ; do
 
         # prepare paraphrased files
         paraphrase_sts_hparams="--batch_size ${sts_batch_size} --model_name ${sts_model}"
