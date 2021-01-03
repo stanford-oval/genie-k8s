@@ -19,32 +19,39 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 # OR OTHER DEALINGS IN THE SOFTWARE.
 
+from kfp import dsl
 from kfp import components
 from kubernetes.client import V1Toleration
+from kubernetes.client.models import (
+    V1VolumeMount,
+    V1Volume,
+    V1PersistentVolumeClaimVolumeSource,
+    V1SecretVolumeSource
+)
 
 from .common import *
 
 
 def paraphrase_generation_step(
-        image,
-        owner,
-        project,
-        experiment,
-        dataset,
-        s3_input_datadir,
-        train_task_name,
-        paraphrasing_model,
-        keep_original_duplicates,
-        ignore_context,
-        genienlp_version,
-        paraphrase_subfolder,
-        additional_args
+    image,
+    owner,
+    project,
+    experiment,
+    dataset,
+    s3_input_datadir,
+    train_task_name,
+    paraphrasing_model,
+    keep_original_duplicates,
+    ignore_context,
+    genienlp_version,
+    paraphrase_subfolder,
+    additional_args
 ):
     paraphrase_env = {
         'GENIENLP_VERSION': genienlp_version,
     }
-    
-    paraphrase_num_gpus = 4
+
+    paraphrase_num_gpus=4
     paraphrase_op = components.load_component_from_file('components/generate-paraphrase.yaml')(
         image=image,
         s3_bucket='geniehai',
@@ -60,41 +67,41 @@ def paraphrase_generation_step(
         paraphrase_subfolder=paraphrase_subfolder,
         additional_args=additional_args)
     (paraphrase_op.container
-     .set_memory_request('150G')
-     .set_memory_limit('150G')
-     .set_cpu_request('16')
-     .set_cpu_limit('16')
-     # not supported yet in the version of kfp we're using
-     # .set_ephemeral_storage_request('75G')
-     # .set_ephemeral_storage_limit('75G')
-     .set_gpu_limit(str(paraphrase_num_gpus))
-     )
+        .set_memory_request('150G')
+        .set_memory_limit('150G')
+        .set_cpu_request('16')
+        .set_cpu_limit('16')
+        # not supported yet in the version of kfp we're using
+        #.set_ephemeral_storage_request('75G')
+        #.set_ephemeral_storage_limit('75G')
+        .set_gpu_limit(str(paraphrase_num_gpus))
+    )
     (add_env(add_ssh_volume(paraphrase_op), paraphrase_env)
-     .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-     .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.12xlarge'))
-    
+        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.12xlarge'))
+
     return paraphrase_op
 
 
 def paraphrase_filtering_step(
-        image,
-        owner,
-        project,
-        experiment,
-        dataset,
-        s3_input_datadir,
-        train_task_name,
-        filtering_model,
-        filtering_batch_size,
-        genienlp_version,
-        paraphrase_subfolder,
-        additional_args
+    image,
+    owner,
+    project,
+    experiment,
+    dataset,
+    s3_input_datadir,
+    train_task_name,
+    filtering_model,
+    filtering_batch_size,
+    genienlp_version,
+    paraphrase_subfolder,
+    additional_args
 ):
     paraphrase_env = {
         'GENIENLP_VERSION': genienlp_version,
     }
-    
-    paraphrase_num_gpus = 4
+
+    paraphrase_num_gpus=4
     paraphrase_op = components.load_component_from_file('components/filter-paraphrase.yaml')(
         image=image,
         s3_bucket='geniehai',
@@ -109,17 +116,17 @@ def paraphrase_filtering_step(
         paraphrase_subfolder=paraphrase_subfolder,
         additional_args=additional_args)
     (paraphrase_op.container
-     .set_memory_request('150G')
-     .set_memory_limit('150G')
-     .set_cpu_request('16')
-     .set_cpu_limit('16')
-     # not supported yet in the version of kfp we're using
-     # .set_ephemeral_storage_request('75G')
-     # .set_ephemeral_storage_limit('75G')
-     .set_gpu_limit(str(paraphrase_num_gpus))
-     )
+        .set_memory_request('150G')
+        .set_memory_limit('150G')
+        .set_cpu_request('16')
+        .set_cpu_limit('16')
+        # not supported yet in the version of kfp we're using
+        #.set_ephemeral_storage_request('75G')
+        #.set_ephemeral_storage_limit('75G')
+        .set_gpu_limit(str(paraphrase_num_gpus))
+    )
     (add_env(add_ssh_volume(paraphrase_op), paraphrase_env)
-     .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-     .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.12xlarge'))
-    
+        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.12xlarge'))
+
     return paraphrase_op

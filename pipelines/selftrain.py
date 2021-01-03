@@ -19,30 +19,37 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 # OR OTHER DEALINGS IN THE SOFTWARE.
 
-from kfp import components
 from kfp import dsl
+from kfp import components
 from kubernetes.client import V1Toleration
+from kubernetes.client.models import (
+    V1VolumeMount,
+    V1Volume,
+    V1PersistentVolumeClaimVolumeSource,
+    V1SecretVolumeSource
+)
 
 from .common import *
+
 from .training import generate_dataset_step, paraphrase_fewshot_step, \
     train_step, eval_step
 
 
 def auto_annotate_step(
-        image,
-        owner,
-        project,
-        experiment,
-        dataset,
-        user_model,
-        agent_model,
-        genienlp_version,
-        genie_version,
-        thingtalk_version,
-        workdir_repo,
-        workdir_version,
-        thingpedia_developer_key,
-        additional_args
+    image,
+    owner,
+    project,
+    experiment,
+    dataset,
+    user_model,
+    agent_model,
+    genienlp_version,
+    genie_version,
+    thingtalk_version,
+    workdir_repo,
+    workdir_version,
+    thingpedia_developer_key,
+    additional_args
 ):
     auto_annotate_env = {
         'GENIENLP_VERSION': genienlp_version,
@@ -53,26 +60,26 @@ def auto_annotate_step(
         'THINGPEDIA_DEVELOPER_KEY': thingpedia_developer_key,
     }
     auto_annotate_op = components.load_component_from_file('components/auto-annotate-selftrain.yaml')(
-        image=image,
-        s3_bucket='geniehai',
-        owner=owner,
-        project=project,
-        experiment=experiment,
-        dataset=dataset,
-        user_model=user_model,
-        agent_model=agent_model,
-        additional_args=additional_args)
+            image=image,
+            s3_bucket='geniehai',
+            owner=owner,
+            project=project,
+            experiment=experiment,
+            dataset=dataset,
+            user_model=user_model,
+            agent_model=agent_model,
+            additional_args=additional_args)
     (auto_annotate_op.container
-     .set_memory_limit('12Gi')
-     .set_memory_request('12Gi')
-     .set_cpu_limit('7.5')
-     .set_cpu_request('7.5')
-     )
-    
+        .set_memory_limit('12Gi')
+        .set_memory_request('12Gi')
+        .set_cpu_limit('7.5')
+        .set_cpu_request('7.5')
+    )
+
     (add_env(add_ssh_volume(auto_annotate_op), auto_annotate_env)
-     .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-     .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.2xlarge'))
-    
+        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.2xlarge'))
+
     return auto_annotate_op
 
 
@@ -81,57 +88,57 @@ def auto_annotate_step(
     description='Runs the whole training pipeline, including two parallel autoparaphrasing and finetuning (for user and agent), auto annotation, and selftrain finetuning'
 )
 def selftrain_pipeline(
-        owner,
-        project,
-        experiment,
-        model,
-        dataset,
-        image=default_image,
-        genienlp_version=GENIENLP_VERSION,
-        genie_version=GENIE_VERSION,
-        thingtalk_version=THINGTALK_VERSION,
-        workdir_repo=WORKDIR_REPO,
-        workdir_version=WORKDIR_VERSION,
-        thingpedia_developer_key=default_developer_key,
-        s3_bucket='geniehai',
-        s3_database_dir='',
-        bootleg_model='',
-        bootleg_version='',
-        train_languages='',
-        eval_languages='',
-        s3_bootleg_prepped_data='',
-        generate_dataset_parallel='6',
-        generate_dataset_additional_args='',
-        train_additional_args='',
-        train_iterations='80000',
-        fewshot_train_iterations='20000',
-        selftrain_train_iterations='20000',
-        filtering_train_iterations='10000',
-        filtering_batch_size='4000',
-        ignore_context='true',
-        keep_original_duplicates='false',
-        paraphrasing_model=PARAPHRASING_MODEL,
-        paraphrase_additional_args='',
-        filtering_additional_args='',
-        auto_annotate_additional_args='',
-        eval_set='dev',
-        eval_additional_args=''
+    owner,
+    project,
+    experiment,
+    model,
+    dataset,
+    image=default_image,
+    genienlp_version=GENIENLP_VERSION,
+    genie_version=GENIE_VERSION,
+    thingtalk_version=THINGTALK_VERSION,
+    workdir_repo=WORKDIR_REPO,
+    workdir_version=WORKDIR_VERSION,
+    thingpedia_developer_key=default_developer_key,
+    s3_bucket='geniehai',
+    s3_database_dir='',
+    bootleg_model='',
+    bootleg_version='',
+    train_languages='',
+    eval_languages='',
+    s3_bootleg_prepped_data='',
+    generate_dataset_parallel='6',
+    generate_dataset_additional_args='',
+    train_additional_args='',
+    train_iterations='80000',
+    fewshot_train_iterations='20000',
+    selftrain_train_iterations='20000',
+    filtering_train_iterations='10000',
+    filtering_batch_size='4000',
+    ignore_context='true',
+    keep_original_duplicates='false',
+    paraphrasing_model=PARAPHRASING_MODEL,
+    paraphrase_additional_args='',
+    filtering_additional_args='',
+    auto_annotate_additional_args='',
+    eval_set='dev',
+    eval_additional_args=''
 ):
     # first, generate the dataset
     generate_dataset_op = generate_dataset_step(image=image,
-                                                owner=owner,
-                                                project=project,
-                                                experiment=experiment,
-                                                dataset=dataset,
-                                                parallel=generate_dataset_parallel,
-                                                genie_version=genie_version,
-                                                thingtalk_version=thingtalk_version,
-                                                workdir_repo=workdir_repo,
-                                                workdir_version=workdir_version,
-                                                thingpedia_developer_key=thingpedia_developer_key,
-                                                additional_args=generate_dataset_additional_args)
+                                                    owner=owner,
+                                                    project=project,
+                                                    experiment=experiment,
+                                                    dataset=dataset,
+                                                    parallel=generate_dataset_parallel,
+                                                    genie_version=genie_version,
+                                                    thingtalk_version=thingtalk_version,
+                                                    workdir_repo=workdir_repo,
+                                                    workdir_version=workdir_version,
+                                                    thingpedia_developer_key=thingpedia_developer_key,
+                                                    additional_args=generate_dataset_additional_args)
     initial_datadir = generate_dataset_op.outputs['s3_datadir']
-    
+
     # autoparaphrase and few-shot finetune the user model
     user_gen_datadir, user_model = paraphrase_fewshot_step(
         do_paraphrase=True,
@@ -167,7 +174,7 @@ def selftrain_pipeline(
         paraphrase_additional_args=paraphrase_additional_args,
         filtering_additional_args=filtering_additional_args,
     )
-    
+
     # autoparaphrase and few-shot finetune the agent model
     agent_gen_datadir, agent_model = paraphrase_fewshot_step(
         do_paraphrase=True,
@@ -203,7 +210,7 @@ def selftrain_pipeline(
         paraphrase_additional_args=paraphrase_additional_args,
         filtering_additional_args=filtering_additional_args,
     )
-    
+
     auto_annotate_op = auto_annotate_step(image=image,
                                           owner=owner,
                                           project=project,
@@ -219,7 +226,7 @@ def selftrain_pipeline(
                                           thingpedia_developer_key=thingpedia_developer_key,
                                           additional_args=auto_annotate_additional_args)
     selftrain_datadir = auto_annotate_op.outputs['s3_datadir']
-    
+
     train_op = train_step(
             owner=owner,
             project=project,
@@ -243,7 +250,7 @@ def selftrain_pipeline(
             additional_args=train_additional_args
             )
     eval_model = train_op.outputs['s3_model_dir']
-    
+
     eval_op = eval_step(image=image,
                         owner=owner,
                         project=project,
@@ -265,50 +272,50 @@ def selftrain_pipeline(
     description='Runs the whole training pipeline, including two parallel finetuning (for user and agent), auto annotation, and selftrain finetuning'
 )
 def selftrain_nopara_pipeline(
-        owner,
-        project,
-        experiment,
-        model,
-        dataset,
-        image=default_image,
-        genienlp_version=GENIENLP_VERSION,
-        genie_version=GENIE_VERSION,
-        thingtalk_version=THINGTALK_VERSION,
-        workdir_repo=WORKDIR_REPO,
-        workdir_version=WORKDIR_VERSION,
-        thingpedia_developer_key=default_developer_key,
-        s3_bucket='geniehai',
-        s3_database_dir='',
-        bootleg_model='',
-        bootleg_version='',
-        train_languages='',
-        eval_languages='',
-        s3_bootleg_prepped_data='',
-        generate_dataset_parallel='6',
-        generate_dataset_additional_args='',
-        train_additional_args='',
-        train_iterations='80000',
-        fewshot_train_iterations='20000',
-        selftrain_train_iterations='20000',
-        auto_annotate_additional_args='',
-        eval_set='dev',
-        eval_additional_args=''
+    owner,
+    project,
+    experiment,
+    model,
+    dataset,
+    image=default_image,
+    genienlp_version=GENIENLP_VERSION,
+    genie_version=GENIE_VERSION,
+    thingtalk_version=THINGTALK_VERSION,
+    workdir_repo=WORKDIR_REPO,
+    workdir_version=WORKDIR_VERSION,
+    thingpedia_developer_key=default_developer_key,
+    s3_bucket='geniehai',
+    s3_database_dir='',
+    bootleg_model='',
+    bootleg_version='',
+    train_languages='',
+    eval_languages='',
+    s3_bootleg_prepped_data='',
+    generate_dataset_parallel='6',
+    generate_dataset_additional_args='',
+    train_additional_args='',
+    train_iterations='80000',
+    fewshot_train_iterations='20000',
+    selftrain_train_iterations='20000',
+    auto_annotate_additional_args='',
+    eval_set='dev',
+    eval_additional_args=''
 ):
     # first, generate the dataset
     generate_dataset_op = generate_dataset_step(image=image,
-                                                owner=owner,
-                                                project=project,
-                                                experiment=experiment,
-                                                dataset=dataset,
-                                                parallel=generate_dataset_parallel,
-                                                genie_version=genie_version,
-                                                thingtalk_version=thingtalk_version,
-                                                workdir_repo=workdir_repo,
-                                                workdir_version=workdir_version,
-                                                thingpedia_developer_key=thingpedia_developer_key,
-                                                additional_args=generate_dataset_additional_args)
+                                                    owner=owner,
+                                                    project=project,
+                                                    experiment=experiment,
+                                                    dataset=dataset,
+                                                    parallel=generate_dataset_parallel,
+                                                    genie_version=genie_version,
+                                                    thingtalk_version=thingtalk_version,
+                                                    workdir_repo=workdir_repo,
+                                                    workdir_version=workdir_version,
+                                                    thingpedia_developer_key=thingpedia_developer_key,
+                                                    additional_args=generate_dataset_additional_args)
     initial_datadir = generate_dataset_op.outputs['s3_datadir']
-    
+
     # autoparaphrase and few-shot finetune the user model
     user_gen_datadir, user_model = paraphrase_fewshot_step(
         do_paraphrase=False,
@@ -344,7 +351,7 @@ def selftrain_nopara_pipeline(
         paraphrase_additional_args='',
         filtering_additional_args='',
     )
-    
+
     # autoparaphrase and few-shot finetune the agent model
     agent_gen_datadir, agent_model = paraphrase_fewshot_step(
         do_paraphrase=False,
@@ -380,7 +387,7 @@ def selftrain_nopara_pipeline(
         paraphrase_additional_args='',
         filtering_additional_args='',
     )
-    
+
     auto_annotate_op = auto_annotate_step(image=image,
                                           owner=owner,
                                           project=project,
@@ -396,7 +403,7 @@ def selftrain_nopara_pipeline(
                                           thingpedia_developer_key=thingpedia_developer_key,
                                           additional_args=auto_annotate_additional_args)
     selftrain_datadir = auto_annotate_op.outputs['s3_datadir']
-    
+
     train_op = train_step(
             owner=owner,
             project=project,
@@ -420,7 +427,7 @@ def selftrain_nopara_pipeline(
             additional_args=train_additional_args,
     )
     eval_model = train_op.outputs['s3_model_dir']
-    
+
     eval_op = eval_step(image=image,
                         owner=owner,
                         project=project,
