@@ -34,36 +34,17 @@ RUN if [ ${ADD_APEX} == true ]; then \
 	fi
 
 # add user genie-toolkit
-RUN if id "genie-toolkit" &>/dev/null; then \
-		echo "genie-toolkit user already exists" ; \
-	else \
-		useradd -ms /bin/bash genie-toolkit ; \
-	fi
+RUN useradd -ms /bin/bash genie-toolkit
 
-USER genie-toolkit
-
-RUN if [ ! -d /opt/thingtalk/ ]; then \
-		mkdir /opt/thingtalk/ ; \
-	fi
-RUN chown genie-toolkit:genie-toolkit /opt/thingtalk
-RUN if [ -z "$(ls -A /opt/thingtalk/)" ]; then \
-		git clone https://github.com/stanford-oval/thingtalk /opt/thingtalk/; \
-	fi
-
-
-RUN if [ ! -d /opt/genie-toolkit/ ]; then \
-		mkdir /opt/genie-toolkit/ ; \
-	fi
-RUN chown genie-toolkit:genie-toolkit /opt/genie-toolkit
-RUN if [ -z "$(ls -A /opt/genie-toolkit/)" ]; then \
-		git clone https://github.com/stanford-oval/genie-toolkit /opt/genie-toolkit/; \
-	fi
+RUN mkdir /opt/thingtalk/ && chown genie-toolkit:genie-toolkit /opt/thingtalk
+RUN mkdir /opt/genie-toolkit/ && chown genie-toolkit:genie-toolkit /opt/genie-toolkit
 
 ARG THINGTALK_VERSION=master
 # npm *really* does not like running as root, and will misbehave badly when
 # run as root, so we run it as a separate user
+USER genie-toolkit
+RUN git clone https://github.com/stanford-oval/thingtalk /opt/thingtalk/
 WORKDIR /opt/thingtalk/
-RUN git fetch
 RUN git checkout ${THINGTALK_VERSION}
 RUN if test -f yarn.lock ; then \
    yarn install  ; \
@@ -82,10 +63,10 @@ RUN if test -f yarn.lock ; then \
    ln -s /opt/thingtalk /usr/local/lib/node_modules/thingtalk ; \
  fi
 
-USER genie-toolkit
 ARG GENIE_VERSION=master
+USER genie-toolkit
+RUN git clone https://github.com/stanford-oval/genie-toolkit /opt/genie-toolkit/
 WORKDIR /opt/genie-toolkit/
-RUN git fetch
 RUN git checkout ${GENIE_VERSION}
 RUN if test -f yarn.lock ; then \
    yarn install ; \
