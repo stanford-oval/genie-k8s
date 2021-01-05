@@ -44,7 +44,7 @@ implementation:
       mkdir -p "$modeldir"
 
       if test "{s3_database_dir}" != None ; then
-        aws s3 sync --no-progress ${s3_database_dir} ./database/ --exclude '*' --include '*.json' --include "*${bootleg_model}/*" --include '*emb_data*' --include '*entity_db*'
+        aws s3 sync --no-progress ${s3_database_dir} ./database/ --exclude '*' --include "*${bootleg_model}/*" --include '*emb_data*' --include '*wiki_entity_data*'
       fi
 
       mkdir -p cache
@@ -57,14 +57,14 @@ implementation:
         ;;
 
         *)
-          aws s3 sync --no-progress --exclude "synthetic*.txt" ${s3_datadir} dataset/almond
+          aws s3 sync --no-progress --exclude "*/*" --exclude "synthetic*.txt" ${s3_datadir} dataset/almond
         ;;
       esac
 
       mkdir -p "/shared/tensorboard/${project}/${experiment}/${owner}/${model}"
      
       genienlp bootleg-dump-features \
-          --data "$modeldir/dataset" \
+          --data "dataset" \
           --save "$modeldir" \
           --cache "$modeldir/cache" \
           --train_tasks ${task_name} \
@@ -81,7 +81,7 @@ implementation:
       rm -fr "$modeldir/cache"
       rm -fr "$modeldir/dataset"
 
-      S3_BOOTLEG_PREPPED_DATA=${s3_datadir}bootleg/prepped_files/
+      S3_BOOTLEG_PREPPED_DATA=${s3_datadir}bootleg/${bootleg_model}/prepped_files/
 
       aws s3 sync --no-progress results_temp ${S3_BOOTLEG_PREPPED_DATA}
             

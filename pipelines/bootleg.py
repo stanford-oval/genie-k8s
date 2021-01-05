@@ -19,14 +19,12 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 # OR OTHER DEALINGS IN THE SOFTWARE.
 
-from kfp import dsl
 from kfp import components
+from kfp import dsl
 from kubernetes.client import V1Toleration
 from kubernetes.client.models import (
-    V1VolumeMount,
-    V1Volume,
     V1PersistentVolumeClaimVolumeSource,
-    V1SecretVolumeSource
+    V1EmptyDirVolumeSource
 )
 
 from .common import *
@@ -85,11 +83,14 @@ def bootleg(
      .set_cpu_limit('7.5')
      .set_gpu_limit(str(bootleg_num_gpus))
      .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
+     .add_volume_mount(V1VolumeMount(name='shm', mount_path='/dev/shm'))
      )
     (add_env(add_ssh_volume(bootleg_op), bootleg_env)
      .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
      .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2 * bootleg_num_gpus}xlarge')
      .add_volume(V1Volume(name='tensorboard',
-                          persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
+                          persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf')))
+    .add_volume(V1Volume(name='shm', empty_dir=V1EmptyDirVolumeSource(medium='Memory')))
+     )
     
     return bootleg_op

@@ -1,9 +1,30 @@
+#
+# Copyright 2020 The Board of Trustees of the Leland Stanford Junior University
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+# OR OTHER DEALINGS IN THE SOFTWARE.
+
 import kfp
 import os
 import argparse
 
 from utils import list_pipelines, list_pipeline_versions, list_experiments, prepare_unknown_args
-from pipelines.common import default_image, GENIE_VERSION, GENIENLP_VERSION, WORKDIR_REPO, WORKDIR_VERSION, THINGTALK_VERSION, BOOTLEG_VERSION
+from pipelines.common import default_image
 
 
 parser = argparse.ArgumentParser()
@@ -12,12 +33,12 @@ parser.add_argument('--owner', type=str)
 parser.add_argument('--project', type=str)
 parser.add_argument('--experiment', type=str)
 parser.add_argument('--image', type=str, default=default_image)
-parser.add_argument('--genienlp_version', type=str, default=GENIENLP_VERSION)
+parser.add_argument('--genienlp_version', type=str)
 parser.add_argument('--bootleg_version', type=str)
-parser.add_argument('--genie_version', type=str, default=GENIE_VERSION)
-parser.add_argument('--thingtalk_version', type=str, default=THINGTALK_VERSION)
-parser.add_argument('--workdir_repo', type=str, default=WORKDIR_REPO)
-parser.add_argument('--workdir_version', type=str, default=WORKDIR_VERSION)
+parser.add_argument('--genie_version', type=str)
+parser.add_argument('--thingtalk_version', type=str)
+parser.add_argument('--workdir_repo', type=str)
+parser.add_argument('--workdir_version', type=str)
 parser.add_argument('--model', type=str)
 parser.add_argument('--s3_datadir', type=str)
 

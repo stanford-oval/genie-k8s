@@ -1,11 +1,13 @@
 set -ex
 
+pip3 install -U pip
+
 cd /opt/genienlp/
 GENIENLP_HEAD=`git rev-parse HEAD`
 if [ -n "${GENIENLP_VERSION}" ] && [ "${GENIENLP_VERSION}" != "${GENIENLP_HEAD}" ]; then
   git fetch
   git checkout ${GENIENLP_VERSION}
-  pip3 install --upgrade --use-feature=2020-resolver -e .
+  pip3 install -e .
 fi
 
 if [ -d /opt/bootleg/ ] ; then
@@ -14,7 +16,7 @@ if [ -d /opt/bootleg/ ] ; then
   if [ -n "${BOOTLEG_VERSION}" ] && [ "${BOOTLEG_VERSION}" != "${BOOTLEG_HEAD}" ]; then
     git fetch
     git checkout ${BOOTLEG_VERSION}
-    pip3 install --use-feature=2020-resolver -r requirements.txt && pip3 install --use-feature=2020-resolver -e .
+    pip3 install -r requirements.txt && pip3 install -e .
   fi
 fi
 
