@@ -17,7 +17,6 @@ inputs:
   - {name: prepare_for_translation, description: ''}
   - {name: do_translation, description: ''}
   - {name: post_process_translation, description: ''}
-  - {name: task_name, description: ''}
   - {name: s3_datadir, description: ''}
   - {name: additional_args, description: ''}
 outputs:
@@ -32,7 +31,7 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image owner project experiment s3_bucket model_name_or_path input_splits train_output_per_example nmt do_alignment src_lang tgt_lang prepare_for_translation do_translation post_process_translation task_name s3_datadir" "$@"
+      parse_args "$0" "image owner project experiment s3_bucket model_name_or_path input_splits train_output_per_example nmt do_alignment src_lang tgt_lang prepare_for_translation do_translation post_process_translation s3_datadir" "$@"
       shift $n
 
       . /opt/genie-toolkit/sync-repos.sh
@@ -121,7 +120,6 @@ implementation:
       --prepare_for_translation, {inputValue: prepare_for_translation},
       --do_translation, {inputValue: do_translation},
       --post_process_translation, {inputValue: post_process_translation},
-      --task_name, {inputValue: task_name},
       --s3_datadir, {inputValue: s3_datadir},
       --, {inputValue: additional_args}
     ]

@@ -16,7 +16,6 @@ inputs:
   - {name: tgt_lang, description: ''}
   - {name: do_paraphrasing, description: ''}
   - {name: paraphrasing_method, description: ''}
-  - {name: task_name, description: ''}
   - {name: s3_datadir, description: ''}
   - {name: sts_batch_size, description: ''}
   - {name: sts_model, description: ''}
@@ -36,7 +35,7 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image owner project experiment s3_bucket model_name_or_path input_splits train_output_per_example nmt pivot_langs do_alignment tgt_lang do_paraphrasing paraphrasing_method task_name s3_datadir sts_batch_size sts_model filtering_metric filtering_threshold train_fewshot s3_output_datadir" "$@"
+      parse_args "$0" "image owner project experiment s3_bucket model_name_or_path input_splits train_output_per_example nmt pivot_langs do_alignment tgt_lang do_paraphrasing paraphrasing_method s3_datadir sts_batch_size sts_model filtering_metric filtering_threshold train_fewshot s3_output_datadir" "$@"
       shift $n
 
       . /opt/genie-toolkit/sync-repos.sh
@@ -140,7 +139,6 @@ implementation:
       --tgt_lang, {inputValue: tgt_lang},
       --do_paraphrasing, {inputValue: do_paraphrasing},
       --paraphrasing_method, {inputValue: paraphrasing_method},
-      --task_name, {inputValue: task_name},
       --s3_datadir, {inputValue: s3_datadir},
       --s3_output_datadir, { outputPath: s3_output_datadir},
       --sts_batch_size, {inputValue: sts_batch_size},
