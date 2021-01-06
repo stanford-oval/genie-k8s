@@ -211,27 +211,7 @@ def train_eval_spl(
         s3_model_dir=train_op.outputs['s3_model_dir'],
         additional_args=eval_additional_args
     )
-    
-    test_op = eval_spl_step(
-        owner=owner,
-        project=project,
-        experiment=experiment,
-        model=model,
-        task_name=task_name,
-        s3_datadir=s3_datadir,
-        image=image,
-        genienlp_version=genienlp_version,
-        genie_version=genie_version,
-        thingtalk_version=thingtalk_version,
-        workdir_repo=workdir_repo,
-        workdir_version=workdir_version,
-        pred_languages=pred_languages,
-        eval_set='test',
-        annotated_set_name=annotated_set_name,
-        is_oracle=is_oracle,
-        s3_model_dir=train_op.outputs['s3_model_dir'],
-        additional_args=eval_additional_args
-    )
+
 
 
 @dsl.pipeline(
@@ -314,27 +294,7 @@ def train_eval_spl_4gpus(
         s3_model_dir=train_op.outputs['s3_model_dir'],
         additional_args=eval_additional_args
     )
-    
-    test_op = eval_spl_step(
-        owner=owner,
-        project=project,
-        experiment=experiment,
-        model=model,
-        task_name=task_name,
-        s3_datadir=s3_datadir,
-        image=image,
-        genienlp_version=genienlp_version,
-        genie_version=genie_version,
-        thingtalk_version=thingtalk_version,
-        workdir_repo=workdir_repo,
-        workdir_version=workdir_version,
-        pred_languages=pred_languages,
-        eval_set='test',
-        annotated_set_name=annotated_set_name,
-        is_oracle=is_oracle,
-        s3_model_dir=train_op.outputs['s3_model_dir'],
-        additional_args=eval_additional_args
-    )
+
 
 
 def prepare_for_translation_step(
@@ -968,27 +928,6 @@ def multilingual_paraphrasing(
         workdir_version=workdir_version,
         pred_languages=tgt_lang,
         eval_set=eval_set,
-        annotated_set_name=annotated_set_name,
-        is_oracle=is_oracle,
-        s3_model_dir=train_op.outputs['s3_model_dir'],
-        additional_args=eval_additional_args
-    )
-    
-    test_op = eval_spl_step(
-        owner=owner,
-        project=project,
-        experiment=experiment,
-        model=model,
-        task_name=task_name,
-        s3_datadir=s3_datadir,
-        image=image,
-        genienlp_version=genienlp_version,
-        genie_version=genie_version,
-        thingtalk_version=thingtalk_version,
-        workdir_repo=workdir_repo,
-        workdir_version=workdir_version,
-        pred_languages=tgt_lang,
-        eval_set='test',
         annotated_set_name=annotated_set_name,
         is_oracle=is_oracle,
         s3_model_dir=train_op.outputs['s3_model_dir'],

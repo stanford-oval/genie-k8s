@@ -48,12 +48,14 @@ implementation:
       cd workdir/${MAKEDIR}
 
       IFS='+'; read -ra PLS <<<"$pred_languages"; IFS=' '
+      IFS='+'; read -ra ES <<<"$eval_set"; IFS=' '
+
       echo "${PLS[@]}"
 
       export TZ=America/Los_Angeles
 
       for lang in "${PLS[@]}"; do
-        for e_set in ${eval_set} ; do
+        for e_set in "${ES[@]}" ; do
           mkdir -p $experiment/${e_set}/${lang}
           if [[ "$task_name" == *"contextual"* || "$task_name" == *"dialog"* ]] ; then
               is_dlg=true
@@ -89,7 +91,7 @@ implementation:
 
         done
 
-      make -B s3_metrics_output=${s3_metrics_output} metrics_output=${metrics_output} is_dlg=${is_dlg} artifact_lang=${lang} project=$project experiment=$experiment eval_set=${eval_set} evaluate-output-artifacts-${model}
+      make -B s3_metrics_output=${s3_metrics_output} metrics_output=${metrics_output} is_dlg=${is_dlg} artifact_lang=${lang} project=$project experiment=$experiment eval_set="${ES[@]}" evaluate-output-artifacts-${model}
       done
 
 
