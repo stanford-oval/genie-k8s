@@ -73,11 +73,13 @@ def eval_spl_step(
         s3_model_dir=s3_model_dir,
         additional_args=additional_args)
     (eval_op.container
-     .set_memory_limit('15Gi')
-     .set_memory_request('15Gi')
-     .set_cpu_limit('4')
-     .set_cpu_request('4'))
-    add_env(add_ssh_volume(eval_op), eval_env)
+        .set_memory_limit('12Gi')
+        .set_memory_request('12Gi')
+        .set_cpu_limit('7.5')
+        .set_cpu_request('7.5'))
+    (add_env(add_ssh_volume(eval_op), eval_env)
+        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.2xlarge'))
     
     eval_op.container.set_image_pull_policy('Always')
     
