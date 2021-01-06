@@ -28,6 +28,7 @@ from kubernetes.client.models import (
     V1PersistentVolumeClaimVolumeSource,
     V1SecretVolumeSource
 )
+from .common import add_env, add_ssh_volume
 
 
 @dsl.pipeline(
