@@ -104,7 +104,7 @@ implementation:
         for pivot_lang in ${pivot_langs_array[*]} ; do
 
           paraphrase_sts_hparams="--batch_size ${sts_batch_size} --model_name ${sts_model}"
-          make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true pivot_lang=$pivot_lang nmt_model=${nmt} para_method=${paraphrasing_method} paraphrase_sts_hparams="${paraphrase_sts_hparams}" prepare_paraphrases_${tgt_lang}
+          make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true pivot_lang=$pivot_lang nmt_model=${nmt} para_method=${paraphrasing_method}  paraphrase_sts_hparams="${paraphrase_sts_hparams}" prepare_paraphrases_${tgt_lang}
 
           aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${s3_datadir}translated/${nmt}/${tgt_lang}
 
@@ -115,15 +115,15 @@ implementation:
       if ${filter_paraphrases} ; then
         for pivot_lang in ${pivot_langs_array[*]} ; do
           # filter paraphrases based on sts score
-          filtering_sts_hparams="--filtering_metric ${filtering_metric} --filtering_threshold ${filtering_threshold}"
-          make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true pivot_lang=$pivot_lang nmt_model=${nmt} para_method=${paraphrasing_method} filtering_sts_hparams="${filtering_sts_hparams}" filter_paraphrase_${tgt_lang}
+          # filtering_sts_hparams="--filtering_metric ${filtering_metric} --filtering_threshold ${filtering_threshold}"
+          make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true pivot_lang=$pivot_lang nmt_model=${nmt} para_method=${paraphrasing_method} sts_filtering_metric=${filtering_metric} sts_filtering_threshold=${filtering_threshold} filter_paraphrase_${tgt_lang}
 
           aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${s3_datadir}translated/${nmt}/${tgt_lang}
         done
       fi
 
       # join paraphrase files with original data
-      make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true all_pivot_langs=$pivot_langs  nmt_model=${nmt} para_method=${paraphrasing_method} join_para_data_${tgt_lang}
+      make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true all_pivot_langs=$pivot_langs  nmt_model=${nmt} para_method=${paraphrasing_method} sts_filtering_metric=${filtering_metric} sts_filtering_threshold=${filtering_threshold} join_para_data_${tgt_lang}
 
       # sync local files
       aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${s3_datadir}translated/${nmt}/${tgt_lang}
