@@ -71,7 +71,7 @@ implementation:
       # generate paraphrases
       if ${do_paraphrasing} ; then
         case ${nmt}+${paraphrasing_method} in
-          marian+masked)
+          marian+masked|gt+masked)
               make -B -j2 geniedir=/opt/genie-toolkit \
                 default_masked_paraphrase_hparams="${paraphrase_arguments} --model_name_or_path ${model_name_or_path}" \
                 all_names="${input_splits_array[*]}" experiment=${experiment} nmt_model=${nmt} train_output_per_example=${train_output_per_example} masked_paraphrase_marian_unquoted_${tgt_lang}
