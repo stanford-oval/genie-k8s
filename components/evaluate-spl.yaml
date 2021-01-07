@@ -62,7 +62,7 @@ implementation:
               aws s3 sync ${s3_datadir} ./dataset/ --exclude "*" --include "*eval*.tsv"  --include "*test*.tsv"
               make -j2 -B geniedir=/opt/genie-toolkit s3_model_dir=${s3_model_dir} project=$project experiment_dialog=$experiment eval_set=${e_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${lang}/${e_set}.tsv" ${experiment}/${e_set}/${model}.nlu.results
               for f in $experiment/${e_set}/${model}.nlu.{results,debug} ; do
-                aws s3 cp $f s3://geniehai/${owner}/workdir/${project}/${experiment}/${e_set}/${lang} || true
+                aws s3 cp $f s3://geniehai/${owner}/workdir/${project}/${experiment}/${e_set}/${lang}/ || true
               done
               cat $experiment/${e_set}/${model}.nlu.results
 
@@ -70,9 +70,9 @@ implementation:
                 make -j2 -B geniedir=/opt/genie-toolkit s3_model_dir=${s3_model_dir} project=$project experiment_dialog=$experiment eval_set=${e_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${lang}/annotated/${annotated_set_name}.txt" ${experiment}/${e_set}/${model}.dialog.results
                 make -j2 -B geniedir=/opt/genie-toolkit s3_model_dir=${s3_model_dir} project=$project experiment_dialog=$experiment eval_set=${e_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${lang}/annotated/${annotated_set_name}.txt" ${experiment}/${e_set}/${model}.predictions.json
                 for f in $experiment/${e_set}/${model}.dialog.{results,debug} ; do
-                  aws s3 cp $f s3://geniehai/${owner}/workdir/${project}/${experiment}/${e_set}/${lang} || true
+                  aws s3 cp $f s3://geniehai/${owner}/workdir/${project}/${experiment}/${e_set}/${lang}/ || true
                 done
-                aws s3 cp $experiment/${e_set}/${model}.predictions.json s3://geniehai/${owner}/workdir/${project}/${experiment}/${e_set}/${lang} || true
+                aws s3 cp $experiment/${e_set}/${model}.predictions.json s3://geniehai/${owner}/workdir/${project}/${experiment}/${e_set}/${lang}/ || true
               fi
 
           else
@@ -80,11 +80,11 @@ implementation:
             aws s3 sync ${s3_datadir} ./dataset/ --exclude "*" --include "*eval*.tsv"  --include "*test*.tsv"
             make -j2 -B geniedir=/opt/genie-toolkit s3_model_dir=${s3_model_dir} project=$project experiment=$experiment eval_set=${e_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${lang}/${e_set}.tsv" ${experiment}/${e_set}/${model}.results_single
             for f in $experiment/${e_set}/${model}.{results,debug} ; do
-              aws s3 cp $f s3://geniehai/${owner}/workdir/${project}/${experiment}/${e_set}/${lang}
+              aws s3 cp $f s3://geniehai/${owner}/workdir/${project}/${experiment}/${e_set}/${lang}/
             done
             cp $experiment/${e_set}/${model}.results $experiment/${e_set}/${model}.nlu.results
             if [[ -s $experiment/${e_set}/${model}.errors ]] ; then
-              aws s3 cp $experiment/${e_set}/${model}.errors s3://geniehai/${owner}/workdir/${project}/${experiment}/${e_set}/${lang}
+              aws s3 cp $experiment/${e_set}/${model}.errors s3://geniehai/${owner}/workdir/${project}/${experiment}/${e_set}/${lang}/
             fi
             cat $experiment/${e_set}/${model}.results
           fi
