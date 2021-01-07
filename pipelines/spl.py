@@ -30,6 +30,10 @@ from .common import *
 from .training import train_step, train_step_4gpus
 
 
+#############################
+#####  Training & Evaluation
+#############################
+
 def eval_spl_step(
         owner='mehrad',
         project='spl',
@@ -298,6 +302,10 @@ def train_eval_spl_4gpus(
     )
 
 
+
+#############################
+#####  Translation
+#############################
 
 def prepare_for_translation_step(
         owner='mehrad',
@@ -596,10 +604,10 @@ def all_translation_steps(
 
 
 @dsl.pipeline(
-    name='Translate a dataset',
+    name='Prepare and translate a dataset',
     description='Prepare, Translate, and Postprocess dataset'
 )
-def translate(
+def prepare_translate_process(
         owner='mehrad',
         project='spl',
         experiment='',
@@ -645,6 +653,63 @@ def translate(
         additional_args=additional_args
     )
 
+
+
+
+@dsl.pipeline(
+    name='Translate a dataset',
+    description='Translate, and Postprocess dataset'
+)
+def translate_process(
+        owner='mehrad',
+        project='spl',
+        experiment='',
+        s3_bucket='geniehai',
+        s3_datadir='',
+        model_name_or_path='Helsinki-NLP/opus-mt-en-{}',
+        input_splits='test+eval+train',
+        train_output_per_example='1',
+        nmt='marian',
+        do_alignment='true',
+        src_lang='en',
+        tgt_lang='',
+        image=default_image,
+        genienlp_version='',
+        genie_version='',
+        thingtalk_version=THINGTALK_VERSION,
+        workdir_repo=GENIE_WORKDIR_REPO,
+        workdir_version=GENIE_WORKDIR_VERSION,
+        additional_args=''
+):
+    all_translation_steps(
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        s3_bucket=s3_bucket,
+        s3_datadir=s3_datadir,
+        model_name_or_path=model_name_or_path,
+        input_splits=input_splits,
+        train_output_per_example=train_output_per_example,
+        nmt=nmt,
+        do_alignment=do_alignment,
+        src_lang=src_lang,
+        tgt_lang=tgt_lang,
+        prepare_for_translation=False,
+        do_translation=True,
+        post_process_translation=True,
+        image=image,
+        genienlp_version=genienlp_version,
+        genie_version=genie_version,
+        thingtalk_version=thingtalk_version,
+        workdir_repo=workdir_repo,
+        workdir_version=workdir_version,
+        additional_args=additional_args
+    )
+
+
+#############################
+#####  Paraphrasing
+#############################
 
 def paraphrase_step(
         owner='mehrad',
@@ -726,7 +791,7 @@ def paraphrase_step(
                           persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
     
     paraphrase_op.container.set_image_pull_policy('Always')
-        
+    
     return paraphrase_op
 
 
