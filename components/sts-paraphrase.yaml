@@ -12,6 +12,7 @@ inputs:
   - {name: train_output_per_example, description: ''}
   - {name: nmt, description: ''}
   - {name: pivot_langs, description: ''}
+  - {name: marian_group_langs, description: ''}
   - {name: do_alignment, description: ''}
   - {name: tgt_lang, description: ''}
   - {name: do_paraphrasing, description: ''}
@@ -37,7 +38,7 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image owner project experiment s3_bucket model_name_or_path input_splits train_output_per_example nmt pivot_langs do_alignment tgt_lang do_paraphrasing prepare_paraphrases filter_paraphrases paraphrasing_method s3_datadir sts_batch_size sts_model filtering_metric filtering_threshold train_fewshot s3_output_datadir" "$@"
+      parse_args "$0" "image owner project experiment s3_bucket model_name_or_path input_splits train_output_per_example nmt pivot_langs marian_group_langs do_alignment tgt_lang do_paraphrasing prepare_paraphrases filter_paraphrases paraphrasing_method s3_datadir sts_batch_size sts_model filtering_metric filtering_threshold train_fewshot s3_output_datadir" "$@"
       shift $n
 
       . /opt/genie-toolkit/sync-repos.sh
@@ -67,6 +68,7 @@ implementation:
 
       IFS='+'; read -ra input_splits_array <<<"$input_splits"; IFS=' '
       IFS='+'; read -ra pivot_langs_array <<<"$pivot_langs"; IFS=' '
+      IFS='+'; read -ra marian_group_langs_array <<<"$marian_group_langs"; IFS=' '
 
       # generate paraphrases
       if ${do_paraphrasing} ; then
@@ -77,10 +79,12 @@ implementation:
                 all_names="${input_splits_array[*]}" experiment=${experiment} nmt_model=${nmt} train_output_per_example=${train_output_per_example} masked_paraphrase_marian_unquoted_${tgt_lang}
           ;;
           marian+round_trip)
-            for pivot_lang in ${pivot_langs_array[*]} ; do
+            for (( i=0; i<${#pivot_langs_array[*]}; ++i)); do
+              pivot_lang="${pivot_langs_array[$i]}"
+              marian_group_lang="${marian_group_langs[$i]}"
               make -B -j2 geniedir=/opt/genie-toolkit \
                 default_translation_hparams="${paraphrase_arguments} --replace_qp --force_replace_qp" \
-                all_names="${input_splits_array[*]}" experiment=${experiment} nmt_model=${nmt} skip_translation=false pivot_lang=$pivot_lang paraphrase_marian_unquoted_${tgt_lang}
+                all_names="${input_splits_array[*]}" experiment=${experiment} src_lang=${tgt_lang} tgt_lang=${tgt_lang} marian_group_lang=$marian_group_lang pivot_lang=$pivot_lang nmt_model=${nmt} skip_translation=false paraphrase_marian_unquoted_${tgt_lang}
             done
           ;;
           gt+round_trip)
@@ -146,6 +150,7 @@ implementation:
       --train_output_per_example, {inputValue: train_output_per_example},
       --nmt, {inputValue: nmt},
       --pivot_langs, {inputValue: pivot_langs},
+      --marian_group_langs, {inputValue: marian_group_langs},
       --do_alignment, {inputValue: do_alignment},
       --tgt_lang, {inputValue: tgt_lang},
       --do_paraphrasing, {inputValue: do_paraphrasing},
