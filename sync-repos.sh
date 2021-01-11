@@ -17,6 +17,7 @@ if [ -d /opt/bootleg/ ] ; then
     git fetch
     git checkout ${BOOTLEG_VERSION}
     pip3 install -r requirements.txt && pip3 install -e .
+    python3 -m spacy download en_core_web_sm
   fi
 fi
 

@@ -15,6 +15,7 @@ RUN if [ ${ADD_BOOTLEG} == true ]; then \
 		git clone https://github.com/Mehrad0711/bootleg.git /opt/bootleg/ ; \
 		cd /opt/bootleg/ ; \
 		git checkout ${BOOTLEG_VERSION} && pip3 install -r requirements.txt && pip3 install -e . ; \
+		python3 -m spacy download en_core_web_sm ; \
 	fi
 
 ARG ADD_APEX=
