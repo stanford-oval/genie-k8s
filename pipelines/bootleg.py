@@ -90,5 +90,7 @@ def bootleg(
                           persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf')))
     .add_volume(V1Volume(name='shm', empty_dir=V1EmptyDirVolumeSource(medium='Memory')))
      )
+
+    bootleg_op.container.set_image_pull_policy('Always')
     
     return bootleg_op
