@@ -48,7 +48,7 @@ implementation:
       mkdir -p "$modeldir"
 
       if test "${s3_database_dir}" != None ; then
-        aws s3 sync --no-progress ${s3_database_dir} ./database/ --exclude '*' --include '*es_*.json' --include '*wikidataqid_to_bootlegtypeid.json' --include '*entityQID_to_wikidataTypeQID.json' --include "*${bootleg_model}/*.json"
+        aws s3 sync --no-progress ${s3_database_dir} ./database/ --exclude '*' --include '*canonical2type.json' --include '*es_*.json' --include '*wikidatatitle_to_typeid_0905.json' --include '*wikidataqid_to_bootlegtypeid.json' --include '*entityQID_to_wikidataTypeQID.json' --include '*alias2qids_wiki*' --include "*${bootleg_model}/*.json" --include "*${bootleg_model}/*.pt"
       fi
 
       if test "${s3_bootleg_prepped_data}" != None ; then
