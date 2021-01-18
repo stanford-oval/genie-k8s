@@ -38,7 +38,7 @@ implementation:
       if [ -f workdir/Makefile ] ; then
         MAKEDIR='.'
       else
-        MAKEDIR=${project}
+        MAKEDIR=spl
       fi
 
       cat >> workdir/config.mk <<EOF
