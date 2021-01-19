@@ -41,7 +41,6 @@ def eval_spl_step(
         image=default_image,
         genienlp_version='',
         genie_version='',
-        thingtalk_version=THINGTALK_VERSION,
         workdir_repo=GENIE_WORKDIR_REPO,
         workdir_version=GENIE_WORKDIR_VERSION,
         pred_languages='',
@@ -53,7 +52,6 @@ def eval_spl_step(
     eval_env = {
         'GENIENLP_VERSION': genienlp_version,
         'GENIE_VERSION': genie_version,
-        'THINGTALK_VERSION': thingtalk_version,
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
     }
@@ -99,7 +97,6 @@ def eval_spl(
         image=default_image,
         genienlp_version='',
         genie_version='',
-        thingtalk_version=THINGTALK_VERSION,
         workdir_repo=GENIE_WORKDIR_REPO,
         workdir_version=GENIE_WORKDIR_VERSION,
         pred_languages='',
@@ -118,7 +115,6 @@ def eval_spl(
         image=image,
         genienlp_version=genienlp_version,
         genie_version=genie_version,
-        thingtalk_version=thingtalk_version,
         workdir_repo=workdir_repo,
         workdir_version=workdir_version,
         pred_languages=pred_languages,
@@ -146,7 +142,6 @@ def train_eval_spl(
         image=default_image,
         genienlp_version='',
         genie_version='',
-        thingtalk_version=THINGTALK_VERSION,
         workdir_repo=GENIE_WORKDIR_REPO,
         workdir_version=GENIE_WORKDIR_VERSION,
         load_from='None',
@@ -201,7 +196,6 @@ def train_eval_spl(
         image=image,
         genienlp_version=genienlp_version,
         genie_version=genie_version,
-        thingtalk_version=thingtalk_version,
         workdir_repo=workdir_repo,
         workdir_version=workdir_version,
         pred_languages=pred_languages,
@@ -222,7 +216,6 @@ def train_eval_spl(
         image=image,
         genienlp_version=genienlp_version,
         genie_version=genie_version,
-        thingtalk_version=thingtalk_version,
         workdir_repo=workdir_repo,
         workdir_version=workdir_version,
         pred_languages=pred_languages,
@@ -250,7 +243,6 @@ def train_eval_spl_4gpus(
         image=default_image,
         genienlp_version='',
         genie_version='',
-        thingtalk_version=THINGTALK_VERSION,
         workdir_repo=GENIE_WORKDIR_REPO,
         workdir_version=GENIE_WORKDIR_VERSION,
         load_from='None',
@@ -304,7 +296,6 @@ def train_eval_spl_4gpus(
         image=image,
         genienlp_version=genienlp_version,
         genie_version=genie_version,
-        thingtalk_version=thingtalk_version,
         workdir_repo=workdir_repo,
         workdir_version=workdir_version,
         pred_languages=pred_languages,
@@ -325,7 +316,6 @@ def train_eval_spl_4gpus(
         image=image,
         genienlp_version=genienlp_version,
         genie_version=genie_version,
-        thingtalk_version=thingtalk_version,
         workdir_repo=workdir_repo,
         workdir_version=workdir_version,
         pred_languages=pred_languages,
@@ -354,7 +344,6 @@ def prepare_for_translation_step(
         image=default_image,
         genienlp_version='',
         genie_version='',
-        thingtalk_version=THINGTALK_VERSION,
         workdir_repo=GENIE_WORKDIR_REPO,
         workdir_version=GENIE_WORKDIR_VERSION,
         additional_args=''
@@ -363,7 +352,6 @@ def prepare_for_translation_step(
     prepare_for_translation_env = {
         'GENIENLP_VERSION': genienlp_version,
         'GENIE_VERSION': genie_version,
-        'THINGTALK_VERSION': thingtalk_version,
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
     }
@@ -418,7 +406,6 @@ def do_translation_step(
         image=default_image,
         genienlp_version='',
         genie_version='',
-        thingtalk_version=THINGTALK_VERSION,
         workdir_repo=GENIE_WORKDIR_REPO,
         workdir_version=GENIE_WORKDIR_VERSION,
         additional_args=''
@@ -426,7 +413,6 @@ def do_translation_step(
     do_translation_env = {
         'GENIENLP_VERSION': genienlp_version,
         'GENIE_VERSION': genie_version,
-        'THINGTALK_VERSION': thingtalk_version,
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
     }
@@ -489,7 +475,6 @@ def post_process_translation_step(
         image=default_image,
         genienlp_version='',
         genie_version='',
-        thingtalk_version=THINGTALK_VERSION,
         workdir_repo=GENIE_WORKDIR_REPO,
         workdir_version=GENIE_WORKDIR_VERSION,
         additional_args=''
@@ -498,7 +483,6 @@ def post_process_translation_step(
     post_process_translation_env = {
         'GENIENLP_VERSION': genienlp_version,
         'GENIE_VERSION': genie_version,
-        'THINGTALK_VERSION': thingtalk_version,
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
     }
@@ -556,7 +540,6 @@ def all_translation_steps(
         image=default_image,
         genienlp_version='',
         genie_version='',
-        thingtalk_version=THINGTALK_VERSION,
         workdir_repo=GENIE_WORKDIR_REPO,
         workdir_version=GENIE_WORKDIR_VERSION,
         additional_args=''
@@ -580,7 +563,6 @@ def all_translation_steps(
             image=image,
             genienlp_version=genienlp_version,
             genie_version=genie_version,
-            thingtalk_version=thingtalk_version,
             workdir_repo=workdir_repo,
             workdir_version=workdir_version,
             additional_args=''
@@ -604,7 +586,6 @@ def all_translation_steps(
             image=image,
             genienlp_version=genienlp_version,
             genie_version=genie_version,
-            thingtalk_version=thingtalk_version,
             workdir_repo=workdir_repo,
             workdir_version=workdir_version,
             additional_args=additional_args
@@ -631,7 +612,6 @@ def all_translation_steps(
             image=image,
             genienlp_version=genienlp_version,
             genie_version=genie_version,
-            thingtalk_version=thingtalk_version,
             workdir_repo=workdir_repo,
             workdir_version=workdir_version,
             additional_args=''
@@ -664,7 +644,6 @@ def translate(
         image=default_image,
         genienlp_version='',
         genie_version='',
-        thingtalk_version=THINGTALK_VERSION,
         workdir_repo=GENIE_WORKDIR_REPO,
         workdir_version=GENIE_WORKDIR_VERSION,
         additional_args=''
@@ -689,7 +668,6 @@ def translate(
         image=image,
         genienlp_version=genienlp_version,
         genie_version=genie_version,
-        thingtalk_version=thingtalk_version,
         workdir_repo=workdir_repo,
         workdir_version=workdir_version,
         additional_args=additional_args
@@ -720,7 +698,6 @@ def paraphrase_step(
         image=default_image,
         genienlp_version='',
         genie_version='',
-        thingtalk_version=THINGTALK_VERSION,
         workdir_repo=GENIE_WORKDIR_REPO,
         workdir_version=GENIE_WORKDIR_VERSION,
         additional_args=''
@@ -728,7 +705,6 @@ def paraphrase_step(
     paraphrase_env = {
         'GENIENLP_VERSION': genienlp_version,
         'GENIE_VERSION': genie_version,
-        'THINGTALK_VERSION': thingtalk_version,
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
     }
@@ -800,7 +776,6 @@ def paraphrase_step_4gpus(
         image=default_image,
         genienlp_version='',
         genie_version='',
-        thingtalk_version=THINGTALK_VERSION,
         workdir_repo=GENIE_WORKDIR_REPO,
         workdir_version=GENIE_WORKDIR_VERSION,
         additional_args=''
@@ -808,7 +783,6 @@ def paraphrase_step_4gpus(
     paraphrase_env = {
         'GENIENLP_VERSION': genienlp_version,
         'GENIE_VERSION': genie_version,
-        'THINGTALK_VERSION': thingtalk_version,
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
     }
@@ -889,7 +863,6 @@ def multilingual_paraphrasing(
         image=default_image,
         genienlp_version='',
         genie_version='',
-        thingtalk_version=THINGTALK_VERSION,
         workdir_repo=GENIE_WORKDIR_REPO,
         workdir_version=GENIE_WORKDIR_VERSION,
         bootleg_version='None',
@@ -928,7 +901,6 @@ def multilingual_paraphrasing(
         image=image,
         genienlp_version=genienlp_version,
         genie_version=genie_version,
-        thingtalk_version=thingtalk_version,
         workdir_repo=workdir_repo,
         workdir_version=workdir_version,
         additional_args=paraphrase_additional_args
@@ -968,7 +940,6 @@ def multilingual_paraphrasing(
         image=image,
         genienlp_version=genienlp_version,
         genie_version=genie_version,
-        thingtalk_version=thingtalk_version,
         workdir_repo=workdir_repo,
         workdir_version=workdir_version,
         pred_languages=tgt_lang,
@@ -989,7 +960,6 @@ def multilingual_paraphrasing(
         image=image,
         genienlp_version=genienlp_version,
         genie_version=genie_version,
-        thingtalk_version=thingtalk_version,
         workdir_repo=workdir_repo,
         workdir_version=workdir_version,
         pred_languages=tgt_lang,
@@ -1026,7 +996,6 @@ def round_trip_paraphrasing(
         image=default_image,
         genienlp_version='',
         genie_version='',
-        thingtalk_version=THINGTALK_VERSION,
         workdir_repo=GENIE_WORKDIR_REPO,
         workdir_version=GENIE_WORKDIR_VERSION,
         additional_args=''
@@ -1053,7 +1022,6 @@ def round_trip_paraphrasing(
         image=image,
         genienlp_version=genienlp_version,
         genie_version=genie_version,
-        thingtalk_version=thingtalk_version,
         workdir_repo=workdir_repo,
         workdir_version=workdir_version,
         additional_args=additional_args
@@ -1084,7 +1052,6 @@ def masked_paraphrasing(
         image=default_image,
         genienlp_version='',
         genie_version='',
-        thingtalk_version=THINGTALK_VERSION,
         workdir_repo=GENIE_WORKDIR_REPO,
         workdir_version=GENIE_WORKDIR_VERSION,
         additional_args=''
@@ -1112,7 +1079,6 @@ def masked_paraphrasing(
         image=image,
         genienlp_version=genienlp_version,
         genie_version=genie_version,
-        thingtalk_version=thingtalk_version,
         workdir_repo=workdir_repo,
         workdir_version=workdir_version,
         additional_args=additional_args
@@ -1144,7 +1110,6 @@ def masked_paraphrasing_4gpus(
         image=default_image,
         genienlp_version='',
         genie_version='',
-        thingtalk_version=THINGTALK_VERSION,
         workdir_repo=GENIE_WORKDIR_REPO,
         workdir_version=GENIE_WORKDIR_VERSION,
         additional_args=''
@@ -1172,7 +1137,6 @@ def masked_paraphrasing_4gpus(
         image=image,
         genienlp_version=genienlp_version,
         genie_version=genie_version,
-        thingtalk_version=thingtalk_version,
         workdir_repo=workdir_repo,
         workdir_version=workdir_version,
         additional_args=additional_args
@@ -1206,7 +1170,6 @@ def sts_filtering(
         image=default_image,
         genienlp_version='',
         genie_version='',
-        thingtalk_version=THINGTALK_VERSION,
         workdir_repo=GENIE_WORKDIR_REPO,
         workdir_version=GENIE_WORKDIR_VERSION,
         additional_args=''
@@ -1234,7 +1197,6 @@ def sts_filtering(
         image=image,
         genienlp_version=genienlp_version,
         genie_version=genie_version,
-        thingtalk_version=thingtalk_version,
         workdir_repo=workdir_repo,
         workdir_version=workdir_version,
         additional_args=additional_args
