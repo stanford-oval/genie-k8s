@@ -4,7 +4,7 @@ MAINTAINER Thingpedia Admins <thingpedia-admins@lists.stanford.edu>
 
 USER root
 
-# install basic tools, nodejs 10.x and yarn
+# install basic tools, nodejs 10.x
 RUN dnf -y install make gettext unzip zip nano xz gcc-c++ diffutils \
 	git gcc gcc-c++ procps-ng \
 	&& dnf -y module enable python38 \
@@ -15,8 +15,7 @@ RUN dnf -y install make gettext unzip zip nano xz gcc-c++ diffutils \
 	&& pip3 install --upgrade pip \
 	&& pip3 install --use-feature=2020-resolver awscli \
 	&& dnf -y module enable nodejs:10 \
-	&& curl -sL https://dl.yarnpkg.com/rpm/yarn.repo | tee /etc/yum.repos.d/yarn.repo \
-	&& dnf -y install nodejs yarn \
+	&& dnf -y install nodejs \
 	&& dnf clean all \
 	&& rm -fr /root/.cache
 
