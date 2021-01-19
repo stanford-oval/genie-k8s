@@ -25,6 +25,7 @@ GENIE_HEAD=`git rev-parse HEAD`
 if [ -n "${GENIE_VERSION}" ] && [ "${GENIE_VERSION}" != "${GENIE_HEAD}" ]; then
   git fetch
   git checkout -f ${GENIE_VERSION}
+  git clean -fdx
   # we cannot run npm as root, it will not run the build steps correctly
   # (https://github.com/npm/cli/issues/2062)
   if test `id -u` = 0 ; then
