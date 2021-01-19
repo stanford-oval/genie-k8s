@@ -61,6 +61,7 @@ implementation:
       export TZ=America/Los_Angeles
       export GENIENLP_DATABASE_DIR=./database/
 
+      # TODO now we always evalute user side. change to account for agent side too
       for lang in "${PLS[@]}"; do
         for e_set in "${ES[@]}" ; do
           mkdir -p $experiment/${e_set}/${lang}
@@ -72,7 +73,7 @@ implementation:
                 eval_lang=$lang
               fi
               aws s3 sync ${s3_datadir} ./dataset/ --exclude "*" --include "*eval*.tsv"  --include "*test*.tsv"
-              make -j2 -B geniedir=/opt/genie-toolkit GENIENLP_DATABASE_DIR=./database/ s3_model_dir=${s3_model_dir} project=$project experiment_dialog=$experiment eval_set=${e_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${eval_lang}/${e_set}.tsv" ${experiment}/${e_set}/${model}.nlu.results
+              make -j2 -B geniedir=/opt/genie-toolkit GENIENLP_DATABASE_DIR=./database/ s3_model_dir=${s3_model_dir} project=$project experiment_dialog=$experiment eval_set=${e_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${eval_lang}/user/${e_set}.tsv" ${experiment}/${e_set}/${model}.nlu.results
               for f in $experiment/${e_set}/${model}.nlu.{results,debug} ; do
                 aws s3 cp $f s3://geniehai/${owner}/workdir/${project}/${experiment}/${e_set}/${lang}/ || true
               done
