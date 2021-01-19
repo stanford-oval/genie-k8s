@@ -13,6 +13,7 @@ if [ -d /opt/bootleg/ ] ; then
   fi
 fi
 
+
 cd /opt/genienlp/
 GENIENLP_HEAD=`git rev-parse HEAD`
 if [ -n "${GENIENLP_VERSION}" ] && [ "${GENIENLP_VERSION}" != "${GENIENLP_HEAD}" ]; then
@@ -22,47 +23,18 @@ if [ -n "${GENIENLP_VERSION}" ] && [ "${GENIENLP_VERSION}" != "${GENIENLP_HEAD}"
 fi
 
 
-cd /opt/thingtalk/
-THINGTALK_HEAD=`git rev-parse HEAD`
-if [ -n "${THINGTALK_VERSION}" ] && [ "${THINGTALK_VERSION}" != "${THINGTALK_HEAD}" ]; then
-  git fetch
-  git checkout -f ${THINGTALK_VERSION}
-  if test -f yarn.lock ; then
-    yarn install
-    yarn link
-  else
-    # we cannot run npm as root, it will not run the build steps correctly
-    # (https://github.com/npm/cli/issues/2062)
-    if test `id -u` = 0 ; then
-      su genie-toolkit -c "npm install"
-    else
-      npm install
-    fi
-  fi
-fi
-
 cd  /opt/genie-toolkit/
 GENIE_HEAD=`git rev-parse HEAD`
 if [ -n "${GENIE_VERSION}" ] && [ "${GENIE_VERSION}" != "${GENIE_HEAD}" ]; then
   git fetch
   git checkout -f ${GENIE_VERSION}
-  if test -f yarn.lock ; then
-    yarn link thingtalk
-    yarn install
-    yarn link
+  git clean -fdx
+  # we cannot run npm as root, it will not run the build steps correctly
+  # (https://github.com/npm/cli/issues/2062)
+  if test `id -u` = 0 ; then
+    su genie-toolkit -c "npm ci"
   else
-    # we cannot run npm as root, it will not run the build steps correctly
-    # (https://github.com/npm/cli/issues/2062)
-    if test `id -u` = 0 ; then
-      # also, it looks like npm will corrupt the installation of thingtalk
-      # when doing "npm install" if the package was linked already so remove
-      # the link first
-      rm -f node_modules/thingtalk
-      su genie-toolkit -c "npm install && npm link thingtalk"
-    else
-      npm install
-      npm link thingtalk
-    fi
+    npm ci
   fi
 fi
 
@@ -71,11 +43,7 @@ if [ -n "${WORKDIR_REPO}" ] && [ -n "${WORKDIR_VERSION}" ]; then
   git clone $WORKDIR_REPO workdir
   cd workdir
   git checkout ${WORKDIR_VERSION}
-  if test -f yarn.lock ; then
-    yarn link thingtalk
-    yarn link genie-toolkit
-    yarn install
-  elif test -f package-lock.json ; then
+  if test -f package-lock.json ; then
     # we cannot run npm as root, it will not run the build steps correctly
     # (https://github.com/npm/cli/issues/2062)
     if test `id -u` = 0 ; then
@@ -83,12 +51,9 @@ if [ -n "${WORKDIR_REPO}" ] && [ -n "${WORKDIR_VERSION}" ]; then
       # we're modifying
       chmod +x $HOME $PWD
       chown -R genie-toolkit:genie-toolkit .
-      rm -f node_modules/thingtalk
-      rm -f node_modules/genie-toolkit
-      su genie-toolkit -c "npm install && npm link thingtalk && npm link genie-toolkit"
+      su genie-toolkit -c "npm ci && npm link genie-toolkit"
     else
-      npm install
-      npm link thingtalk
+      npm ci
       npm link genie-toolkit
     fi
   fi
