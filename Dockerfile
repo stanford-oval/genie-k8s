@@ -47,7 +47,7 @@ USER genie-toolkit
 RUN git clone https://github.com/stanford-oval/genie-toolkit /opt/genie-toolkit/
 WORKDIR /opt/genie-toolkit/
 RUN git checkout ${GENIE_VERSION}
-RUN npm install
+RUN npm ci
 
 USER root
 # normally, this would be done by npm link, but when running as root, npm

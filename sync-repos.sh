@@ -28,9 +28,9 @@ if [ -n "${GENIE_VERSION}" ] && [ "${GENIE_VERSION}" != "${GENIE_HEAD}" ]; then
   # we cannot run npm as root, it will not run the build steps correctly
   # (https://github.com/npm/cli/issues/2062)
   if test `id -u` = 0 ; then
-    su genie-toolkit -c "npm install"
+    su genie-toolkit -c "npm ci"
   else
-    npm install
+    npm ci
   fi
 fi
 
@@ -47,10 +47,9 @@ if [ -n "${WORKDIR_REPO}" ] && [ -n "${WORKDIR_VERSION}" ]; then
       # we're modifying
       chmod +x $HOME $PWD
       chown -R genie-toolkit:genie-toolkit .
-      rm -f node_modules/genie-toolkit
-      su genie-toolkit -c "npm install && npm link genie-toolkit"
+      su genie-toolkit -c "npm ci && npm link genie-toolkit"
     else
-      npm install
+      npm ci
       npm link genie-toolkit
     fi
   fi
