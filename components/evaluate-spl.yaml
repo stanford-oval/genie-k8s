@@ -63,36 +63,38 @@ implementation:
 
       for lang in "${PLS[@]}"; do
         for e_set in "${ES[@]}" ; do
-          mkdir -p $experiment/${e_set}/${lang}
-          if [[ ! "$task_name" == *"multilingual"* ]] ; then eval_lang='' ; else eval_lang=$lang ; fi
+          mkdir -p $experiment/${e_set}/${pred_lang}
+          if [[ ! "$task_name" == *"multilingual"* ]] ; then pred_lang='' ; else pred_lang="$lang/" ; fi
 
           if [[ "$task_name" == *"contextual"* || "$task_name" == *"dialog"* ]] ; then
               is_dlg=true
+              has_annotated=false
               aws s3 sync ${s3_datadir} ./dataset/ --exclude "*" --include "*eval*.tsv"  --include "*test*.tsv"
 
               if [[ "$task_name" == *"agent"* ]] ; then dlg_side='agent' ; else dlg_side='user' ; fi
 
 
               ########
-              make -j2 -B geniedir=/opt/genie-toolkit GENIENLP_DATABASE_DIR=./database/ s3_model_dir=${s3_model_dir} project=$project experiment=$experiment eval_set=${e_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${eval_lang}/${dlg_side}/${e_set}.tsv" ${experiment}/${e_set}/${model}.nlu.results
+              make -j2 -B geniedir=/opt/genie-toolkit GENIENLP_DATABASE_DIR=./database/ s3_model_dir=${s3_model_dir} project=$project experiment=$experiment eval_set=${e_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${pred_lang}${dlg_side}/${e_set}.tsv" ${experiment}/${e_set}/${model}.nlu.results
               ########
 
               for f in $experiment/${e_set}/${model}.nlu.{results,debug} ; do
-                aws s3 cp $f s3://geniehai/${owner}/workdir/${project}/${experiment}/${e_set}/${lang}/ || true
+                aws s3 cp $f s3://geniehai/${owner}/workdir/${project}/${experiment}/${e_set}/${pred_lang} || true
               done
               cat $experiment/${e_set}/${model}.nlu.results
 
-              if [[ "${annotated_set_name}" != 'None' && -f ./dataset/${lang}/annotated/${annotated_set_name}.txt ]] ; then
+              if [[ "${annotated_set_name}" != 'None' && -f ./dataset/${pred_lang}annotated/${annotated_set_name}.txt ]] ; then
+                has_annotated=true
 
                 ########
-                make -j2 -B geniedir=/opt/genie-toolkit GENIENLP_DATABASE_DIR=./database/ s3_model_dir=${s3_model_dir} project=$project experiment=$experiment eval_set=${e_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${eval_lang}/annotated/${annotated_set_name}.txt" ${experiment}/${e_set}/${model}.dialog.results
-                make -j2 -B geniedir=/opt/genie-toolkit GENIENLP_DATABASE_DIR=./database/ s3_model_dir=${s3_model_dir} project=$project experiment=$experiment eval_set=${e_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${eval_lang}/annotated/${annotated_set_name}.txt" ${experiment}/${e_set}/${model}.predictions.json
+                make -j2 -B geniedir=/opt/genie-toolkit GENIENLP_DATABASE_DIR=./database/ s3_model_dir=${s3_model_dir} project=$project experiment=$experiment eval_set=${e_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${pred_lang}annotated/${annotated_set_name}.txt" ${experiment}/${e_set}/${model}.dialog.results
+                make -j2 -B geniedir=/opt/genie-toolkit GENIENLP_DATABASE_DIR=./database/ s3_model_dir=${s3_model_dir} project=$project experiment=$experiment eval_set=${e_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${pred_lang}annotated/${annotated_set_name}.txt" ${experiment}/${e_set}/${model}.predictions.json
                 ########
 
                 for f in $experiment/${e_set}/${model}.dialog.{results,debug} ; do
-                  aws s3 cp $f s3://geniehai/${owner}/workdir/${project}/${experiment}/${e_set}/${lang}/ || true
+                  aws s3 cp $f s3://geniehai/${owner}/workdir/${project}/${experiment}/${e_set}/${pred_lang} || true
                 done
-                aws s3 cp $experiment/${e_set}/${model}.predictions.json s3://geniehai/${owner}/workdir/${project}/${experiment}/${e_set}/${lang}/ || true
+                aws s3 cp $experiment/${e_set}/${model}.predictions.json s3://geniehai/${owner}/workdir/${project}/${experiment}/${e_set}/${pred_lang} || true
               fi
 
           else
@@ -100,15 +102,15 @@ implementation:
             aws s3 sync ${s3_datadir} ./dataset/ --exclude "*" --include "*eval*.tsv"  --include "*test*.tsv"
 
             ########
-            make -j2 -B geniedir=/opt/genie-toolkit GENIENLP_DATABASE_DIR=./database/ s3_model_dir=${s3_model_dir} project=$project experiment=$experiment eval_set=${e_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${eval_lang}/${e_set}.tsv" ${experiment}/${e_set}/${model}.results_single
+            make -j2 -B geniedir=/opt/genie-toolkit GENIENLP_DATABASE_DIR=./database/ s3_model_dir=${s3_model_dir} project=$project experiment=$experiment eval_set=${e_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${pred_lang}${e_set}.tsv" ${experiment}/${e_set}/${model}.results_single
             ########
 
             for f in $experiment/${e_set}/${model}.{results,debug} ; do
-              aws s3 cp $f s3://geniehai/${owner}/workdir/${project}/${experiment}/${e_set}/${lang}/
+              aws s3 cp $f s3://geniehai/${owner}/workdir/${project}/${experiment}/${e_set}/${pred_lang}
             done
             cp $experiment/${e_set}/${model}.results $experiment/${e_set}/${model}.nlu.results
             if [[ -s $experiment/${e_set}/${model}.errors ]] ; then
-              aws s3 cp $experiment/${e_set}/${model}.errors s3://geniehai/${owner}/workdir/${project}/${experiment}/${e_set}/${lang}/
+              aws s3 cp $experiment/${e_set}/${model}.errors s3://geniehai/${owner}/workdir/${project}/${experiment}/${e_set}/${pred_lang}
             fi
             cat $experiment/${e_set}/${model}.results
           fi
@@ -116,7 +118,7 @@ implementation:
         done
 
       ########
-      make -B s3_metrics_output=${s3_metrics_output} metrics_output=${metrics_output} is_dlg=${is_dlg} artifact_lang=${lang} project=$project experiment=$experiment eval_set=$eval_set evaluate-output-artifacts-${model}
+      make -B s3_metrics_output=${s3_metrics_output} metrics_output=${metrics_output} is_dlg=${is_dlg} has_annotated=${has_annotated} artifact_lang=${pred_lang} project=$project experiment=$experiment eval_set=$eval_set evaluate-output-artifacts-${model}
       ########
 
       done
