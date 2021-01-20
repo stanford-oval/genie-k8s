@@ -75,7 +75,7 @@ implementation:
 
 
               ########
-              make -j2 -B geniedir=/opt/genie-toolkit GENIENLP_DATABASE_DIR=./database/ s3_model_dir=${s3_model_dir} project=$project experiment=$experiment eval_set=${e_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${pred_lang}${dlg_side}/${e_set}.tsv" ${experiment}/${e_set}/${model}.nlu.results
+              make -j2 -B geniedir=/opt/genie-toolkit GENIENLP_DATABASE_DIR=./database/ s3_model_dir=${s3_model_dir} project=$project experiment=$experiment eval_set=${e_set} `if ${is_oracle} ; then echo "evalflags=--oracle" ; fi` input_eval_server="./dataset/${pred_lang}${dlg_side}/${e_set}.tsv" ${experiment}/${e_set}/${model}.nlu.results
               ########
 
               for f in $experiment/${e_set}/${model}.nlu.{results,debug} ; do
@@ -87,8 +87,8 @@ implementation:
                 has_annotated=true
 
                 ########
-                make -j2 -B geniedir=/opt/genie-toolkit GENIENLP_DATABASE_DIR=./database/ s3_model_dir=${s3_model_dir} project=$project experiment=$experiment eval_set=${e_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${pred_lang}annotated/${annotated_set_name}.txt" ${experiment}/${e_set}/${model}.dialog.results
-                make -j2 -B geniedir=/opt/genie-toolkit GENIENLP_DATABASE_DIR=./database/ s3_model_dir=${s3_model_dir} project=$project experiment=$experiment eval_set=${e_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${pred_lang}annotated/${annotated_set_name}.txt" ${experiment}/${e_set}/${model}.predictions.json
+                make -j2 -B geniedir=/opt/genie-toolkit GENIENLP_DATABASE_DIR=./database/ s3_model_dir=${s3_model_dir} project=$project experiment=$experiment eval_set=${e_set} `if ${is_oracle} ; then echo "evalflags=--oracle" ; fi` input_eval_server="./dataset/${pred_lang}annotated/${annotated_set_name}.txt" ${experiment}/${e_set}/${model}.dialog.results
+                make -j2 -B geniedir=/opt/genie-toolkit GENIENLP_DATABASE_DIR=./database/ s3_model_dir=${s3_model_dir} project=$project experiment=$experiment eval_set=${e_set} `if ${is_oracle} ; then echo "evalflags=--oracle" ; fi` input_eval_server="./dataset/${pred_lang}annotated/${annotated_set_name}.txt" ${experiment}/${e_set}/${model}.predictions.json
                 ########
 
                 for f in $experiment/${e_set}/${model}.dialog.{results,debug} ; do
@@ -102,7 +102,7 @@ implementation:
             aws s3 sync ${s3_datadir} ./dataset/ --exclude "*" --include "*eval*.tsv"  --include "*test*.tsv"
 
             ########
-            make -j2 -B geniedir=/opt/genie-toolkit GENIENLP_DATABASE_DIR=./database/ s3_model_dir=${s3_model_dir} project=$project experiment=$experiment eval_set=${e_set} `if ${is_oracle} ; then echo "--oracle" ; fi` input_eval_server="./dataset/${pred_lang}${e_set}.tsv" ${experiment}/${e_set}/${model}.results_single
+            make -j2 -B geniedir=/opt/genie-toolkit GENIENLP_DATABASE_DIR=./database/ s3_model_dir=${s3_model_dir} project=$project experiment=$experiment eval_set=${e_set} `if ${is_oracle} ; then echo "evalflags=--oracle" ; fi` input_eval_server="./dataset/${pred_lang}${e_set}.tsv" ${experiment}/${e_set}/${model}.results_single
             ########
 
             for f in $experiment/${e_set}/${model}.{results,debug} ; do
