@@ -17,6 +17,9 @@ RUN if [ ${ADD_BOOTLEG} == true ]; then \
 		git checkout ${BOOTLEG_VERSION} && pip3 install -r requirements.txt && pip3 install -e . ; \
 	fi
 
+# for occasional plotting in genienlp
+RUN pip3 install matplotlib~=3.0
+
 ARG ADD_APEX=
 RUN echo ${ADD_APEX}
 RUN if [ ${ADD_APEX} == true ]; then \

@@ -27,11 +27,15 @@ The scripts will build the images and upload to AWS ECR.
 ## Uploading pipelines
 
 Use:
+
 ```bash
 python3 upload_pipeline.py ${pipeline_function} ${pipeline_name}
 ```
+
 to upload a pipeline to your Kubeflow cluster. `${pipeline_function}` should be
 the name of a Python function in `pipelines.py`.
+
+You can also upload all pipelines at the same time by setting `THINGPEDIA_DEVELOPER_KEY`in `upload_all_pipelines.sh`and running it.
 
 ## Running jobs
 
