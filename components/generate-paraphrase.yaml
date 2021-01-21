@@ -78,35 +78,32 @@ implementation:
 
       run_paraphrase() {
         echo $paraphrasing_arguments
+
+        mkdir -p ${input_dir}/almond/
+        cp ${input_dir}/train.tsv ${input_dir}/almond/train.tsv
+
         # run paraphrase generation
-        if [ "$is_dialogue" = true ] ; then
-          genienlp run-paraphrase \
-          --task paraphrase \
-          --model_name_or_path paraphraser \
-          --input_file ${input_dir}/train.tsv \
-          --output_file ${output_dir}/paraphrased.tsv \
-          --input_column 2 \
-          --thingtalk_column 3 \
-          $paraphrasing_arguments
-        else
-          genienlp run-paraphrase \
-            --task paraphrase \
-            --model_name_or_path paraphraser \
-            --input_file ${input_dir}/train.tsv \
-            --output_file ${output_dir}/paraphrased.tsv \
-            --input_column 1 \
-            --thingtalk_column 2 \
-            $paraphrasing_arguments
-        fi
+        genienlp predict \
+        --task paraphrase \
+        --path paraphraser \
+        --data ${input_dir} \
+        --eval_dir eval_dir \
+        --evaluate train \
+        --overwrite \
+        --skip_cache \
+        --silent \
+        $paraphrasing_arguments
+
+        mv eval_dir/train/* ${output_dir}/
       }
 
       join() {
         # join the original file and the paraphrasing output
-        export num_new_queries=$((`wc -l ${output_dir}/paraphrased.tsv | cut -d " " -f1` / `wc -l ${input_dir}/train.tsv | cut -d " " -f1`))
+        export num_new_queries=$((`wc -l ${output_dir}/paraphrase.tsv | cut -d " " -f1` / `wc -l ${input_dir}/train.tsv | cut -d " " -f1`))
         genienlp transform-dataset \
           ${input_dir}/train.tsv \
           ${output_dir}/unfiltered.tsv \
-          --query_file ${output_dir}/paraphrased.tsv \
+          --query_file ${output_dir}/paraphrase.tsv \
           --num_new_queries ${num_new_queries} \
           --transformation replace_queries \
           --remove_with_heuristics \
@@ -118,8 +115,7 @@ implementation:
       join
 
       # Delete intermediate files that don't help debugging
-      rm ${output_dir}/paraphrased.tsv
-      rm -f ${output_dir}/with_context.tsv
+      rm ${output_dir}/paraphrase.tsv
 
       # upload the new dataset to S3
       aws s3 sync --no-progress output_dataset/ "${s3_output_dir}"
