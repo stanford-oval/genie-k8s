@@ -12,7 +12,6 @@ inputs:
   - {name: s3_input_datadir, description: '', default: ''}
   - {name: paraphrasing_model, description: '', default: ''}
   - {name: keep_original_duplicates, description: '', default: ''}
-  - {name: ignore_context, description: '', default: ''}
   - {name: paraphrase_subfolder, description: '', default: ''}
   - {name: additional_args, description: '', default: ''}
 outputs:
@@ -26,17 +25,13 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image s3_bucket owner task_name project experiment dataset s3_input_datadir s3_output_datadir paraphrasing_model keep_original_duplicates task_name ignore_context paraphrase_subfolder" "$@"
+      parse_args "$0" "image s3_bucket owner task_name project experiment dataset s3_input_datadir s3_output_datadir paraphrasing_model keep_original_duplicates task_name paraphrase_subfolder" "$@"
       shift $n
       
       set -e
       set -x
       
       /opt/genie-toolkit/sync-repos.sh 
-
-      if [ "$ignore_context" = true ] ; then
-        echo "ignoring context"
-      fi
 
       aws s3 sync --no-progress "${s3_input_datadir}" input_dataset/
       aws s3 sync --no-progress --exclude '*checkpoint*' "${paraphrasing_model}" paraphraser/
@@ -79,48 +74,20 @@ implementation:
               --task ${task_name}
               cp ${input_dir}/train_no_duplicate.tsv ${input_dir}/train.tsv
           fi
-
-          if [ "$is_dialogue" = true ] ; then
-              if [ "$ignore_context" = true ] ; then
-                : # nothing to be done
-              else
-                # add previous agent utterance; this additional context helps the paraphraser
-                genienlp dialog-to-tsv \
-                  ${input_dir}/train.tsv \
-                  --dialog_file input_dataset/synthetic.txt \
-                  ${output_dir}/with_context.tsv
-              fi
-               
-          else
-            : # nothing to be done
-          fi
       }
 
       run_paraphrase() {
         echo $paraphrasing_arguments
         # run paraphrase generation
         if [ "$is_dialogue" = true ] ; then
-          if [ "$ignore_context" = true ] ; then
-            genienlp run-paraphrase \
-            --task paraphrase \
-            --model_name_or_path paraphraser \
-            --input_file ${input_dir}/train.tsv \
-            --output_file ${output_dir}/paraphrased.tsv \
-            --input_column 2 \
-            --thingtalk_column 3 \
-            $paraphrasing_arguments
-          else
-            genienlp run-paraphrase \
-            --task paraphrase \
-            --model_name_or_path paraphraser \
-            --input_file ${output_dir}/with_context.tsv \
-            --output_file ${output_dir}/paraphrased.tsv \
-            --input_column 0 \
-            --prompt_column 1 \
-            --thingtalk_column 2 \
-            --gold_column 3 \
-            $paraphrasing_arguments
-          fi
+          genienlp run-paraphrase \
+          --task paraphrase \
+          --model_name_or_path paraphraser \
+          --input_file ${input_dir}/train.tsv \
+          --output_file ${output_dir}/paraphrased.tsv \
+          --input_column 2 \
+          --thingtalk_column 3 \
+          $paraphrasing_arguments
         else
           genienlp run-paraphrase \
             --task paraphrase \
@@ -170,7 +137,6 @@ implementation:
       --s3_output_datadir, {outputPath: s3_output_datadir},
       --paraphrasing_model, {inputValue: paraphrasing_model},
       --keep_original_duplicates, {inputValue: keep_original_duplicates},
-      --ignore_context, {inputValue: ignore_context},
       --paraphrase_subfolder, {inputValue: paraphrase_subfolder},
       --, {inputValue: additional_args}, 
     ]
