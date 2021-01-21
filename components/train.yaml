@@ -16,6 +16,7 @@ inputs:
   - {name: train_iterations, description: ''}
   - {name: skip_tensorboard, description: ''}
   - {name: calibrate, description: ''}
+  - {name: calibration_ood_file, description: ''}
   - {name: calibration_additional_args, description: ''}
   - {name: train_languages, description: ''}
   - {name: eval_languages, description: ''}
@@ -35,7 +36,7 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image s3_bucket owner task_name project experiment model load_from s3_datadir s3_database_dir dataset_subfolder s3_model_dir skip_tensorboard calibrate calibration_additional_args train_languages eval_languages use_bootleg s3_bootleg_prepped_data bootleg_model" "$@"
+      parse_args "$0" "image s3_bucket owner task_name project experiment model load_from s3_datadir s3_database_dir dataset_subfolder s3_model_dir skip_tensorboard calibrate calibration_ood_file calibration_additional_args train_languages eval_languages use_bootleg s3_bootleg_prepped_data bootleg_model" "$@"
       shift $n
       cd $HOME
 
@@ -109,6 +110,16 @@ implementation:
           $@
 
       if test "$calibrate" == "true" ; then
+        calibrate_on=valid
+        if test "${calibration_ood_file}" != None ; then
+          aws s3 cp ${calibration_ood_file} dataset/calibration-ood.tsv
+          if ! test -f dataset/almond/user/test.tsv ; then
+            cp dataset/almond/user/eval.tsv dataset/almond/user/test.tsv
+          fi
+          cat dataset/calibration-ood.tsv >> dataset/almond/user/test.tsv
+          calibrate_on=test
+        fi
+      
         genienlp predict \
             --path "$modeldir" \
             --data "dataset" \
@@ -116,7 +127,7 @@ implementation:
             --task ${task_name} \
             --silent \
             --overwrite \
-            --evaluate valid \
+            --evaluate ${calibrate_on} \
             --save_confidence_features \
             --confidence_feature_path "$modeldir/confidence_feature_file.pkl" \
             ${calibration_additional_args}
@@ -149,6 +160,7 @@ implementation:
       --s3_model_dir, {outputPath: s3_model_dir},
       --skip_tensorboard, {inputValue: skip_tensorboard},
       --calibrate, {inputValue: calibrate},
+      --calibration_ood_file, {inputValue: calibration_ood_file},
       --calibration_additional_args, {inputValue: calibration_additional_args},
       --train_languages, {inputValue: train_languages},
       --eval_languages, {inputValue: eval_languages},
