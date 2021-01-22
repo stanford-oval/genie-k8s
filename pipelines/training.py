@@ -400,6 +400,52 @@ def paraphrase_fewshot_step(
 
     return train_s3_datadir, eval_model
 
+def paraphrase_only(
+    owner,
+    project,
+    experiment,
+    dataset,
+    image,
+    genienlp_version,
+    s3_input_datadir,
+    train_task_name,
+    keep_original_duplicates,
+    paraphrasing_model,
+    filtering_model,
+    filtering_batch_size,
+    paraphrase_subfolder,
+    paraphrase_additional_args,
+    filtering_additional_args,
+):
+    paraphrase_generation_op = paraphrase_generation_step(image=image,
+                                    owner=owner,
+                                    project=project,
+                                    experiment=experiment,
+                                    dataset=dataset,
+                                    s3_input_datadir=s3_input_datadir,
+                                    train_task_name=train_task_name,
+                                    paraphrasing_model=paraphrasing_model,
+                                    keep_original_duplicates=keep_original_duplicates,
+                                    genienlp_version=genienlp_version,
+                                    paraphrase_subfolder=paraphrase_subfolder,
+                                    additional_args=paraphrase_additional_args)
+
+    paraphrase_filtering_op = paraphrase_filtering_step(image=image,
+                                    owner=owner,
+                                    project=project,
+                                    experiment=experiment,
+                                    dataset=dataset,
+                                    s3_input_datadir=paraphrase_generation_op.outputs['s3_output_datadir'],
+                                    train_task_name=train_task_name,
+                                    filtering_model=filtering_model,
+                                    filtering_batch_size=filtering_batch_size,
+                                    genienlp_version=genienlp_version,
+                                    paraphrase_subfolder=paraphrase_subfolder,
+                                    additional_args=filtering_additional_args)
+
+    output_s3_datadir = paraphrase_filtering_op.outputs['s3_output_datadir']
+
+    return output_s3_datadir
 
 def everything(
     do_generate,
@@ -970,3 +1016,41 @@ def eval_only_pipeline(
         thingpedia_developer_key=thingpedia_developer_key,
         eval_set=eval_set,
         additional_args=additional_args)
+
+@dsl.pipeline(
+    name='Paraphrase (and filter) a dataset',
+    description='Runs auto-paraphrasing pipeline on an existing dataset folder'
+)
+def paraphrase_only_pipeline(
+    owner,
+    project,
+    experiment,
+    dataset='',
+    image=default_image,
+    genienlp_version=GENIENLP_VERSION,
+    s3_input_datadir='',
+    train_task_name='',
+    filtering_batch_size='4000',
+    keep_original_duplicates='false',
+    paraphrasing_model=PARAPHRASING_MODEL,
+    filtering_model='',
+    paraphrase_subfolder='user',
+    paraphrase_additional_args='',
+    filtering_additional_args='',
+):
+    paraphrase_only(owner,
+                    project,
+                    experiment,
+                    dataset,
+                    image,
+                    genienlp_version,
+                    s3_input_datadir,
+                    train_task_name,
+                    keep_original_duplicates,
+                    paraphrasing_model,
+                    filtering_model,
+                    filtering_batch_size,
+                    paraphrase_subfolder,
+                    paraphrase_additional_args,
+                    filtering_additional_args,
+                    )

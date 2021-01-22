@@ -99,12 +99,10 @@ implementation:
 
       join() {
         # join the original file and the paraphrasing output
-        export num_new_queries=$((`wc -l ${output_dir}/paraphrase.tsv | cut -d " " -f1` / `wc -l ${input_dir}/train.tsv | cut -d " " -f1`))
         genienlp transform-dataset \
           ${input_dir}/train.tsv \
           ${output_dir}/unfiltered.tsv \
           --query_file ${output_dir}/paraphrase.tsv \
-          --num_new_queries ${num_new_queries} \
           --transformation replace_queries \
           --remove_with_heuristics \
           --task ${task_name}
