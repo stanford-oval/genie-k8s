@@ -52,7 +52,7 @@ implementation:
       fi
 
       if test "${s3_bootleg_prepped_data}" != None ; then
-        aws s3 sync --no-progress ${s3_bootleg_prepped_data} results_temp
+        aws s3 sync --no-progress ${s3_bootleg_prepped_data} results_temp --exclude '*' --include '*bootleg_labels.jsonl'
       fi
 
       load_args=
