@@ -43,7 +43,7 @@ implementation:
       mkdir -p "$modeldir"
 
       if test "{s3_database_dir}" != None ; then
-        aws s3 sync --no-progress ${s3_database_dir} ./database/ --exclude '*' --include '*type2id.json' --include '*canonical2type.json' --include "*${bootleg_model}/*" --include '*emb_data*' --include '*wiki_entity_data*'
+        aws s3 sync --no-progress ${s3_database_dir} ./database/ --exclude '*' --include '*es_material*' --include "*${bootleg_model}/*" --include '*emb_data*' --include '*wiki_entity_data*'
       fi
 
       mkdir -p cache
@@ -75,7 +75,7 @@ implementation:
           --eval_set_name $eval_set \
           --train_languages $train_languages \
           --eval_languages $eval_languages \
-          --bootleg_input_dir ./database/ \
+          --database_dir ./database/ \
           --bootleg_model ${bootleg_model} \
           $@
 
