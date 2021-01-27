@@ -42,7 +42,6 @@ def paraphrase_generation_step(
     train_task_name,
     paraphrasing_model,
     keep_original_duplicates,
-    ignore_context,
     genienlp_version,
     paraphrase_subfolder,
     additional_args
@@ -63,7 +62,6 @@ def paraphrase_generation_step(
         s3_input_datadir=s3_input_datadir,
         paraphrasing_model=paraphrasing_model,
         keep_original_duplicates=keep_original_duplicates,
-        ignore_context=ignore_context,
         paraphrase_subfolder=paraphrase_subfolder,
         additional_args=additional_args)
     (paraphrase_op.container
