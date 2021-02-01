@@ -99,6 +99,7 @@ implementation:
 
           else
             is_dlg=false
+            has_annotated=false
             aws s3 sync ${s3_datadir} ./dataset/ --exclude "*" --include "*eval*.tsv"  --include "*test*.tsv"
 
             ########
