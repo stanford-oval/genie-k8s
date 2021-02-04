@@ -96,6 +96,66 @@ def eval_spl_step(
     return eval_op
 
 
+def eval_spl_step_cpu(
+        owner='mehrad',
+        project='spl',
+        experiment='',
+        model='',
+        task_name='almond_multilingual',
+        s3_datadir='',
+        s3_model_dir='',
+        s3_database_dir='None',
+        bootleg_model='None',
+        image=default_image,
+        genienlp_version='',
+        genie_version='',
+        bootleg_version='',
+        workdir_repo=GENIE_WORKDIR_REPO,
+        workdir_version=GENIE_WORKDIR_VERSION,
+        pred_languages='',
+        eval_set='eval',
+        annotated_set_name='annotated',
+        is_oracle='false',
+        additional_args='--evaluate valid --overwrite'
+):
+    eval_env = {
+        'GENIENLP_VERSION': genienlp_version,
+        'GENIE_VERSION': genie_version,
+        'BOOTLEG_VERSION': bootleg_version,
+        'WORKDIR_REPO': workdir_repo,
+        'WORKDIR_VERSION': workdir_version,
+    }
+    
+    eval_op = components.load_component_from_file('components/evaluate-spl.yaml')(
+        image=image,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        model=model,
+        eval_set=eval_set,
+        annotated_set_name=annotated_set_name,
+        is_oracle=is_oracle,
+        pred_languages=pred_languages,
+        task_name=task_name,
+        s3_datadir=s3_datadir,
+        s3_model_dir=s3_model_dir,
+        s3_database_dir=s3_database_dir,
+        bootleg_model=bootleg_model,
+        additional_args=additional_args)
+    (eval_op.container
+     .set_memory_request('56Gi')
+     .set_memory_limit('56Gi')
+     .set_cpu_request('7.5')
+     .set_cpu_limit('7.5')
+     )
+    (add_env(add_ssh_volume(eval_op), eval_env))
+    
+    eval_op.container.set_image_pull_policy('Always')
+    
+    return eval_op
+
+
+
 @dsl.pipeline(
     name='Eval SPL',
     description='Evaluate a model for SPL experiments'
@@ -123,6 +183,56 @@ def eval_spl(
         eval_additional_args='--evaluate valid --overwrite'
 ):
     eval_op = eval_spl_step(
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        model=model,
+        task_name=task_name,
+        s3_datadir=s3_datadir,
+        s3_database_dir=s3_database_dir,
+        bootleg_model=bootleg_model,
+        image=image,
+        genienlp_version=genienlp_version,
+        genie_version=genie_version,
+        bootleg_version=bootleg_version,
+        workdir_repo=workdir_repo,
+        workdir_version=workdir_version,
+        pred_languages=pred_languages,
+        eval_set=eval_set,
+        annotated_set_name=annotated_set_name,
+        is_oracle=is_oracle,
+        s3_model_dir=s3_model_dir,
+        additional_args=eval_additional_args
+    )
+
+
+@dsl.pipeline(
+    name='Eval SPL on CPU',
+    description='Evaluate a model for SPL experiments'
+)
+def eval_spl_cpu(
+        owner='mehrad',
+        project='spl',
+        experiment='',
+        model='',
+        task_name='almond_multilingual',
+        s3_datadir='',
+        s3_model_dir='',
+        s3_database_dir='None',
+        bootleg_model='None',
+        image=default_image,
+        genienlp_version='',
+        genie_version='',
+        bootleg_version='',
+        workdir_repo=GENIE_WORKDIR_REPO,
+        workdir_version=GENIE_WORKDIR_VERSION,
+        pred_languages='',
+        eval_set='eval',
+        annotated_set_name='annotated',
+        is_oracle='false',
+        eval_additional_args='--evaluate valid --overwrite'
+):
+    eval_op = eval_spl_step_cpu(
         owner=owner,
         project=project,
         experiment=experiment,
