@@ -41,9 +41,9 @@ def bootleg(
         s3_datadir,
         s3_bucket='geniehai',
         s3_database_dir=S3_DATABASE_DIR,
-        image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit:latest-mehrad-bootleg',
-        genienlp_version='703dc192d74d172dbe0d79119192164ed4825508',
-        bootleg_version='master',
+        image='',
+        genienlp_version='',
+        bootleg_version='',
         bootleg_model='',
         train_languages='en',
         eval_languages='en',
@@ -56,7 +56,6 @@ def bootleg(
         'BOOTLEG_VERSION': bootleg_version
     }
     
-    bootleg_num_gpus = 1
     bootleg_op = components.load_component_from_file('components/bootleg.yaml')(
         image=image,
         s3_bucket=s3_bucket,
@@ -74,16 +73,15 @@ def bootleg(
         additional_args=bootleg_additional_args
     )
     (bootleg_op.container
-     .set_memory_request('56Gi')
-     .set_memory_limit('56Gi')
-     .set_cpu_request('7.5')
-     .set_cpu_limit('7.5')
-     .set_gpu_limit(str(bootleg_num_gpus))
+     .set_memory_request('120G')
+     .set_memory_limit('120G')
+     .set_cpu_request('31')
+     .set_cpu_limit('31')
      .add_volume_mount(V1VolumeMount(name='shm', mount_path='/dev/shm'))
      )
     (add_env(add_ssh_volume(bootleg_op), bootleg_env)
      .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-     .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2 * bootleg_num_gpus}xlarge')
+     .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.8xlarge')
     .add_volume(V1Volume(name='shm', empty_dir=V1EmptyDirVolumeSource(medium='Memory')))
      )
     
