@@ -2,6 +2,15 @@ set -ex
 
 pip3 install -U pip
 
+cd /opt/genienlp/
+GENIENLP_HEAD=`git rev-parse HEAD`
+if [ -n "${GENIENLP_VERSION}" ] && [ "${GENIENLP_VERSION}" != "${GENIENLP_HEAD}" ]; then
+  git fetch
+  git checkout ${GENIENLP_VERSION}
+  pip3 install -e .
+fi
+
+
 if [ -d /opt/bootleg/ ] ; then
   cd /opt/bootleg/
   BOOTLEG_HEAD=`git rev-parse HEAD`
@@ -12,16 +21,6 @@ if [ -d /opt/bootleg/ ] ; then
     python3 -m spacy download en_core_web_sm
   fi
 fi
-
-
-cd /opt/genienlp/
-GENIENLP_HEAD=`git rev-parse HEAD`
-if [ -n "${GENIENLP_VERSION}" ] && [ "${GENIENLP_VERSION}" != "${GENIENLP_HEAD}" ]; then
-  git fetch
-  git checkout ${GENIENLP_VERSION}
-  pip3 install -e .
-fi
-
 
 cd  /opt/genie-toolkit/
 GENIE_HEAD=`git rev-parse HEAD`
