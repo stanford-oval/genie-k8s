@@ -17,6 +17,11 @@ inputs:
   - {name: skip_tensorboard, description: ''}
   - {name: calibrate, description: ''}
   - {name: calibration_ood_file, description: ''}
+  - {name: calibration_junk_file, description: ''}
+  - {name: is_correct_params, description: ''}
+  - {name: is_probably_correct_params, description: ''}
+  - {name: is_ood_params, description: ''}
+  - {name: is_junk_params, description: ''}
   - {name: calibration_additional_args, description: ''}
   - {name: train_languages, description: ''}
   - {name: eval_languages, description: ''}
@@ -36,7 +41,7 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image s3_bucket owner task_name project experiment model load_from s3_datadir s3_database_dir dataset_subfolder s3_model_dir skip_tensorboard calibrate calibration_ood_file calibration_additional_args train_languages eval_languages use_bootleg s3_bootleg_prepped_data bootleg_model" "$@"
+      parse_args "$0" "image s3_bucket owner task_name project experiment model load_from s3_datadir s3_database_dir dataset_subfolder s3_model_dir skip_tensorboard calibrate calibration_ood_file calibration_junk_file is_correct_params is_probably_correct_params is_ood_params is_junk_params calibration_additional_args train_languages eval_languages use_bootleg s3_bootleg_prepped_data bootleg_model" "$@"
       shift $n
       cd $HOME
 
@@ -110,16 +115,6 @@ implementation:
           $@
 
       if test "$calibrate" == "true" ; then
-        calibrate_on=valid
-        if test "${calibration_ood_file}" != None ; then
-          aws s3 cp ${calibration_ood_file} dataset/calibration-ood.tsv
-          if ! test -f dataset/almond/user/test.tsv ; then
-            cp dataset/almond/user/eval.tsv dataset/almond/user/test.tsv
-          fi
-          cat dataset/calibration-ood.tsv >> dataset/almond/user/test.tsv
-          calibrate_on=test
-        fi
-      
         genienlp predict \
             --path "$modeldir" \
             --data "dataset" \
@@ -127,12 +122,57 @@ implementation:
             --task ${task_name} \
             --silent \
             --overwrite \
-            --evaluate ${calibrate_on} \
+            --evaluate valid \
             --save_confidence_features \
-            --confidence_feature_path "$modeldir/confidence_feature_file.pkl" \
+            --confidence_feature_path "$modeldir/is_correct_confidence_feature_file.pkl" \
             ${calibration_additional_args}
 
-        genienlp calibrate --save "$modeldir" --confidence_path "$modeldir/confidence_feature_file.pkl" --plot
+        # for detecting parser's mistakes
+        genienlp calibrate --save "$modeldir" --confidence_path "$modeldir/is_correct_confidence_feature_file.pkl" --plot --name_prefix "is_correct" --threshold 0.5 ${is_correct_params}
+        genienlp calibrate --save "$modeldir" --confidence_path "$modeldir/is_correct_confidence_feature_file.pkl" --plot --name_prefix "is_probably_correct" --threshold 0.5 ${is_probably_correct_params}
+
+        if test "${calibration_ood_file}" != None ; then
+          aws s3 cp ${calibration_ood_file} dataset/calibration-ood.tsv
+          cp dataset/almond/user/eval.tsv dataset/almond/user/test.tsv
+          cat dataset/calibration-ood.tsv >> dataset/almond/user/test.tsv
+
+          genienlp predict \
+            --path "$modeldir" \
+            --data "dataset" \
+            --eval_dir "eval_dir" \
+            --task ${task_name} \
+            --silent \
+            --overwrite \
+            --evaluate test \
+            --save_confidence_features \
+            --confidence_feature_path "$modeldir/is_ood_confidence_feature_file.pkl" \
+            --override_confidence_labels '$ood ;' \
+            ${calibration_additional_args}
+
+          # for out-of-domain detection
+          genienlp calibrate --save "$modeldir" --confidence_path "$modeldir/is_ood_confidence_feature_file.pkl" --plot --name_prefix "is_ood" --threshold 0.5 ${is_ood_params}
+
+          if test "${calibration_junk_file}" != None ; then
+            aws s3 cp ${calibration_junk_file} dataset/calibration-junk.tsv
+            cat dataset/calibration-junk.tsv >> dataset/almond/user/test.tsv
+
+            genienlp predict \
+            --path "$modeldir" \
+            --data "dataset" \
+            --eval_dir "eval_dir" \
+            --task ${task_name} \
+            --silent \
+            --overwrite \
+            --evaluate test \
+            --save_confidence_features \
+            --confidence_feature_path "$modeldir/is_junk_confidence_feature_file.pkl" \
+            --override_confidence_labels '$junk ;' \
+            ${calibration_additional_args}
+
+          # for junk detection
+          genienlp calibrate --save "$modeldir" --confidence_path "$modeldir/is_junk_confidence_feature_file.pkl" --plot --name_prefix "is_junk" --threshold 0.5 ${is_junk_params}
+          fi
+        fi
       fi
 
       rm -fr "$modeldir/cache"
@@ -161,6 +201,11 @@ implementation:
       --skip_tensorboard, {inputValue: skip_tensorboard},
       --calibrate, {inputValue: calibrate},
       --calibration_ood_file, {inputValue: calibration_ood_file},
+      --calibration_junk_file, {inputValue: calibration_junk_file},
+      --is_correct_params, {inputValue: is_correct_params},
+      --is_probably_correct_params, {inputValue: is_probably_correct_params},
+      --is_ood_params, {inputValue: is_ood_params},
+      --is_junk_params, {inputValue: is_junk_params},
       --calibration_additional_args, {inputValue: calibration_additional_args},
       --train_languages, {inputValue: train_languages},
       --eval_languages, {inputValue: eval_languages},
