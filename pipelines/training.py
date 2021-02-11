@@ -551,7 +551,7 @@ def everything(
                                                     thingpedia_developer_key=thingpedia_developer_key,
                                                     additional_args=generate_dataset_additional_args)
         train_s3_datadir = generate_dataset_op.outputs['s3_datadir']
-    
+
     if do_bootleg:
         s3_bootleg_prepped_data = split_bootleg_merge_step(
                         owner=owner,
@@ -571,7 +571,8 @@ def everything(
                         remove_original=remove_original,
                         bootleg_additional_args=bootleg_additional_args
         )
-
+    
+    
     train_s3_datadir, eval_model = paraphrase_train_fewshot_step(
         do_paraphrase=do_paraphrase,
         do_fewshot=do_fewshot,
@@ -630,6 +631,64 @@ def everything(
 
 @dsl.pipeline(
     name='Generate, bootleg, train and eval',
+    description='Run bootleg on existing dataset + train + eval'
+)
+def bootleg_train_eval_pipeline(
+    owner,
+    project,
+    experiment,
+    model,
+    train_s3_datadir,
+    image=default_image,
+    genienlp_version=GENIENLP_VERSION,
+    genie_version=GENIE_VERSION,
+    bootleg_version=BOOTLEG_VERSION,
+    workdir_repo=WORKDIR_REPO,
+    workdir_version=WORKDIR_VERSION,
+    thingpedia_developer_key=default_developer_key,
+    train_task_name='',
+    train_load_from='None',
+    train_additional_args='',
+    train_iterations='80000',
+    eval_set='',
+    eval_additional_args='',
+    s3_database_dir=S3_DATABASE_DIR,
+    s3_bootleg_prepped_data='None',
+    bootleg_model='',
+    bootleg_additional_args=''
+):
+    everything(do_generate=False,
+               do_bootleg=True,
+               do_paraphrase=False,
+               do_fewshot=False,
+               owner=owner,
+               project=project,
+               experiment=experiment,
+               model=model,
+               train_s3_datadir=train_s3_datadir,
+               image=image,
+               genienlp_version=genienlp_version,
+               genie_version=genie_version,
+               bootleg_version=bootleg_version,
+               workdir_repo=workdir_repo,
+               workdir_version=workdir_version,
+               thingpedia_developer_key=thingpedia_developer_key,
+               train_task_name=train_task_name,
+               train_load_from=train_load_from,
+               train_additional_args=train_additional_args,
+               train_iterations=train_iterations,
+               eval_set=eval_set,
+               eval_additional_args=eval_additional_args,
+               s3_database_dir=s3_database_dir,
+               s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+               bootleg_model=bootleg_model,
+               bootleg_additional_args=bootleg_additional_args
+               )
+
+
+
+@dsl.pipeline(
+    name='Generate, bootleg, train and eval',
     description='The minimal training pipeline with bootleg'
 )
 def generate_bootleg_train_eval_pipeline(
@@ -653,6 +712,7 @@ def generate_bootleg_train_eval_pipeline(
     train_iterations='80000',
     eval_set='',
     eval_additional_args='',
+    s3_database_dir=S3_DATABASE_DIR,
     s3_bootleg_prepped_data='None',
     bootleg_model='',
     bootleg_additional_args=''
@@ -681,6 +741,7 @@ def generate_bootleg_train_eval_pipeline(
                train_iterations=train_iterations,
                eval_set=eval_set,
                eval_additional_args=eval_additional_args,
+               s3_database_dir=s3_database_dir,
                s3_bootleg_prepped_data=s3_bootleg_prepped_data,
                bootleg_model=bootleg_model,
                bootleg_additional_args=bootleg_additional_args
