@@ -244,17 +244,21 @@ def eval_step(
     experiment,
     model,
     s3_model_dir,
+    s3_database_dir,
     eval_set,
     genienlp_version,
     genie_version,
+    bootleg_version,
     workdir_repo,
     workdir_version,
     thingpedia_developer_key,
+    bootleg_model,
     additional_args
 ):
     eval_env = {
         'GENIENLP_VERSION': genienlp_version,
         'GENIE_VERSION': genie_version,
+        'BOOTLEG_VERSION': bootleg_version,
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
         'THINGPEDIA_DEVELOPER_KEY': thingpedia_developer_key,
@@ -269,6 +273,8 @@ def eval_step(
             model_owner=owner,
             eval_set=eval_set,
             s3_model_dir=s3_model_dir,
+            s3_database_dir=s3_database_dir,
+            bootleg_model=bootleg_model,
             additional_args=additional_args)
     (eval_op.container
         .set_memory_limit('12Gi')
@@ -621,12 +627,15 @@ def everything(
                         experiment=experiment,
                         model=model,
                         s3_model_dir=eval_model,
+                        s3_database_dir=s3_database_dir,
                         eval_set=eval_set,
                         genienlp_version=genienlp_version,
                         genie_version=genie_version,
+                        bootleg_version=bootleg_version,
                         workdir_repo=workdir_repo,
                         workdir_version=workdir_version,
                         thingpedia_developer_key=thingpedia_developer_key,
+                        bootleg_model=bootleg_model,
                         additional_args=eval_additional_args)
 
 @dsl.pipeline(
@@ -1282,9 +1291,12 @@ def eval_only_pipeline(
     image=default_image,
     genienlp_version=GENIENLP_VERSION,
     genie_version=GENIE_VERSION,
+    bootleg_version=BOOTLEG_VERSION,
     workdir_repo=WORKDIR_REPO,
     workdir_version=WORKDIR_VERSION,
     thingpedia_developer_key=default_developer_key,
+    s3_database_dir='None',
+    bootleg_model='None',
     eval_set='',
     additional_args=''
 ):
@@ -1297,9 +1309,12 @@ def eval_only_pipeline(
         image=image,
         genienlp_version=genienlp_version,
         genie_version=genie_version,
+        bootleg_version=bootleg_version,
         workdir_repo=workdir_repo,
         workdir_version=workdir_version,
         thingpedia_developer_key=thingpedia_developer_key,
+        s3_database_dir=s3_database_dir,
+        bootleg_model=bootleg_model,
         eval_set=eval_set,
         additional_args=additional_args)
 
