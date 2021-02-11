@@ -51,6 +51,44 @@ def bootleg(
         remove_original='false',
         bootleg_additional_args=''
 ):
+    split_bootleg_merge_step(
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        task_name=task_name,
+        s3_datadir=s3_datadir,
+        s3_bucket=s3_bucket,
+        s3_database_dir=s3_database_dir,
+        image=image,
+        genienlp_version=genienlp_version,
+        bootleg_version=bootleg_version,
+        bootleg_model=bootleg_model,
+        train_languages=train_languages,
+        eval_languages=eval_languages,
+        eval_set=eval_set,
+        remove_original=remove_original,
+        bootleg_additional_args=bootleg_additional_args
+    )
+   
+
+def split_bootleg_merge_step(
+        owner,
+        project,
+        experiment,
+        task_name,
+        s3_datadir,
+        s3_bucket='geniehai',
+        s3_database_dir=S3_DATABASE_DIR,
+        image='',
+        genienlp_version='',
+        bootleg_version='',
+        bootleg_model='',
+        train_languages='en',
+        eval_languages='en',
+        eval_set='',
+        remove_original='false',
+        bootleg_additional_args=''
+):
     num_chunks = 4
     split_op = split_step(
         image=image,
@@ -58,7 +96,7 @@ def bootleg(
         s3_datadir=s3_datadir,
         num_chunks=num_chunks
     )
-
+    
     bootleg_ops = []
     for i in range(num_chunks):
         bootleg_op = bootleg_step(
@@ -80,7 +118,6 @@ def bootleg(
             bootleg_additional_args=bootleg_additional_args)
         bootleg_ops.append(bootleg_op)
     
-    
     merge_op = merge_step(
         image=image,
         task_name=task_name,
@@ -91,7 +128,11 @@ def bootleg(
     )
     
     merge_op.after(*bootleg_ops)
+
+    s3_bootleg_prepped_data = merge_op.outputs['s3_output_datadir']
     
+    return s3_bootleg_prepped_data
+ 
 
 def split_step(
     image,
@@ -112,6 +153,8 @@ def split_step(
         .set_cpu_limit('7.5')
         .set_cpu_request('7.5'))
     (add_env(add_ssh_volume(split_op), split_env))
+
+    split_op.execution_options.caching_strategy.max_cache_staleness = "P0D"
 
     return split_op
 
@@ -139,6 +182,8 @@ def merge_step(
         .set_cpu_limit('7.5')
         .set_cpu_request('7.5'))
     (add_env(add_ssh_volume(merge_op), merge_env))
+
+    merge_op.execution_options.caching_strategy.max_cache_staleness = "P0D"
 
     return merge_op
 
