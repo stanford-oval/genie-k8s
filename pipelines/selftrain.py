@@ -31,7 +31,7 @@ from kubernetes.client.models import (
 
 from .common import *
 
-from .training import generate_dataset_step, paraphrase_fewshot_step, \
+from .training import generate_dataset_step, paraphrase_train_fewshot_step, \
     train_step, eval_step
 
 
@@ -143,7 +143,7 @@ def selftrain_pipeline(
     initial_datadir = generate_dataset_op.outputs['s3_datadir']
 
     # autoparaphrase and few-shot finetune the user model
-    user_gen_datadir, user_model = paraphrase_fewshot_step(
+    user_gen_datadir, user_model = paraphrase_train_fewshot_step(
         do_paraphrase=True,
         do_fewshot=True,
         owner=owner,
@@ -186,7 +186,7 @@ def selftrain_pipeline(
     )
 
     # autoparaphrase and few-shot finetune the agent model
-    agent_gen_datadir, agent_model = paraphrase_fewshot_step(
+    agent_gen_datadir, agent_model = paraphrase_train_fewshot_step(
         do_paraphrase=True,
         do_fewshot=True,
         owner=owner,
@@ -346,7 +346,7 @@ def selftrain_nopara_pipeline(
     initial_datadir = generate_dataset_op.outputs['s3_datadir']
 
     # autoparaphrase and few-shot finetune the user model
-    user_gen_datadir, user_model = paraphrase_fewshot_step(
+    user_gen_datadir, user_model = paraphrase_train_fewshot_step(
         do_paraphrase=False,
         do_fewshot=True,
         owner=owner,
@@ -389,7 +389,7 @@ def selftrain_nopara_pipeline(
     )
 
     # autoparaphrase and few-shot finetune the agent model
-    agent_gen_datadir, agent_model = paraphrase_fewshot_step(
+    agent_gen_datadir, agent_model = paraphrase_train_fewshot_step(
         do_paraphrase=False,
         do_fewshot=True,
         owner=owner,
