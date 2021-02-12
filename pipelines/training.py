@@ -82,6 +82,7 @@ def train_step(
     s3_datadir,
     dataset_subfolder,
     genienlp_version,
+    bootleg_version,
     train_iterations,
     skip_tensorboard,
     valid_set='eval',
@@ -94,7 +95,6 @@ def train_step(
     is_junk_params='',
     calibration_additional_args='None',
     s3_database_dir='None',
-    bootleg_version='',
     train_languages='en',
     eval_languages='en',
     s3_bucket='geniehai',
@@ -106,7 +106,7 @@ def train_step(
         'GENIENLP_VERSION': genienlp_version,
         'BOOTLEG_VERSION': bootleg_version,
     }
-    train_num_gpus=1
+    train_num_gpus = 1
     train_op = components.load_component_from_file('components/train.yaml')(
             image=image,
             s3_bucket=s3_bucket,
@@ -165,6 +165,7 @@ def train_step_4gpus(
         s3_datadir,
         dataset_subfolder,
         genienlp_version,
+        bootleg_version,
         train_iterations,
         skip_tensorboard,
         valid_set='eval',
@@ -177,7 +178,6 @@ def train_step_4gpus(
         is_junk_params='',
         calibration_additional_args='None',
         s3_database_dir='None',
-        bootleg_version='',
         train_languages='en',
         eval_languages='en',
         s3_bucket='geniehai',
@@ -190,7 +190,6 @@ def train_step_4gpus(
         'BOOTLEG_VERSION': bootleg_version,
     }
     train_num_gpus = 4
-    # TODO fix cpu request
     train_op = components.load_component_from_file('components/train.yaml')(
         image=image,
         s3_bucket=s3_bucket,
@@ -220,10 +219,10 @@ def train_step_4gpus(
         bootleg_model=bootleg_model,
         additional_args=additional_args)
     (train_op.container
-     .set_memory_request('56Gi')
-     .set_memory_limit('56Gi')
-     .set_cpu_request('7.5')
-     .set_cpu_limit('7.5')
+     .set_memory_request('241G')
+     .set_memory_limit('241G')
+     .set_cpu_request('31')
+     .set_cpu_limit('31')
      .set_gpu_limit(str(train_num_gpus))
      .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
      )
