@@ -128,8 +128,8 @@ implementation:
             ${calibration_additional_args}
 
         # for detecting parser's mistakes
-        genienlp calibrate --save "$modeldir" --confidence_path "$modeldir/is_correct_confidence_feature_file.pkl" --plot --name_prefix "is_correct" --threshold 0.5 ${is_correct_params}
-        genienlp calibrate --save "$modeldir" --confidence_path "$modeldir/is_correct_confidence_feature_file.pkl" --plot --name_prefix "is_probably_correct" --threshold 0.5 ${is_probably_correct_params}
+        genienlp calibrate --save "$modeldir" --confidence_path "$modeldir/is_correct_confidence_feature_file.pkl" --plot --name_prefix "is_correct" ${is_correct_params}
+        genienlp calibrate --save "$modeldir" --confidence_path "$modeldir/is_correct_confidence_feature_file.pkl" --plot --name_prefix "is_probably_correct" ${is_probably_correct_params}
 
         if test "${calibration_ood_file}" != None ; then
           aws s3 cp ${calibration_ood_file} dataset/calibration-ood.tsv
@@ -150,7 +150,7 @@ implementation:
             ${calibration_additional_args}
 
           # for out-of-domain detection
-          genienlp calibrate --save "$modeldir" --confidence_path "$modeldir/is_ood_confidence_feature_file.pkl" --plot --name_prefix "is_ood" --threshold 0.5 ${is_ood_params}
+          genienlp calibrate --save "$modeldir" --confidence_path "$modeldir/is_ood_confidence_feature_file.pkl" --plot --name_prefix "is_ood" ${is_ood_params}
 
           if test "${calibration_junk_file}" != None ; then
             aws s3 cp ${calibration_junk_file} dataset/calibration-junk.tsv
@@ -170,7 +170,7 @@ implementation:
             ${calibration_additional_args}
 
           # for junk detection
-          genienlp calibrate --save "$modeldir" --confidence_path "$modeldir/is_junk_confidence_feature_file.pkl" --plot --name_prefix "is_junk" --threshold 0.5 ${is_junk_params}
+          genienlp calibrate --save "$modeldir" --confidence_path "$modeldir/is_junk_confidence_feature_file.pkl" --plot --name_prefix "is_junk" ${is_junk_params}
           fi
         fi
       fi
