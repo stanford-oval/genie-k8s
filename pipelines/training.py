@@ -169,6 +169,7 @@ def train_step_4gpus(
         genienlp_version,
         train_iterations,
         skip_tensorboard,
+        valid_set='eval',
         calibrate='false',
         calibration_ood_file='None',
         calibration_junk_file='None',
@@ -192,6 +193,7 @@ def train_step_4gpus(
         'BOOTLEG_VERSION': bootleg_version,
     }
     train_num_gpus = 4
+    # TODO fix cpu request
     train_op = components.load_component_from_file('components/train.yaml')(
         image=image,
         s3_bucket=s3_bucket,
@@ -206,6 +208,7 @@ def train_step_4gpus(
         dataset_subfolder=dataset_subfolder,
         train_iterations=train_iterations,
         skip_tensorboard=skip_tensorboard,
+        valid_set=valid_set,
         calibrate=calibrate,
         calibration_ood_file=calibration_ood_file,
         calibration_junk_file=calibration_junk_file,
@@ -319,7 +322,7 @@ def paraphrase_train_fewshot_step(
     bootleg_version,
     train_languages,
     eval_languages,
-    eval_set,
+    valid_set,
     s3_bootleg_prepped_data,
     train_dataset_subfolder,
     filtering_train_iterations,
@@ -401,6 +404,7 @@ def paraphrase_train_fewshot_step(
             eval_languages=eval_languages,
             dataset_subfolder=train_dataset_subfolder,
             skip_tensorboard='false',
+            valid_set=valid_set,
             calibrate=calibrate,
             calibration_ood_file=calibration_ood_file,
             calibration_junk_file=calibration_junk_file,
@@ -576,7 +580,7 @@ def everything(
                         bootleg_model=bootleg_model,
                         train_languages=train_languages,
                         eval_languages=eval_languages,
-                        eval_set=eval_set,
+                        eval_set=valid_set,
                         remove_original=remove_original,
                         bootleg_additional_args=bootleg_additional_args
         )
@@ -603,7 +607,7 @@ def everything(
         bootleg_version=bootleg_version,
         train_languages=train_languages,
         eval_languages=eval_languages,
-        eval_set=eval_set,
+        valid_set=valid_set,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
         train_dataset_subfolder=train_dataset_subfolder,
         calibrate=calibrate,
@@ -662,6 +666,7 @@ def bootleg_train_eval_pipeline(
     train_load_from='None',
     train_additional_args='',
     train_iterations='80000',
+    valid_set='eval',
     eval_set='',
     eval_additional_args='',
     s3_database_dir=S3_DATABASE_DIR,
@@ -689,6 +694,7 @@ def bootleg_train_eval_pipeline(
                train_load_from=train_load_from,
                train_additional_args=train_additional_args,
                train_iterations=train_iterations,
+               valid_set=valid_set,
                eval_set=eval_set,
                eval_additional_args=eval_additional_args,
                s3_database_dir=s3_database_dir,
@@ -722,6 +728,7 @@ def generate_bootleg_train_eval_pipeline(
     train_load_from='None',
     train_additional_args='',
     train_iterations='80000',
+    valid_set='eval',
     eval_set='',
     eval_additional_args='',
     s3_database_dir=S3_DATABASE_DIR,
@@ -751,6 +758,7 @@ def generate_bootleg_train_eval_pipeline(
                train_load_from=train_load_from,
                train_additional_args=train_additional_args,
                train_iterations=train_iterations,
+               valid_set=valid_set,
                eval_set=eval_set,
                eval_additional_args=eval_additional_args,
                s3_database_dir=s3_database_dir,
@@ -758,7 +766,6 @@ def generate_bootleg_train_eval_pipeline(
                bootleg_model=bootleg_model,
                bootleg_additional_args=bootleg_additional_args
                )
-
 
 
 
@@ -792,6 +799,7 @@ def generate_train_eval_pipeline(
     is_ood_params='',
     is_junk_params='',
     calibration_additional_args='None',
+    valid_set='eval',
     eval_set='',
     eval_additional_args=''
 ):
@@ -824,6 +832,7 @@ def generate_train_eval_pipeline(
                is_ood_params=is_ood_params,
                is_junk_params=is_junk_params,
                calibration_additional_args=calibration_additional_args,
+               valid_set=valid_set,
                eval_set=eval_set,
                eval_additional_args=eval_additional_args)
 
@@ -857,6 +866,7 @@ def train_eval_only_pipeline(
     is_ood_params='',
     is_junk_params='',
     calibration_additional_args='None',
+    valid_set='eval',
     eval_set='',
     eval_additional_args=''
 ):
@@ -888,6 +898,7 @@ def train_eval_only_pipeline(
                is_ood_params=is_ood_params,
                is_junk_params=is_junk_params,
                calibration_additional_args=calibration_additional_args,
+               valid_set=valid_set,
                eval_set=eval_set,
                eval_additional_args=eval_additional_args)
 
@@ -929,6 +940,7 @@ def generate_paraphrase_train_eval_pipeline(
     paraphrase_subfolder='user',
     paraphrase_additional_args='',
     filtering_additional_args='',
+    valid_set='eval',
     eval_set='',
     eval_additional_args=''
 ):
@@ -968,6 +980,7 @@ def generate_paraphrase_train_eval_pipeline(
                paraphrase_subfolder=paraphrase_subfolder,
                paraphrase_additional_args=paraphrase_additional_args,
                filtering_additional_args=filtering_additional_args,
+               valid_set=valid_set,
                eval_set=eval_set,
                eval_additional_args=eval_additional_args)
 
@@ -1003,6 +1016,7 @@ def generate_train_fewshot_eval_pipeline(
     is_junk_params='',
     calibration_additional_args='None',
     fewshot_train_iterations='20000',
+    valid_set='eval',
     eval_set='',
     eval_additional_args=''
 ):
@@ -1036,6 +1050,7 @@ def generate_train_fewshot_eval_pipeline(
                is_junk_params=is_junk_params,
                calibration_additional_args=calibration_additional_args,
                fewshot_train_iterations=fewshot_train_iterations,
+               valid_set=valid_set,
                eval_set=eval_set,
                eval_additional_args=eval_additional_args)
 
@@ -1078,6 +1093,7 @@ def generate_paraphrase_train_fewshot_eval_pipeline(
     paraphrase_subfolder='user',
     paraphrase_additional_args='',
     filtering_additional_args='',
+    valid_set='eval',
     eval_set='',
     eval_additional_args=''
 ):
@@ -1118,6 +1134,7 @@ def generate_paraphrase_train_fewshot_eval_pipeline(
                paraphrase_subfolder=paraphrase_subfolder,
                paraphrase_additional_args=paraphrase_additional_args,
                filtering_additional_args=filtering_additional_args,
+               valid_set=valid_set,
                eval_set=eval_set,
                eval_additional_args=eval_additional_args)
 
@@ -1159,6 +1176,7 @@ def paraphrase_train_fewshot_eval_pipeline(
     paraphrase_subfolder='user',
     paraphrase_additional_args='',
     filtering_additional_args='',
+    valid_set='eval',
     eval_set='',
     eval_additional_args=''
 ):
@@ -1198,6 +1216,7 @@ def paraphrase_train_fewshot_eval_pipeline(
                paraphrase_subfolder=paraphrase_subfolder,
                paraphrase_additional_args=paraphrase_additional_args,
                filtering_additional_args=filtering_additional_args,
+               valid_set=valid_set,
                eval_set=eval_set,
                eval_additional_args=eval_additional_args)
 
@@ -1239,6 +1258,7 @@ def paraphrase_train_eval_pipeline(
     paraphrase_subfolder='user',
     paraphrase_additional_args='',
     filtering_additional_args='',
+    valid_set='eval',
     eval_set='',
     eval_additional_args=''
 ):
@@ -1277,6 +1297,7 @@ def paraphrase_train_eval_pipeline(
                paraphrase_subfolder=paraphrase_subfolder,
                paraphrase_additional_args=paraphrase_additional_args,
                filtering_additional_args=filtering_additional_args,
+               valid_set=valid_set,
                eval_set=eval_set,
                eval_additional_args=eval_additional_args)
 

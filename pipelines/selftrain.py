@@ -22,12 +22,6 @@
 from kfp import dsl
 from kfp import components
 from kubernetes.client import V1Toleration
-from kubernetes.client.models import (
-    V1VolumeMount,
-    V1Volume,
-    V1PersistentVolumeClaimVolumeSource,
-    V1SecretVolumeSource
-)
 
 from .common import *
 
@@ -171,7 +165,7 @@ def selftrain_pipeline(
         bootleg_version=bootleg_version,
         train_languages=train_languages,
         eval_languages=eval_languages,
-        eval_set=eval_set,
+        valid_set=eval_set,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
         train_load_from='None',
         train_dataset_subfolder='None',
@@ -214,7 +208,7 @@ def selftrain_pipeline(
         bootleg_version=bootleg_version,
         train_languages=train_languages,
         eval_languages=eval_languages,
-        eval_set=eval_set,
+        valid_set=eval_set,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
         train_load_from='None',
         train_dataset_subfolder='None',
@@ -366,7 +360,7 @@ def selftrain_nopara_pipeline(
         bootleg_version=bootleg_version,
         train_languages=train_languages,
         eval_languages=eval_languages,
-        eval_set=eval_set,
+        valid_set=eval_set,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
         train_load_from='None',
         train_dataset_subfolder='None',
@@ -409,7 +403,7 @@ def selftrain_nopara_pipeline(
         bootleg_version=bootleg_version,
         train_languages=train_languages,
         eval_languages=eval_languages,
-        eval_set=eval_set,
+        valid_set=eval_set,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
         train_load_from='None',
         train_dataset_subfolder='None',
