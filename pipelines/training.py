@@ -277,13 +277,13 @@ def eval_step(
             bootleg_model=bootleg_model,
             additional_args=additional_args)
     (eval_op.container
-        .set_memory_limit('12Gi')
-        .set_memory_request('12Gi')
-        .set_cpu_limit('7.5')
-        .set_cpu_request('7.5'))
+        .set_memory_limit('61G')
+        .set_memory_request('61G')
+        .set_cpu_limit('15')
+        .set_cpu_request('15'))
     (add_env(add_ssh_volume(eval_op), eval_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.2xlarge'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.4xlarge'))
 
     return eval_op
 
