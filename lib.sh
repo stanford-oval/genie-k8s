@@ -73,10 +73,15 @@ parse_args() {
     fi
   done
   for argspec in $argspecs ; do
+  is_empty=0 # if this argument is explicitly set to be empty, e.g. `argument=`
     case "$argspec" in
     *=*)
       argname=$(sed -E -e 's/^([^=]*)=(.*)$/\1/g' <<<"$argspec")
       argdefault=$(sed -E -e 's/^([^=]*)=(.*)$/\2/g' <<<"$argspec")
+      if test -z "${argdefault}" ; then
+        echo "--${argname} is explicitly set to be empty"
+        is_empty=1
+      fi
       ;;
     *)
       argname="$argspec"
@@ -86,11 +91,12 @@ parse_args() {
 
     if test -z "${!argname}" ; then
       if test -z "${argdefault}" ; then
-        echo "Missing required command-line argument --${argname}" 1>&2
-        exit 1
-      else
-        eval "$argname"='"$argdefault"'
+        if test "$is_empty" = "0" ; then
+          echo "Missing required command-line argument --${argname}" 1>&2
+          exit 1
+        fi
       fi
+      eval "$argname"='"$argdefault"'
     fi
   done
 }
