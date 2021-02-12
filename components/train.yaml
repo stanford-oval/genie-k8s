@@ -15,6 +15,7 @@ inputs:
   - {name: dataset_subfolder, description: ''}
   - {name: train_iterations, description: ''}
   - {name: skip_tensorboard, description: ''}
+  - {name: valid_set, description: ''}
   - {name: calibrate, description: ''}
   - {name: calibration_ood_file, description: ''}
   - {name: calibration_junk_file, description: ''}
@@ -41,7 +42,7 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image s3_bucket owner task_name project experiment model load_from s3_datadir s3_database_dir dataset_subfolder s3_model_dir skip_tensorboard calibrate calibration_ood_file calibration_junk_file is_correct_params= is_probably_correct_params= is_ood_params= is_junk_params= calibration_additional_args train_languages eval_languages use_bootleg s3_bootleg_prepped_data bootleg_model" "$@"
+      parse_args "$0" "image s3_bucket owner task_name project experiment model load_from s3_datadir s3_database_dir dataset_subfolder s3_model_dir skip_tensorboard valid_set calibrate calibration_ood_file calibration_junk_file is_correct_params= is_probably_correct_params= is_ood_params= is_junk_params= calibration_additional_args train_languages eval_languages use_bootleg s3_bootleg_prepped_data bootleg_model" "$@"
       shift $n
       cd $HOME
 
@@ -107,8 +108,9 @@ implementation:
           --preserve_case \
           --exist_ok \
           --skip_cache \
-          --train_languages $train_languages \
-          --eval_languages $eval_languages \
+          --train_languages ${train_languages} \
+          --eval_languages ${eval_languages} \
+          --eval_set_name ${valid_set} \
           ${tensorboard_args} \
           ${load_args} \
           ${bootleg_args} \
@@ -199,6 +201,7 @@ implementation:
       --dataset_subfolder, {inputValue: dataset_subfolder},
       --s3_model_dir, {outputPath: s3_model_dir},
       --skip_tensorboard, {inputValue: skip_tensorboard},
+      --valid_set, {inputValue: valid_set},
       --calibrate, {inputValue: calibrate},
       --calibration_ood_file, {inputValue: calibration_ood_file},
       --calibration_junk_file, {inputValue: calibration_junk_file},
