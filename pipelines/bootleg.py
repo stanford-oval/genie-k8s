@@ -48,6 +48,116 @@ def bootleg(
         train_languages='en',
         eval_languages='en',
         eval_set='',
+        remove_original='false',
+        bootleg_additional_args=''
+):
+    num_chunks = 4
+    split_op = split_step(
+        image=image,
+        task_name=task_name,
+        s3_datadir=s3_datadir,
+        num_chunks=num_chunks
+    )
+
+    bootleg_ops = []
+    for i in range(num_chunks):
+        bootleg_op = bootleg_step(
+            owner=owner,
+            project=project,
+            experiment=experiment,
+            task_name=task_name,
+            s3_datadir=split_op.outputs['s3_output_datadir'],
+            s3_bucket=s3_bucket,
+            s3_database_dir=s3_database_dir,
+            image=image,
+            genienlp_version=genienlp_version,
+            bootleg_version=bootleg_version,
+            bootleg_model=bootleg_model,
+            train_languages=train_languages,
+            eval_languages=eval_languages,
+            eval_set=eval_set,
+            dataset_subfolder=str(i),
+            bootleg_additional_args=bootleg_additional_args)
+        bootleg_ops.append(bootleg_op)
+    
+    
+    merge_op = merge_step(
+        image=image,
+        task_name=task_name,
+        s3_datadir=split_op.outputs['s3_output_datadir'],
+        bootleg_model=bootleg_model,
+        num_chunks=num_chunks,
+        remove_original=remove_original
+    )
+    
+    merge_op.after(*bootleg_ops)
+    
+
+def split_step(
+    image,
+    task_name,
+    s3_datadir,
+    num_chunks
+):
+    split_env = {}
+
+    split_op = components.load_component_from_file('components/split_file.yaml')(
+            image=image,
+            task_name=task_name,
+            s3_datadir=s3_datadir,
+            num_chunks=num_chunks)
+    (split_op.container
+        .set_memory_limit('12Gi')
+        .set_memory_request('12Gi')
+        .set_cpu_limit('7.5')
+        .set_cpu_request('7.5'))
+    (add_env(add_ssh_volume(split_op), split_env))
+
+    return split_op
+
+def merge_step(
+    image,
+    task_name,
+    s3_datadir,
+    bootleg_model,
+    num_chunks,
+    remove_original='false'
+):
+    merge_env = {}
+
+    merge_op = components.load_component_from_file('components/merge_files.yaml')(
+            image=image,
+            task_name=task_name,
+            s3_datadir=s3_datadir,
+            bootleg_model=bootleg_model,
+            num_chunks=num_chunks,
+            remove_original=remove_original
+    )
+    (merge_op.container
+        .set_memory_limit('12Gi')
+        .set_memory_request('12Gi')
+        .set_cpu_limit('7.5')
+        .set_cpu_request('7.5'))
+    (add_env(add_ssh_volume(merge_op), merge_env))
+
+    return merge_op
+
+
+def bootleg_step(
+        owner,
+        project,
+        experiment,
+        task_name,
+        s3_datadir,
+        s3_bucket='geniehai',
+        s3_database_dir=S3_DATABASE_DIR,
+        image='',
+        genienlp_version='',
+        bootleg_version='',
+        bootleg_model='',
+        train_languages='en',
+        eval_languages='en',
+        eval_set='',
         dataset_subfolder='None',
         bootleg_additional_args=''
 ):
@@ -82,7 +192,8 @@ def bootleg(
     (add_env(add_ssh_volume(bootleg_op), bootleg_env)
      .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
      .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.8xlarge')
-    .add_volume(V1Volume(name='shm', empty_dir=V1EmptyDirVolumeSource(medium='Memory')))
+     .add_volume(V1Volume(name='shm', empty_dir=V1EmptyDirVolumeSource(medium='Memory')))
      )
     
     return bootleg_op
+
