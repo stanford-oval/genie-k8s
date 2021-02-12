@@ -98,7 +98,6 @@ def train_step(
     train_languages='en',
     eval_languages='en',
     s3_bucket='geniehai',
-    use_bootleg='false',
     s3_bootleg_prepped_data='None',
     bootleg_model='None',
     additional_args=''
@@ -133,7 +132,6 @@ def train_step(
             calibration_additional_args=calibration_additional_args,
             train_languages=train_languages,
             eval_languages=eval_languages,
-            use_bootleg=use_bootleg,
             s3_bootleg_prepped_data=s3_bootleg_prepped_data,
             bootleg_model=bootleg_model,
             additional_args=additional_args)
@@ -183,7 +181,6 @@ def train_step_4gpus(
         train_languages='en',
         eval_languages='en',
         s3_bucket='geniehai',
-        use_bootleg='false',
         s3_bootleg_prepped_data='None',
         bootleg_model='None',
         additional_args=''
@@ -219,7 +216,6 @@ def train_step_4gpus(
         calibration_additional_args=calibration_additional_args,
         train_languages=train_languages,
         eval_languages=eval_languages,
-        use_bootleg=use_bootleg,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
         bootleg_model=bootleg_model,
         additional_args=additional_args)

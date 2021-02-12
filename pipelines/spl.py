@@ -284,7 +284,6 @@ def train_eval_spl(
         is_oracle='false',
         skip_tensorboard='false',
         train_iterations='',
-        use_bootleg='false',
         bootleg_model='None',
         bootleg_version='None',
         s3_bootleg_prepped_data='None',
@@ -311,7 +310,6 @@ def train_eval_spl(
         dataset_subfolder=dataset_subfolder,
         skip_tensorboard=skip_tensorboard,
         train_iterations=train_iterations,
-        use_bootleg=use_bootleg,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
         additional_args=train_additional_args
     )
@@ -368,7 +366,6 @@ def train_eval_spl_4gpus(
         is_oracle='false',
         skip_tensorboard='false',
         train_iterations='',
-        use_bootleg='false',
         bootleg_model='None',
         bootleg_version='None',
         s3_bootleg_prepped_data='None',
@@ -394,7 +391,6 @@ def train_eval_spl_4gpus(
         dataset_subfolder=dataset_subfolder,
         skip_tensorboard=skip_tensorboard,
         train_iterations=train_iterations,
-        use_bootleg=use_bootleg,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
         additional_args=train_additional_args
     )
@@ -1022,7 +1018,6 @@ def multilingual_paraphrasing(
         bootleg_version='None',
         skip_tensorboard='false',
         train_iterations='',
-        use_bootleg='false',
         s3_bootleg_prepped_data='None',
         annotated_set_name='annotated',
         eval_set='',
@@ -1081,7 +1076,6 @@ def multilingual_paraphrasing(
         dataset_subfolder=dataset_subfolder,
         skip_tensorboard=skip_tensorboard,
         train_iterations=train_iterations,
-        use_bootleg=use_bootleg,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
         additional_args=train_additional_args
     )
