@@ -12,11 +12,13 @@ inputs:
   - {name: train_output_per_example, description: ''}
   - {name: nmt, description: ''}
   - {name: pivot_langs, description: ''}
+  - {name: marian_group_langs, description: ''}
   - {name: do_alignment, description: ''}
   - {name: tgt_lang, description: ''}
   - {name: do_paraphrasing, description: ''}
+  - {name: prepare_paraphrases, description: ''}
+  - {name: filter_paraphrases, description: ''}
   - {name: paraphrasing_method, description: ''}
-  - {name: task_name, description: ''}
   - {name: s3_datadir, description: ''}
   - {name: sts_batch_size, description: ''}
   - {name: sts_model, description: ''}
@@ -36,7 +38,7 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image owner project experiment s3_bucket model_name_or_path input_splits train_output_per_example nmt pivot_langs do_alignment tgt_lang do_paraphrasing paraphrasing_method task_name s3_datadir sts_batch_size sts_model filtering_metric filtering_threshold train_fewshot s3_output_datadir" "$@"
+      parse_args "$0" "image owner project experiment s3_bucket model_name_or_path input_splits train_output_per_example nmt pivot_langs marian_group_langs do_alignment tgt_lang do_paraphrasing prepare_paraphrases filter_paraphrases paraphrasing_method s3_datadir sts_batch_size sts_model filtering_metric filtering_threshold train_fewshot s3_output_datadir" "$@"
       shift $n
 
       . /opt/genie-toolkit/sync-repos.sh
@@ -51,8 +53,8 @@ implementation:
 
       cd workdir/${MAKEDIR}
 
-      s3_output_dir="${s3_datadir}translated/${nmt}/${tgt_lang}/sts/${pivot_langs}/s3-data-final-merged`if ${train_fewshot} ; then echo "-fewshot" ; fi`"
-      output_dir="${s3_datadir}translated/${nmt}/${tgt_lang}/sts/${pivot_langs}/data-final-merged`if ${train_fewshot} ; then echo "-fewshot" ; fi`"
+      s3_output_dir="${s3_datadir}translated/${nmt}/${tgt_lang}/sts/${pivot_langs}/s3-data-final-merged-${filtering_metric}-${filtering_threshold}`if ${train_fewshot} ; then echo "-fewshot" ; fi`"
+      output_dir="${s3_datadir}translated/${nmt}/${tgt_lang}/sts/${pivot_langs}/data-final-merged-${filtering_metric}-${filtering_threshold}`if ${train_fewshot} ; then echo "-fewshot" ; fi`"
 
       mkdir -p `dirname $s3_output_datadir`
       echo ${s3_output_dir} > $s3_output_datadir
@@ -66,27 +68,30 @@ implementation:
 
       IFS='+'; read -ra input_splits_array <<<"$input_splits"; IFS=' '
       IFS='+'; read -ra pivot_langs_array <<<"$pivot_langs"; IFS=' '
+      IFS='+'; read -ra marian_group_langs_array <<<"$marian_group_langs"; IFS=' '
 
       # generate paraphrases
       if ${do_paraphrasing} ; then
         case ${nmt}+${paraphrasing_method} in
-          marian+masked)
+          marian+masked|gt+masked)
               make -B -j2 geniedir=/opt/genie-toolkit \
                 default_masked_paraphrase_hparams="${paraphrase_arguments} --model_name_or_path ${model_name_or_path}" \
-                all_names="${input_splits_array[*]}" experiment=${experiment} train_output_per_example=${train_output_per_example} masked_paraphrase_marian_unquoted_${tgt_lang}
+                all_names="${input_splits_array[*]}" experiment=${experiment} nmt_model=${nmt} train_output_per_example=${train_output_per_example} masked_paraphrase_marian_unquoted_${tgt_lang}
           ;;
           marian+round_trip)
-            for pivot_lang in ${pivot_langs_array[*]} ; do
+            for (( i=0; i<${#pivot_langs_array[*]}; ++i)); do
+              pivot_lang="${pivot_langs_array[$i]}"
+              marian_group_lang="${marian_group_langs[$i]}"
               make -B -j2 geniedir=/opt/genie-toolkit \
                 default_translation_hparams="${paraphrase_arguments} --replace_qp --force_replace_qp" \
-                all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=false pivot_lang=$pivot_lang paraphrase_marian_unquoted_${tgt_lang}
+                all_names="${input_splits_array[*]}" experiment=${experiment} src_lang=${tgt_lang} tgt_lang=${tgt_lang} marian_group_lang=$marian_group_lang pivot_lang=$pivot_lang nmt_model=${nmt} skip_translation=false paraphrase_marian_unquoted_${tgt_lang}
             done
           ;;
           gt+round_trip)
             for pivot_lang in ${pivot_langs_array[*]} ; do
               make -B -j2 geniedir=/opt/genie-toolkit \
                 default_translation_hparams="${paraphrase_arguments} --replace_qp --force_replace_qp" \
-                all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=false pivot_lang=$pivot_lang paraphrase_gt_quoted_${tgt_lang}
+                all_names="${input_splits_array[*]}" experiment=${experiment} nmt_model=${nmt} skip_translation=false pivot_lang=$pivot_lang paraphrase_gt_quoted_${tgt_lang}
             done
           ;;
           *)
@@ -98,30 +103,39 @@ implementation:
         aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${s3_datadir}translated/${nmt}/${tgt_lang}
       fi
 
-      for pivot_lang in ${pivot_langs_array[*]} ; do
+      # prepare paraphrases for filtering
+      if ${prepare_paraphrases} ; then
+        for pivot_lang in ${pivot_langs_array[*]} ; do
 
-        # prepare paraphrased files
-        paraphrase_sts_hparams="--batch_size ${sts_batch_size} --model_name ${sts_model}"
-        make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true pivot_lang=$pivot_lang nmt_model=${nmt} para_method=${paraphrasing_method} paraphrase_sts_hparams="${paraphrase_sts_hparams}" prepare_paraphrases_${tgt_lang}
+          paraphrase_sts_hparams="--batch_size ${sts_batch_size} --model_name ${sts_model}"
+          make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true pivot_lang=$pivot_lang nmt_model=${nmt} para_method=${paraphrasing_method}  paraphrase_sts_hparams="${paraphrase_sts_hparams}" prepare_paraphrases_${tgt_lang}
 
-        aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${s3_datadir}translated/${nmt}/${tgt_lang}
+          aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${s3_datadir}translated/${nmt}/${tgt_lang}
 
-        # filter paraphrases based on sts score
-        filtering_sts_hparams="--filtering_metric ${filtering_metric} --filtering_threshold ${filtering_threshold}"
-        make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true pivot_lang=$pivot_lang nmt_model=${nmt} para_method=${paraphrasing_method} filtering_sts_hparams="${filtering_sts_hparams}" filter_paraphrase_${tgt_lang}
+        done
+      fi
 
-      done
+      # filter paraphrases
+      if ${filter_paraphrases} ; then
+        for pivot_lang in ${pivot_langs_array[*]} ; do
+          # filter paraphrases based on sts score
+          # filtering_sts_hparams="--filtering_metric ${filtering_metric} --filtering_threshold ${filtering_threshold}"
+          make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true pivot_lang=$pivot_lang nmt_model=${nmt} para_method=${paraphrasing_method} sts_filtering_metric=${filtering_metric} sts_filtering_threshold=${filtering_threshold} filter_paraphrase_${tgt_lang}
 
-      # Join paraphrase files with original data
-      make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true all_pivot_langs=$pivot_langs  nmt_model=${nmt} para_method=${paraphrasing_method} join_para_data_${tgt_lang}
+          aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${s3_datadir}translated/${nmt}/${tgt_lang}
+        done
+      fi
 
+      # join paraphrase files with original data
+      make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true all_pivot_langs=$pivot_langs  nmt_model=${nmt} para_method=${paraphrasing_method} sts_filtering_metric=${filtering_metric} sts_filtering_threshold=${filtering_threshold} join_para_data_${tgt_lang}
 
       # sync local files
       aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${s3_datadir}translated/${nmt}/${tgt_lang}
 
       # sync all original input splits to s3_output_dir that is passed to training step
       aws s3 sync --no-progress ${experiment}/${nmt}/${tgt_lang}/final/ ${s3_output_dir}
-      # overwrite splits with new generated files
+
+      # overwrite splits with new original+paraphrase data
       aws s3 sync --no-progress ${output_dir} ${s3_output_dir}
 
     args: [
@@ -136,11 +150,13 @@ implementation:
       --train_output_per_example, {inputValue: train_output_per_example},
       --nmt, {inputValue: nmt},
       --pivot_langs, {inputValue: pivot_langs},
+      --marian_group_langs, {inputValue: marian_group_langs},
       --do_alignment, {inputValue: do_alignment},
       --tgt_lang, {inputValue: tgt_lang},
       --do_paraphrasing, {inputValue: do_paraphrasing},
+      --prepare_paraphrases, { inputValue: prepare_paraphrases },
+      --filter_paraphrases, {inputValue: filter_paraphrases},
       --paraphrasing_method, {inputValue: paraphrasing_method},
-      --task_name, {inputValue: task_name},
       --s3_datadir, {inputValue: s3_datadir},
       --s3_output_datadir, { outputPath: s3_output_datadir},
       --sts_batch_size, {inputValue: sts_batch_size},
