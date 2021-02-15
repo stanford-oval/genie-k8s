@@ -120,6 +120,7 @@ def selftrain_pipeline(
     filtering_additional_args='',
     auto_annotate_additional_args='',
     eval_set='dev',
+    eval_parallel_jobs='2',
     eval_additional_args=''
 ):
     # first, generate the dataset
@@ -276,6 +277,7 @@ def selftrain_pipeline(
                         model=model,
                         s3_model_dir=eval_model,
                         eval_set=eval_set,
+                        parallel_jobs=eval_parallel_jobs,
                         genienlp_version=genienlp_version,
                         genie_version=genie_version,
                         workdir_repo=workdir_repo,
@@ -323,6 +325,7 @@ def selftrain_nopara_pipeline(
     calibration_additional_args='',
     auto_annotate_additional_args='',
     eval_set='dev',
+    eval_parallel_jobs='2',
     eval_additional_args=''
 ):
     # first, generate the dataset
@@ -479,6 +482,7 @@ def selftrain_nopara_pipeline(
                         model=model,
                         s3_model_dir=eval_model,
                         eval_set=eval_set,
+                        parallel_jobs=eval_parallel_jobs,
                         genienlp_version=genienlp_version,
                         genie_version=genie_version,
                         workdir_repo=workdir_repo,

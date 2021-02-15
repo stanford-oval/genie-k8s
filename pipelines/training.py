@@ -246,6 +246,7 @@ def eval_step(
     s3_model_dir,
     s3_database_dir,
     eval_set,
+    parallel_jobs,
     genienlp_version,
     genie_version,
     bootleg_version,
@@ -272,6 +273,7 @@ def eval_step(
             model=model,
             model_owner=owner,
             eval_set=eval_set,
+            parallel_jobs=parallel_jobs,
             s3_model_dir=s3_model_dir,
             s3_database_dir=s3_database_dir,
             bootleg_model=bootleg_model,
@@ -541,6 +543,7 @@ def everything(
     paraphrase_additional_args='',
     filtering_additional_args='',
     eval_set='',
+    eval_parallel_jobs='2',
     eval_additional_args='',
     remove_original='false',
     bootleg_additional_args=''
@@ -631,6 +634,7 @@ def everything(
                         s3_model_dir=eval_model,
                         s3_database_dir=s3_database_dir,
                         eval_set=eval_set,
+                        parallel_jobs=eval_parallel_jobs,
                         genienlp_version=genienlp_version,
                         genie_version=genie_version,
                         bootleg_version=bootleg_version,
@@ -1327,6 +1331,7 @@ def eval_only_pipeline(
     s3_database_dir='None',
     bootleg_model='None',
     eval_set='',
+    parallel_jobs='2',
     additional_args=''
 ):
     eval_step(
@@ -1345,6 +1350,7 @@ def eval_only_pipeline(
         s3_database_dir=s3_database_dir,
         bootleg_model=bootleg_model,
         eval_set=eval_set,
+        parallel_jobs=parallel_jobs,
         additional_args=additional_args)
 
 @dsl.pipeline(
