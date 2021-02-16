@@ -113,7 +113,7 @@ implementation:
       join
 
       # Delete intermediate files that don't help debugging
-      rm ${output_dir}/paraphrase.tsv
+      # rm ${output_dir}/paraphrase.tsv
 
       # upload the new dataset to S3
       aws s3 sync --no-progress output_dataset/ "${s3_output_dir}"
