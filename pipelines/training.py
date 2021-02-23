@@ -244,17 +244,18 @@ def eval_step(
     experiment,
     model,
     s3_model_dir,
-    s3_database_dir,
     eval_set,
     parallel_jobs,
     genienlp_version,
     genie_version,
-    bootleg_version,
     workdir_repo,
     workdir_version,
     thingpedia_developer_key,
-    bootleg_model,
-    additional_args
+    s3_database_dir='None',
+    bootleg_version=BOOTLEG_VERSION,
+    bootleg_model='None',
+    is_oracle='false',
+    additional_args=''
 ):
     eval_env = {
         'GENIENLP_VERSION': genienlp_version,
@@ -277,6 +278,7 @@ def eval_step(
             s3_model_dir=s3_model_dir,
             s3_database_dir=s3_database_dir,
             bootleg_model=bootleg_model,
+            is_oracle=is_oracle,
             additional_args=additional_args)
     (eval_op.container
         .set_memory_limit('61G')
@@ -545,6 +547,7 @@ def everything(
     eval_set='',
     eval_parallel_jobs='2',
     eval_additional_args='',
+    is_oracle='false',
     remove_original='false',
     bootleg_additional_args=''
 ):
@@ -642,6 +645,7 @@ def everything(
                         workdir_version=workdir_version,
                         thingpedia_developer_key=thingpedia_developer_key,
                         bootleg_model=bootleg_model,
+                        is_oracle=is_oracle,
                         additional_args=eval_additional_args)
 
 @dsl.pipeline(
@@ -1362,6 +1366,7 @@ def eval_only_pipeline(
     thingpedia_developer_key=default_developer_key,
     s3_database_dir='None',
     bootleg_model='None',
+    is_oracle='false',
     eval_set='',
     parallel_jobs='2',
     additional_args=''
@@ -1381,6 +1386,7 @@ def eval_only_pipeline(
         thingpedia_developer_key=thingpedia_developer_key,
         s3_database_dir=s3_database_dir,
         bootleg_model=bootleg_model,
+        is_oracle=is_oracle,
         eval_set=eval_set,
         parallel_jobs=parallel_jobs,
         additional_args=additional_args)
