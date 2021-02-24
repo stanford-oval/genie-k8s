@@ -43,7 +43,7 @@ implementation:
       mkdir -p "$modeldir"
 
       if test "{s3_database_dir}" != None ; then
-        aws s3 sync --no-progress ${s3_database_dir} ./database/ --exclude '*' --include '*es_material*' --include "*${bootleg_model}/*" --include '*emb_data*' --include '*wiki_entity_data*'
+        aws s3 sync --no-progress ${s3_database_dir}/bootleg/ ./database/
       fi
 
       mkdir -p cache

@@ -40,7 +40,7 @@ WORKDIR_VERSION = '0db4d113bd2436e85f7dfa7542f800106485f7a8'
 GENIE_WORKDIR_REPO = 'git@github.com:stanford-oval/genie-workdirs.git'
 GENIE_WORKDIR_VERSION = 'master'
 PARAPHRASING_MODEL = 's3://geniehai/sinaj/models/schemaorg/paraphrase/bart-large-speedup-megabatch-5m/'
-S3_DATABASE_DIR = 's3://geniehai/mehrad/extras/bootleg_material'
+S3_DATABASE_DIR = 's3://geniehai/mehrad/extras/bootleg_files'
 
 # name of a secret in Kubernetes containing the SSH credentials (GitHub deploy key)
 SSH_VOLUME = 'ssh-secrets-k425k8d8h8'
