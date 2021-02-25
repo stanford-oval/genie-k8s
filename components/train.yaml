@@ -15,6 +15,7 @@ inputs:
   - {name: dataset_subfolder, description: ''}
   - {name: train_iterations, description: ''}
   - {name: skip_tensorboard, description: ''}
+  - {name: valid_set, description: ''}
   - {name: calibrate, description: ''}
   - {name: calibration_ood_file, description: ''}
   - {name: calibration_junk_file, description: ''}
@@ -25,7 +26,6 @@ inputs:
   - {name: calibration_additional_args, description: ''}
   - {name: train_languages, description: ''}
   - {name: eval_languages, description: ''}
-  - {name: use_bootleg, description: ''}
   - {name: s3_bootleg_prepped_data, description: ''}
   - {name: bootleg_model, description: ''}
   - {name: additional_args, description: ''}
@@ -41,7 +41,7 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image s3_bucket owner task_name project experiment model load_from s3_datadir s3_database_dir dataset_subfolder s3_model_dir skip_tensorboard calibrate calibration_ood_file calibration_junk_file is_correct_params= is_probably_correct_params= is_ood_params= is_junk_params= calibration_additional_args train_languages eval_languages use_bootleg s3_bootleg_prepped_data bootleg_model" "$@"
+      parse_args "$0" "image s3_bucket owner task_name project experiment model load_from s3_datadir s3_database_dir dataset_subfolder s3_model_dir skip_tensorboard valid_set calibrate calibration_ood_file calibration_junk_file is_correct_params= is_probably_correct_params= is_ood_params= is_junk_params= calibration_additional_args train_languages eval_languages s3_bootleg_prepped_data bootleg_model" "$@"
       shift $n
       cd $HOME
 
@@ -56,7 +56,12 @@ implementation:
       mkdir -p "$modeldir"
 
       if test "${s3_database_dir}" != None ; then
-        aws s3 sync --no-progress ${s3_database_dir} ./database/ --exclude '*' --include '*es_material*' --include '*wikidatatitle_to_typeid_0905.json' --include '*wikidataqid_to_bootlegtypeid.json' --include '*entityQID_to_wikidataTypeQID.json' --include '*alias2qids_wiki*' --include "*${bootleg_model}/*.json"
+        if test "${bootleg_model}" == "bootleg_wiki" ; then
+          # copy all embedding files for full models (eval folder contains those)
+          aws s3 sync --no-progress ${s3_database_dir}/eval/ ./database/
+        else
+          aws s3 sync --no-progress ${s3_database_dir}/train/ ./database/
+        fi
       fi
 
       if test "${s3_bootleg_prepped_data}" != None ; then
@@ -83,7 +88,7 @@ implementation:
         ;;
 
         *)
-          aws s3 sync --no-progress --exclude "synthetic*.txt" --exclude "*bootleg*" ${s3_datadir}${dataset_subfolder} dataset/almond
+          aws s3 sync --no-progress --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*" ${s3_datadir}${dataset_subfolder} dataset/almond
         ;;
       esac
 
@@ -95,7 +100,7 @@ implementation:
       fi
 
       bootleg_args=
-      if test "$use_bootleg" == "true" ; then
+      if test "$s3_bootleg_prepped_data" == "None" ; then
         bootleg_args="--bootleg_model ${bootleg_model} --database_dir ./database/"
       fi
 
@@ -107,8 +112,9 @@ implementation:
           --preserve_case \
           --exist_ok \
           --skip_cache \
-          --train_languages $train_languages \
-          --eval_languages $eval_languages \
+          --train_languages ${train_languages} \
+          --eval_languages ${eval_languages} \
+          --eval_set_name ${valid_set} \
           ${tensorboard_args} \
           ${load_args} \
           ${bootleg_args} \
@@ -199,6 +205,7 @@ implementation:
       --dataset_subfolder, {inputValue: dataset_subfolder},
       --s3_model_dir, {outputPath: s3_model_dir},
       --skip_tensorboard, {inputValue: skip_tensorboard},
+      --valid_set, {inputValue: valid_set},
       --calibrate, {inputValue: calibrate},
       --calibration_ood_file, {inputValue: calibration_ood_file},
       --calibration_junk_file, {inputValue: calibration_junk_file},
@@ -209,7 +216,6 @@ implementation:
       --calibration_additional_args, {inputValue: calibration_additional_args},
       --train_languages, {inputValue: train_languages},
       --eval_languages, {inputValue: eval_languages},
-      --use_bootleg, {inputValue: use_bootleg},
       --s3_bootleg_prepped_data, {inputValue: s3_bootleg_prepped_data},
       --bootleg_model, {inputValue: bootleg_model},
       --,

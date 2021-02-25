@@ -1,0 +1,78 @@
+name: Split
+description: |
+  Split datasets
+inputs:
+  - {name: image, description: '', default: ''}
+  - {name: task_name, description: '', default: ''}
+  - {name: s3_datadir, description: '', default: ''}
+  - {name: num_chunks, description: '', default: ''}
+
+outputs:
+  - {name: s3_output_datadir}
+
+implementation:
+  container:
+    image: '{{inputs.parameters.image}}'
+    command:
+    - /bin/bash
+    - -ex
+    - -c 
+    - |
+      . /opt/genie-toolkit/lib.sh
+      parse_args "$0" "image task_name s3_datadir num_chunks s3_output_datadir" "$@"
+      shift $n
+      cd $HOME
+
+      /opt/genie-toolkit/sync-repos.sh
+
+      S3_OUTPUT_DATADIR=${s3_datadir}chunked/
+
+      aws s3 sync --no-progress  --exclude "*bootleg*" --exclude "*chunked*" ${s3_datadir} dataset/
+
+      cd dataset/
+
+      all_dirs=()
+
+      case $task_name in
+        *"multilingual"*)
+          for dir in * ; do all_dirs+=($dir) ; done
+        ;;
+
+        *"dialogue"*)
+          if [ "$task_name" == *"agent"* ] ; then all_dirs+=(agent) ; else all_dirs+=(user) ; fi
+        ;;
+
+        *)
+          all_dirs+=(.)
+        ;;
+      esac
+
+      for dir in ${all_dirs[*]} ; do
+        mkdir -p $dir/chunked/
+        train_dataset_size=`wc -l < $dir/train.tsv`
+        eval_dataset_size=`wc -l < $dir/eval.tsv`
+
+        # round up split size
+        train_split_size=$(((train_dataset_size + num_chunks - 1) / num_chunks))
+        eval_split_size=$(((eval_dataset_size + num_chunks - 1) / num_chunks))
+
+        split -a 1 -d -l $train_split_size --additional-suffix=.tsv $dir/train.tsv $dir/chunked/train
+        split -a 1 -d -l $eval_split_size --additional-suffix=.tsv $dir/eval.tsv $dir/chunked/eval
+        for ((i=0;i<$num_chunks;i++)); do
+          aws s3 cp --no-progress $dir/chunked/train"$i".tsv "$S3_OUTPUT_DATADIR"$i/$dir/train.tsv
+          aws s3 cp --no-progress $dir/chunked/eval"$i".tsv "$S3_OUTPUT_DATADIR"$i/$dir/eval.tsv
+        done
+      done
+
+      mkdir -p `dirname $s3_output_datadir`
+      echo ${S3_OUTPUT_DATADIR} > $s3_output_datadir
+
+
+    args: [
+      'cmd',
+      --image, {inputValue: image},
+      --task_name, { inputValue: task_name },
+      --s3_datadir, {inputValue: s3_datadir},
+      --num_chunks, {inputValue: num_chunks},
+      --s3_output_datadir, {outputPath: s3_output_datadir},
+    ]
