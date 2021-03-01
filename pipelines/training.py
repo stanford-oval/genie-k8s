@@ -291,6 +291,48 @@ def eval_step(
 
     return eval_op
 
+def prediction_step(
+    image,
+    eval_set,
+    task_name,
+    s3_model_dir,
+    s3_input_datadir,
+    dataset_subfolder,
+    val_batch_size,
+    genienlp_version,
+    additional_args
+):
+
+    predict_env = {
+        'GENIENLP_VERSION': genienlp_version,
+    }
+
+    predict_num_gpus=4
+    predict_op = components.load_component_from_file('components/predict.yaml')(
+            image=image,
+            eval_set=eval_set,
+            task_name=task_name,
+            s3_model_dir=s3_model_dir,
+            s3_input_datadir=s3_input_datadir,
+            dataset_subfolder=dataset_subfolder,
+            val_batch_size=val_batch_size,
+            additional_args=additional_args)
+    (predict_op.container
+        .set_memory_request('150G')
+        .set_memory_limit('150G')
+        .set_cpu_request('16')
+        .set_cpu_limit('16')
+        # not supported yet in the version of kfp we're using
+        #.set_ephemeral_storage_request('75G')
+        #.set_ephemeral_storage_limit('75G')
+        .set_gpu_limit(str(predict_num_gpus))
+    )
+    (add_env(add_ssh_volume(predict_op), predict_env)
+        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.12xlarge'))
+
+    return predict_op
+
 
 def paraphrase_train_fewshot_step(
     do_paraphrase,
@@ -1390,6 +1432,35 @@ def eval_only_pipeline(
         eval_set=eval_set,
         parallel_jobs=parallel_jobs,
         additional_args=additional_args)
+
+
+@dsl.pipeline(
+    name='Predict',
+    description='Run genienlp predict on a previously trained model'
+)
+def predict_pipeline(
+    image=default_image,
+    eval_set='',
+    task_name='',
+    s3_model_dir='',
+    s3_input_datadir='',
+    dataset_subfolder='None',
+    val_batch_size='4000',
+    additional_args='',
+    genienlp_version=GENIENLP_VERSION
+):
+    prediction_step(
+        image=image,
+        eval_set=eval_set,
+        task_name=task_name,
+        s3_model_dir=s3_model_dir,
+        s3_input_datadir=s3_input_datadir,
+        dataset_subfolder=dataset_subfolder,
+        val_batch_size=val_batch_size,
+        additional_args=additional_args,
+        genienlp_version=genienlp_version
+        )
+
 
 @dsl.pipeline(
     name='Paraphrase (and filter) a dataset',

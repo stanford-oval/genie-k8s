@@ -17,6 +17,7 @@ python3 upload_pipeline.py selftrain_pipeline selftrain
 python3 upload_pipeline.py selftrain_nopara_pipeline selftrain-nopara
 python3 upload_pipeline.py paraphrase_train_eval_pipeline paraphrase-train-eval
 python3 upload_pipeline.py paraphrase_only_pipeline paraphrase-only
+python3 upload_pipeline.py predict_pipeline predict
 
 
 # export CONTAINER_IMAGE=932360549041.dkr.ecr.us-west-2.amazonaws.com/masp:0.1
