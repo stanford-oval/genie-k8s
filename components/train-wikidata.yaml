@@ -1,0 +1,74 @@
+name: Train
+description: |
+  Training
+inputs:
+  - {name: image, description: '', default: ''}
+  - {name: s3_bucket, description: '', default: ''}
+  - {name: owner, description: '', default: ''}
+  - {name: project, description: '', default: ''}
+  - {name: experiment, description: '', default: ''}
+  - {name: canonical, description: '', default: ''}
+  - {name: model, description: '', default: ''}
+  - {name: load_from, description: '', default: ''}
+  - {name: s3_datadir, description: '', default: ''}
+  - {name: train_iterations, description: '', default: ''}
+  - {name: skip_tensorboard, description: '', default: ''}
+  - {name: additional_args, description: '', default: ''}
+outputs:
+  - {name: s3_model_dir}
+implementation:
+  container:
+    image: '{{inputs.parameters.image}}'
+    command:
+    - /bin/bash
+    - -ex
+    - -c
+    - |
+      . /opt/genie-toolkit/lib.sh
+
+      parse_args "$0" "image s3_bucket owner project experiment canonical model load_from s3_datadir s3_model_dir skip_tensorboard train_iterations" "$@"
+      shift $n
+      cd $HOME
+
+      /opt/genie-toolkit/sync-repos.sh
+      MAKEDIR=`get_make_dir ${project}`
+      cd workdir/${MAKEDIR}
+      
+      export TZ=America/Los_Angeles
+      export TS_NODE_TRANSPILE_ONLY=true
+      npm install
+      
+      aws s3 sync --no-progress ${s3_datadir}/datadir/ datadir/
+      aws s3 sync --no-progress ${s3_datadir}/${canonical}/ ${canonical}/
+      # For translate
+      aws s3 cp s3://geniehai/yamamura/dataset/csqa/kb/filtered_property_wikidata4.json datadir/filtered_property_wikidata4.json
+      aws s3 sync --no-progress s3://geniehai/yamamura/dataset/csqa/BFS/dev_proc_direct_1000_wo_con_0_6000/ datadir/masp/valid
+      
+      make eval_set=eval_synthetic experiment=${canonical} translate
+      mv ${canonical}/eval-synthetic/annotated.tsv datadir/eval.tsv
+      
+      modeldir=${canonical}/models/${model}
+      make eval_set=eval_synthetic experiment=${canonical} train_iterations=${train_iterations} model=${model} train
+      
+      S3_MODEL_DIR=${s3_datadir}/models/${model}/
+      aws s3 sync --no-progress ${modeldir}/ ${S3_MODEL_DIR}
+
+      mkdir -p `dirname $s3_model_dir`
+      echo ${s3_datadir} > $s3_model_dir 
+
+    args: [
+      'cmd',
+      --image, {inputValue: image},
+      --s3_bucket, {inputValue: s3_bucket},
+      --owner, {inputValue: owner},
+      --project, {inputValue: project},
+      --experiment, {inputValue: experiment},
+      --canonical, {inputValue: canonical},
+      --model, {inputValue: model},
+      --load_from, {inputValue: load_from},
+      --s3_datadir, {inputValue: s3_datadir},
+      --skip_tensorboard, {inputValue: skip_tensorboard},
+      --train_iterations, {inputValue: train_iterations},
+      --s3_model_dir, {outputPath: s3_model_dir},
+      --, {inputValue: additional_args},
+    ]

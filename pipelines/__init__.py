@@ -24,3 +24,5 @@ from .other_models import *
 from .selftrain import *
 from .spl import *
 from .training import *
+from .wikidata import *
+

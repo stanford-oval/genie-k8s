@@ -1,0 +1,91 @@
+name: Generate dataset
+description: |
+  Generate dataset
+inputs:
+  - {name: image, description: '', default: ''}
+  - {name: s3_bucket, description: '', default: ''}
+  - {name: owner, description: '', default: ''}
+  - {name: project, description: '', default: ''}
+  - {name: experiment, description: '', default: ''}
+  - {name: canonical, description: '', default: ''}
+  - {name: dataset, description: '', default: ''}
+  - {name: additional_args, description: '', default: ''}
+outputs:
+  - {name: s3_datadir}
+  - {name: MLPipeline UI metadata, type: UI metadata}
+implementation: 
+  container:
+    image: '{{inputs.parameters.image}}'
+    command:
+    - /bin/bash
+    - -ex
+    - -c
+    - |
+      . /opt/genie-toolkit/lib.sh
+      parse_args "$0" "image s3_bucket owner project experiment canonical dataset s3_datadir" "$@"
+      shift $n
+      cd $HOME
+
+      /opt/genie-toolkit/sync-repos.sh 
+      MAKEDIR=`get_make_dir ${project}`
+      cd workdir/${MAKEDIR}
+
+      cat >> config.mk <<EOF
+      developer_key = ${THINGPEDIA_DEVELOPER_KEY}
+      EOF
+
+      export TZ=America/Los_Angeles
+      export TS_NODE_TRANSPILE_ONLY=true
+      npm install
+      
+      # Download CSQA json files
+      aws s3 cp s3://geniehai/yamamura/dataset/csqa/kb/filtered_property_wikidata4.json datadir/filtered_property_wikidata4.json
+      aws s3 cp s3://geniehai/yamamura/dataset/csqa/kb/wikidata_short_1.json datadir/wikidata_short_1.json
+      aws s3 cp s3://geniehai/yamamura/dataset/csqa/kb/wikidata_short_2.json datadir/wikidata_short_2.json
+      aws s3 cp s3://geniehai/yamamura/dataset/csqa/kb/items_wikidata_n.json datadir/items_wikidata_n.json
+      aws s3 cp s3://geniehai/yamamura/dataset/csqa/kb/comp_wikidata_rev.json datadir/comp_wikidata_rev.json
+
+      # Synthesize data
+      make eval_set=eval_synthetic experiment=${canonical} datadir
+      
+      S3_DATADIR=s3://${s3_bucket}/${owner}/dataset/${project}/${experiment}/${dataset}/${canonical}/`date +%s`
+      aws s3 cp --no-progress datadir/train.tsv ${S3_DATADIR}/datadir/train.tsv
+      aws s3 cp --no-progress datadir/eval.tsv ${S3_DATADIR}/datadir/eval.tsv
+      aws s3 sync --no-progress ${canonical}/ ${S3_DATADIR}/${canonical}/
+      mkdir -p `dirname $s3_datadir`
+      echo ${S3_DATADIR}  > $s3_datadir
+      
+      if test -f datadir/stats ; then
+        cat > /tmp/mlpipeline-ui-metadata.json <<EOF
+      {"outputs" : [
+          {
+            "storage": "inline",
+            "source": "$(cat datadir/stats | tr '\t' ',')",
+            "format": "csv",
+            "type": "table",
+            "header": [ "set", "# dlgs", "# synthetic turns",
+              "# training turns", "entropy (ctx)", "entropy (utt)",
+              "entropy (tgt)", "turns / dialogues", "# unique ctxs"
+            ]
+          }
+      ]}
+      EOF
+      else
+        echo '{"outputs":[]}' > /tmp/mlpipeline-ui-metadata.json 
+      fi
+    
+    args: [
+      'cmd',
+      --image, {inputValue: image},
+      --s3_bucket, {inputValue: s3_bucket},
+      --owner, {inputValue: owner},
+      --project, {inputValue: project},
+      --experiment, {inputValue: experiment},
+      --canonical, {inputValue: canonical},
+      --dataset, {inputValue: dataset},
+      --s3_datadir, {outputPath: s3_datadir},
+      --, {inputValue: additional_args}
+    ]
+
+    fileOutputs:
+      MLPipeline UI metadata: /tmp/mlpipeline-ui-metadata.json

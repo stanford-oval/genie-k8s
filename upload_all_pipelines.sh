@@ -7,16 +7,19 @@
 
 export THINGPEDIA_DEVELOPER_KEY= # paste your developer key here
 
-python3 upload_pipeline.py generate_train_eval_pipeline generate-train-eval
-python3 upload_pipeline.py train_eval_only_pipeline train-eval
-python3 upload_pipeline.py generate_paraphrase_train_eval_pipeline generate-paraphrase-train-eval
-python3 upload_pipeline.py generate_train_fewshot_eval_pipeline generate-train-fewshot-eval
-python3 upload_pipeline.py generate_paraphrase_train_fewshot_eval_pipeline generate-paraphrase-train-fewshot-eval
-python3 upload_pipeline.py eval_only_pipeline eval-only
-python3 upload_pipeline.py selftrain_pipeline selftrain
-python3 upload_pipeline.py selftrain_nopara_pipeline selftrain-nopara
-python3 upload_pipeline.py paraphrase_train_eval_pipeline paraphrase-train-eval
-python3 upload_pipeline.py paraphrase_only_pipeline paraphrase-only
+
+python3 upload_pipeline.py wikidata_pipeline wikidata-generate-train-eval
+
+#python3 upload_pipeline.py generate_train_eval_pipeline generate-train-eval
+#python3 upload_pipeline.py train_eval_only_pipeline train-eval
+#python3 upload_pipeline.py generate_paraphrase_train_eval_pipeline generate-paraphrase-train-eval
+#python3 upload_pipeline.py generate_train_fewshot_eval_pipeline generate-train-fewshot-eval
+#python3 upload_pipeline.py generate_paraphrase_train_fewshot_eval_pipeline generate-paraphrase-train-fewshot-eval
+#python3 upload_pipeline.py eval_only_pipeline eval-only
+#python3 upload_pipeline.py selftrain_pipeline selftrain
+#python3 upload_pipeline.py selftrain_nopara_pipeline selftrain-nopara
+#python3 upload_pipeline.py paraphrase_train_eval_pipeline paraphrase-train-eval
+#python3 upload_pipeline.py paraphrase_only_pipeline paraphrase-only
 
 
 # export CONTAINER_IMAGE=932360549041.dkr.ecr.us-west-2.amazonaws.com/masp:0.1
