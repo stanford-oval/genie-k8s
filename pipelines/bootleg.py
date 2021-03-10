@@ -43,7 +43,6 @@ def bootleg(
         s3_database_dir=S3_DATABASE_DIR,
         image='',
         genienlp_version='',
-        bootleg_version='',
         bootleg_model='',
         train_languages='en',
         eval_languages='en',
@@ -61,7 +60,6 @@ def bootleg(
         s3_database_dir=s3_database_dir,
         image=image,
         genienlp_version=genienlp_version,
-        bootleg_version=bootleg_version,
         bootleg_model=bootleg_model,
         train_languages=train_languages,
         eval_languages=eval_languages,
@@ -81,7 +79,6 @@ def split_bootleg_merge_step(
         s3_database_dir=S3_DATABASE_DIR,
         image='',
         genienlp_version='',
-        bootleg_version='',
         bootleg_model='',
         train_languages='en',
         eval_languages='en',
@@ -109,7 +106,6 @@ def split_bootleg_merge_step(
             s3_database_dir=s3_database_dir,
             image=image,
             genienlp_version=genienlp_version,
-            bootleg_version=bootleg_version,
             bootleg_model=bootleg_model,
             train_languages=train_languages,
             eval_languages=eval_languages,
@@ -198,7 +194,6 @@ def bootleg_step(
         s3_database_dir=S3_DATABASE_DIR,
         image='',
         genienlp_version='',
-        bootleg_version='',
         bootleg_model='',
         train_languages='en',
         eval_languages='en',
@@ -207,8 +202,7 @@ def bootleg_step(
         bootleg_additional_args=''
 ):
     bootleg_env = {
-        'GENIENLP_VERSION': genienlp_version,
-        'BOOTLEG_VERSION': bootleg_version
+        'GENIENLP_VERSION': genienlp_version
     }
     
     bootleg_op = components.load_component_from_file('components/bootleg.yaml')(

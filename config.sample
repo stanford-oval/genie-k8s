@@ -10,5 +10,3 @@ COMMON_IMAGE=
 # default version of the Genie components to include in the docker image
 genienlp_version=master
 genie_version=master
-thingtalk_version=master
-bootleg_version=master
