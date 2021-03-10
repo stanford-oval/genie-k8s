@@ -38,19 +38,27 @@ implementation:
       export TS_NODE_TRANSPILE_ONLY=true
       npm install
       
+      # Download processed domain files if exist
+      S3_DATADIR=s3://${s3_bucket}/${owner}/dataset/${project}/${experiment}/${dataset}
+      aws s3 sync --no-progress ${S3_DATADIR}/${canonical}/ ${canonical}/
+      
       # Download CSQA json files
       aws s3 cp s3://geniehai/yamamura/dataset/csqa/kb/filtered_property_wikidata4.json datadir/filtered_property_wikidata4.json
       aws s3 cp s3://geniehai/yamamura/dataset/csqa/kb/wikidata_short_1.json datadir/wikidata_short_1.json
       aws s3 cp s3://geniehai/yamamura/dataset/csqa/kb/wikidata_short_2.json datadir/wikidata_short_2.json
       aws s3 cp s3://geniehai/yamamura/dataset/csqa/kb/items_wikidata_n.json datadir/items_wikidata_n.json
       aws s3 cp s3://geniehai/yamamura/dataset/csqa/kb/comp_wikidata_rev.json datadir/comp_wikidata_rev.json
+      aws s3 sync s3://geniehai/yamamura/dataset/csqa/CSQA/test datadir/csqa/test
+      aws s3 sync s3://geniehai/yamamura/dataset/csqa/CSQA/valid datadir/csqa/valid
+
+      make eval_set=eval_synthetic experiment=${canonical} ${canonical}/manifest.tt
+      aws s3 sync --no-progress ${canonical}/ ${S3_DATADIR}/${canonical}/
 
       # Synthesize data
       make eval_set=eval_synthetic experiment=${canonical} datadir
       
-      S3_DATADIR=s3://${s3_bucket}/${owner}/dataset/${project}/${experiment}/${dataset}/${canonical}/`date +%s`
-      aws s3 cp --no-progress datadir/train.tsv ${S3_DATADIR}/datadir/train.tsv
-      aws s3 cp --no-progress datadir/eval.tsv ${S3_DATADIR}/datadir/eval.tsv
+      aws s3 cp --no-progress datadir/train.tsv ${S3_DATADIR}/${canonical}/train.tsv
+      aws s3 cp --no-progress datadir/eval.tsv ${S3_DATADIR}/${canonical}/eval.tsv
       aws s3 sync --no-progress ${canonical}/ ${S3_DATADIR}/${canonical}/
       mkdir -p `dirname $s3_datadir`
       echo ${S3_DATADIR}  > $s3_datadir

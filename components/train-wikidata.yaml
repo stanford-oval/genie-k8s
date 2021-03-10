@@ -16,6 +16,7 @@ inputs:
   - {name: additional_args, description: '', default: ''}
 outputs:
   - {name: s3_model_dir}
+  #- {name: s3_datadir}
 implementation:
   container:
     image: '{{inputs.parameters.image}}'
@@ -38,23 +39,19 @@ implementation:
       export TS_NODE_TRANSPILE_ONLY=true
       npm install
       
-      aws s3 sync --no-progress ${s3_datadir}/datadir/ datadir/
       aws s3 sync --no-progress ${s3_datadir}/${canonical}/ ${canonical}/
-      # For translate
-      aws s3 cp s3://geniehai/yamamura/dataset/csqa/kb/filtered_property_wikidata4.json datadir/filtered_property_wikidata4.json
-      aws s3 sync --no-progress s3://geniehai/yamamura/dataset/csqa/BFS/dev_proc_direct_1000_wo_con_0_6000/ datadir/masp/valid
-      
-      make eval_set=eval_synthetic experiment=${canonical} translate
-      mv ${canonical}/eval-synthetic/annotated.tsv datadir/eval.tsv
-      
+      mkdir datadir
+      mv ${canonical}/train.tsv datadir/train.tsv
+      mv ${canonical}/eval_synthetic/annotated.tsv datadir/eval.tsv
+
       modeldir=${canonical}/models/${model}
       make eval_set=eval_synthetic experiment=${canonical} train_iterations=${train_iterations} model=${model} train
       
-      S3_MODEL_DIR=${s3_datadir}/models/${model}/
+      S3_MODEL_DIR=s3://${s3_bucket}/${owner}/models/${project}/${experiment}/${canonical}/`date +%s`
       aws s3 sync --no-progress ${modeldir}/ ${S3_MODEL_DIR}
 
       mkdir -p `dirname $s3_model_dir`
-      echo ${s3_datadir} > $s3_model_dir 
+      echo ${S3_MODEL_DIR} > $s3_model_dir 
 
     args: [
       'cmd',
@@ -70,5 +67,6 @@ implementation:
       --skip_tensorboard, {inputValue: skip_tensorboard},
       --train_iterations, {inputValue: train_iterations},
       --s3_model_dir, {outputPath: s3_model_dir},
+      #--s3_datadir, {outputPath: s3_datadir},
       --, {inputValue: additional_args},
     ]

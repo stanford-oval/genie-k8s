@@ -33,7 +33,7 @@ default_developer_key = os.getenv('THINGPEDIA_DEVELOPER_KEY')
 
 default_image = '932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit-kf:20210209.2' #updated
 GENIENLP_VERSION = 'abef70716c014b860e65e0538399ba7dc08e523c' #updated
-GENIE_VERSION = '6be6de18fac32054e912735bacee74703f6f2001' # head of wip/naoki-cs399
+GENIE_VERSION = '296399b87089fab2a613bd5f4b1d98f203b89d23' # head of wip/naoki-cs399
 BOOTLEG_VERSION = '83ebf4c0c2c7001041512136ef15440bb364f5ed'
 WORKDIR_REPO = 'git@github.com:stanford-oval/genie-workdirs.git'
 WORKDIR_VERSION = 'HEAD'

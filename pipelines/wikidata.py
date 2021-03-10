@@ -110,8 +110,8 @@ def eval_step(
     experiment,
     canonical,
     model,
+    s3_data_dir,
     s3_model_dir,
-    #eval_set,
     genienlp_version,
     genie_version,
     workdir_repo,
@@ -135,18 +135,17 @@ def eval_step(
             canonical=canonical,
             model=model,
             model_owner=owner,
-            #eval_set=eval_set,
+            s3_data_dir=s3_data_dir,
             s3_model_dir=s3_model_dir,
             additional_args=additional_args)
     (eval_op.container
-        .set_memory_limit('55Gi')
-        .set_memory_request('55Gi')
-        .set_cpu_limit('15.5')
-        .set_cpu_request('15.5')
-    )
+        .set_memory_limit('61G')
+        .set_memory_request('61G')
+        .set_cpu_limit('15')
+        .set_cpu_request('15'))
     (add_env(add_ssh_volume(eval_op), eval_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.2xlarge'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.4xlarge'))
 
     return eval_op
 
@@ -178,6 +177,7 @@ def everything(
     paraphrase_additional_args='',
     filtering_additional_args=''):
 
+    train_s3_datadir = 's3://'+str(s3_bucket)+'/'+str(owner)+'/dataset/'+str(project)+'/'+str(experiment)+'/'+str(dataset)
     if do_generate:
         generate_dataset_op = generate_dataset_step(image=image,
                                                     owner=owner,
@@ -191,7 +191,6 @@ def everything(
                                                     thingpedia_developer_key=thingpedia_developer_key,
                                                     additional_args=generate_dataset_additional_args)
         train_s3_datadir = generate_dataset_op.outputs['s3_datadir']
-    #train_s3_datadir = 's3://geniehai/yamamura/dataset/wikidata294/1/auto/country/1613544170'
 
     train_op = train_step(
             image=image,
@@ -212,6 +211,8 @@ def everything(
             additional_args=train_additional_args,
             )
  
+    #s3_model_dir = 's3://geniehai/yamamura/models/wikidata294/0/country/1615442878'
+    #train_s3_datadir = train_op.outputs['s3_datadir']
     s3_model_dir = train_op.outputs['s3_model_dir']
 
     eval_op = eval_step(image=image,
@@ -220,8 +221,8 @@ def everything(
                         experiment=experiment,
                         canonical=canonical,
                         model=model,
+                        s3_data_dir=train_s3_datadir,
                         s3_model_dir=s3_model_dir,
-                        #eval_set=eval_set,
                         genienlp_version=genienlp_version,
                         genie_version=genie_version,
                         workdir_repo=workdir_repo,
@@ -236,8 +237,8 @@ def everything(
 def wikidata_pipeline(
     owner='yamamura',
     project='wikidata294',
-    experiment='0',
-    canonical='country', # added
+    experiment='1',
+    canonical='country',
     model='0',
     dataset='auto',
     image=default_image,

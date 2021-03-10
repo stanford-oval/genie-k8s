@@ -9,7 +9,7 @@ inputs:
   - {name: canonical, description: '', default: ''}
   - {name: model, description: '', default: ''}
   - {name: model_owner, description: '', default: ''}
-  #- {name: eval_set, description: '', default: ''}
+  - {name: s3_data_dir, description: '', default: ''}
   - {name: s3_model_dir, description: '', default: ''}
   - {name: additional_args, description: '', default: ''}
 outputs:
@@ -26,7 +26,7 @@ implementation:
     - -c 
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image project owner experiment canonical model model_owner s3_model_dir s3_metrics_output metrics_output" "$@"
+      parse_args "$0" "image project owner experiment canonical model model_owner s3_data_dir s3_model_dir s3_metrics_output metrics_output" "$@"
       shift $n
       cd $HOME
 
@@ -42,14 +42,16 @@ implementation:
       export TS_NODE_TRANSPILE_ONLY=true
       npm install
       npm i ts-node
-      
-      aws s3 sync --no-progress ${s3_model_dir}/${canonical}/eval-synthetic/ ${canonical}/eval-synthetic/
-      aws s3 cp --no-progress ${s3_model_dir}/${canonical}/manifest.tt ${canonical}/manifest.tt
-      aws s3 sync --no-progress ${s3_model_dir}/models/${model}/ ${canonical}/models/${model}/
+
+      mkdir -p ${canonical}/models/${model}/
+      aws s3 cp --no-progress ${s3_data_dir}/${canonical}/manifest.tt ${canonical}/manifest.tt
+      aws s3 cp --no-progress ${s3_data_dir}/${canonical}/test.tsv ${canonical}/test.tsv
+      aws s3 sync --no-progress ${s3_model_dir}/ ${canonical}/models/${model}/
       
       make model=${model} eval_set=eval_synthetic experiment=${canonical} evaluate
       
-      aws s3 sync --no-progress ${canonical}/eval-synthetic/ ${s3_model_dir}/${canonical}/eval-synthetic/
+      aws s3 cp --no-progress ${canonical}/eval_synthetic/${model}.results ${s3_model_dir}/${model}.results
+      aws s3 cp --no-progress ${canonical}/eval_synthetic/${model}.debug ${s3_model_dir}/${model}.debug
 
     args: [
       'cmd',
@@ -60,7 +62,7 @@ implementation:
       --canonical, {inputValue: canonical},
       --model, {inputValue: model},
       --model_owner, {inputValue: model_owner},
-      #--eval_set, {inputValue: eval_set},
+      --s3_data_dir, {inputValue: s3_data_dir},
       --s3_model_dir, {inputValue: s3_model_dir},
       --s3_metrics_output, {outputPath: s3_metrics_output},
       --metrics_output, {outputPath: metrics_output},
