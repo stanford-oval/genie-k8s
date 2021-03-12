@@ -34,7 +34,6 @@ default_developer_key = os.getenv('THINGPEDIA_DEVELOPER_KEY')
 default_image = '932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit-kf:20210212.2'
 GENIENLP_VERSION = 'a24f5106bb63642d3dc1fbea039ffe49c829e7be'
 GENIE_VERSION = 'c96402da098696d71bc04a9c36a5753d1beb8982'
-BOOTLEG_VERSION = '41aca545f2fee3d7af724183af37d1b28fb10748'
 WORKDIR_REPO = 'git@github.com:stanford-oval/thingpedia-common-devices.git'
 WORKDIR_VERSION = '1efc491d27c756967890261c6d045fff0755450b'
 GENIE_WORKDIR_REPO = 'git@github.com:stanford-oval/genie-workdirs.git'

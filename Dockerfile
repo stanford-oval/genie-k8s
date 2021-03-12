@@ -6,20 +6,12 @@ RUN pip3 install -U pip
 
 WORKDIR /opt/genienlp/
 ARG GENIENLP_VERSION=master
+RUN pip3 uninstall bootleg -y
 RUN git fetch && git checkout ${GENIENLP_VERSION} && pip3 install -e .
-
-ARG ADD_BOOTLEG=
-RUN echo ${ADD_BOOTLEG}
-ARG BOOTLEG_VERSION=master
-RUN if [ ${ADD_BOOTLEG} == true ]; then \
-		git clone https://github.com/Mehrad0711/bootleg.git /opt/bootleg/ ; \
-		cd /opt/bootleg/ ; \
-		git checkout ${BOOTLEG_VERSION} && pip3 install -r requirements.txt && pip3 install -e . ; \
-		python3 -m spacy download en_core_web_sm ; \
-	fi
+RUN python3 -m spacy download en_core_web_sm
 
 # for occasional plotting in genienlp
-RUN pip3 install matplotlib~=3.0
+RUN pip3 install matplotlib~=3.0 seaborn~=0.9
 
 ARG ADD_APEX=
 RUN echo ${ADD_APEX}
