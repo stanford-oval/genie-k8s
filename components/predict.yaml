@@ -13,7 +13,10 @@ inputs:
   - {name: val_batch_size, description: '', default: ''}
   - {name: additional_args, description: '', default: ''}
 outputs:
-  - {name: s3_output_datadir}
+  - {name: metrics_output}
+  - {name: s3_metrics_output}
+  - {name: MLPipeline UI metadata, type: UI metadata}
+  - {name: MLPipeline Metrics, type: Metrics}
 implementation:
   container:
     image: '{{inputs.parameters.image}}'
@@ -23,7 +26,7 @@ implementation:
     - -c 
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image owner eval_set task_name model_name_or_path s3_input_datadir model_type dataset_subfolder s3_output_datadir val_batch_size" "$@"
+      parse_args "$0" "image owner eval_set task_name model_name_or_path s3_input_datadir model_type dataset_subfolder metrics_output s3_metrics_output val_batch_size" "$@"
       shift $n
       cd $HOME
 
@@ -73,11 +76,18 @@ implementation:
           --val_batch_size ${val_batch_size} \
           $@
 
-      S3_OUTPUT_DATADIR=${s3_output}/eval/`date +%s`
-      aws s3 sync --no-progress "./eval" ${S3_OUTPUT_DATADIR}
+      mkdir -p `dirname $s3_metrics_output`
+      mkdir -p $metrics_output
 
-      mkdir -p `dirname $s3_output_datadir`
-      echo ${S3_OUTPUT_DATADIR} > $s3_output_datadir
+      S3_METRIC_OUTPUT="$s3_output"/eval/`date +%s`/
+
+      echo $S3_METRIC_OUTPUT >> $s3_metrics_output
+      cp -r ./eval/ $metrics_output/
+
+      genienlp write-kf-metrics --eval_file ./eval/${eval_set}/${task_name}.results.json
+
+      aws s3 sync --no-progress "./eval" $S3_METRIC_OUTPUT
+
 
     args: [
       'cmd',
@@ -89,7 +99,12 @@ implementation:
       --s3_input_datadir, {inputValue: s3_input_datadir},
       --model_type, {inputValue: model_type},
       --dataset_subfolder, {inputValue: dataset_subfolder},
-      --s3_output_datadir, {outputPath: s3_output_datadir},
+      --s3_metrics_output, {outputPath: s3_metrics_output},
+      --metrics_output, { outputPath: metrics_output },
       --val_batch_size, {inputValue: val_batch_size},
       --, {inputValue: additional_args}
     ]
+
+    fileOutputs:
+      MLPipeline UI metadata: /tmp/mlpipeline-ui-metadata.json
+      MLPipeline Metrics: /tmp/mlpipeline-metrics.json
