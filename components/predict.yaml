@@ -36,7 +36,21 @@ implementation:
         dataset_subfolder=
       fi
 
-      aws s3 sync --no-progress --exclude "synthetic*.txt" --exclude "*bootleg*" ${s3_input_datadir}${dataset_subfolder} dataset/almond
+      case $task_name in
+        *"multilingual"*)
+            dataset_dir=dataset/almond/multilingual
+        ;;
+
+        "almond"*)
+          dataset_dir=dataset/almond
+        ;;
+
+        *)
+           dataset_dir=dataset
+        ;;
+      esac
+
+      aws s3 sync --no-progress ${s3_input_datadir}${dataset_subfolder} $dataset_dir --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*"
 
       # if not an s3 path assume pretrained model name and save it in genienlp format
       if [[ "${model_name_or_path}" != "s3://"* ]] ; then

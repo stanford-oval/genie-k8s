@@ -59,9 +59,14 @@ implementation:
           done
         ;;
 
-        *)
+        "almond"*)
           aws s3 sync --no-progress --exclude "synthetic*.txt" --exclude "*bootleg*" ${s3_datadir}${dataset_subfolder} dataset/almond
         ;;
+
+        *)
+        aws s3 sync --no-progress --exclude "synthetic*.txt" --exclude "*bootleg*" ${s3_datadir}${dataset_subfolder} dataset
+      ;;
+
       esac
 
       genienlp bootleg-dump-features \
