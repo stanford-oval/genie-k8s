@@ -1525,8 +1525,6 @@ def train_predict_small(
     
 
 
-
-
 @dsl.pipeline(
     name='Predict',
     description='Run genienlp predict on a previously trained model'
@@ -1558,8 +1556,9 @@ def predict_pipeline(
         genienlp_version=genienlp_version
         )
 
+
 @dsl.pipeline(
-    name='Predict',
+    name='Predict using g4dn.4xlarge',
     description='Run genienlp predict on a previously trained model'
 )
 def predict_pipeline_small(
