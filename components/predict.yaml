@@ -3,10 +3,12 @@ description: |
   Predict
 inputs:
   - {name: image, description: '', default: ''}
+  - {name: owner, description: '', default: ''}
   - {name: eval_set, description: '', default: ''}
   - {name: task_name, description: '', default: ''}
-  - {name: s3_model_dir, description: '', default: ''}
+  - {name: model_name_or_path, description: '', default: ''}
   - {name: s3_input_datadir, description: '', default: ''}
+  - {name: model_type, description: '', default: ''}
   - {name: dataset_subfolder, description: '', default: ''}
   - {name: val_batch_size, description: '', default: ''}
   - {name: additional_args, description: '', default: ''}
@@ -21,7 +23,7 @@ implementation:
     - -c 
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image eval_set task_name s3_model_dir s3_input_datadir dataset_subfolder s3_output_datadir val_batch_size" "$@"
+      parse_args "$0" "image owner eval_set task_name model_name_or_path s3_input_datadir model_type dataset_subfolder s3_output_datadir val_batch_size" "$@"
       shift $n
       cd $HOME
 
@@ -34,8 +36,16 @@ implementation:
         dataset_subfolder=
       fi
 
-      aws s3 sync --no-progress "${s3_model_dir}" "$modeldir"/ --exclude "iteration_*.pth" --exclude "*_optim.pth" --exclude "*eval/*"  --exclude "*.log"
       aws s3 sync --no-progress --exclude "synthetic*.txt" --exclude "*bootleg*" ${s3_input_datadir}${dataset_subfolder} dataset/almond
+
+      # if not an s3 path assume pretrained model name and save it in genienlp format
+      if [[ "${model_name_or_path}" != "s3://"* ]] ; then
+        genienlp train --train_tasks ${task_name} --data "dataset"  --train_iterations 0 --save "$modeldir" --model ${model_type} --pretrained_model ${model_name_or_path} --exist_ok
+        s3_output=s3://geniehai/${owner}/workdir/prediction/${task_name}/${model_type}/${model_name_or_path}
+      else
+        aws s3 sync --no-progress "${model_name_or_path}" "$modeldir"/ --exclude "iteration_*.pth" --exclude "*_optim.pth" --exclude "*eval/*"  --exclude "*.log"
+        s3_output=${model_name_or_path%/}
+      fi
 
       genienlp predict \
           --data "dataset" \
@@ -49,7 +59,7 @@ implementation:
           --val_batch_size ${val_batch_size} \
           $@
 
-      S3_OUTPUT_DATADIR=${s3_model_dir%/}/eval/`date +%s`
+      S3_OUTPUT_DATADIR=${s3_output}/eval/`date +%s`
       aws s3 sync --no-progress "./eval" ${S3_OUTPUT_DATADIR}
 
       mkdir -p `dirname $s3_output_datadir`
@@ -58,10 +68,12 @@ implementation:
     args: [
       'cmd',
       --image, {inputValue: image},
+      --owner, {inputValue: owner},
       --eval_set, {inputValue: eval_set},
       --task_name, {inputValue: task_name},
-      --s3_model_dir, {inputValue: s3_model_dir},
+      --model_name_or_path, {inputValue: model_name_or_path},
       --s3_input_datadir, {inputValue: s3_input_datadir},
+      --model_type, {inputValue: model_type},
       --dataset_subfolder, {inputValue: dataset_subfolder},
       --s3_output_datadir, {outputPath: s3_output_datadir},
       --val_batch_size, {inputValue: val_batch_size},
