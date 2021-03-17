@@ -8,7 +8,10 @@
 export THINGPEDIA_DEVELOPER_KEY= # paste your developer key here
 
 python3 upload_pipeline.py generate_train_eval_pipeline generate-train-eval
-python3 upload_pipeline.py train_eval_only_pipeline train-eval
+python3 upload_pipeline.py train_eval_pipeline train-eval
+python3 upload_pipeline.py bootleg_only_pipeline bootleg-only
+python3 upload_pipeline.py generate_bootleg_train_eval_pipeline generate-bootleg-train-eval
+python3 upload_pipeline.py bootleg_train_eval_pipeline bootleg-train-eval
 python3 upload_pipeline.py generate_paraphrase_train_eval_pipeline generate-paraphrase-train-eval
 python3 upload_pipeline.py generate_train_fewshot_eval_pipeline generate-train-fewshot-eval
 python3 upload_pipeline.py generate_paraphrase_train_fewshot_eval_pipeline generate-paraphrase-train-fewshot-eval
@@ -18,6 +21,7 @@ python3 upload_pipeline.py selftrain_nopara_pipeline selftrain-nopara
 python3 upload_pipeline.py paraphrase_train_eval_pipeline paraphrase-train-eval
 python3 upload_pipeline.py paraphrase_only_pipeline paraphrase-only
 python3 upload_pipeline.py predict_pipeline predict
+python3 upload_pipeline.py predict_small_pipeline predict-small
 
 
 # export CONTAINER_IMAGE=932360549041.dkr.ecr.us-west-2.amazonaws.com/masp:0.1

@@ -31,9 +31,9 @@ from kubernetes.client.models import (
 # Get the Thingpedia key from environment variable
 default_developer_key = os.getenv('THINGPEDIA_DEVELOPER_KEY')
 
-default_image = '932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit-kf:20210212.2'
-GENIENLP_VERSION = 'a24f5106bb63642d3dc1fbea039ffe49c829e7be'
-GENIE_VERSION = 'c96402da098696d71bc04a9c36a5753d1beb8982'
+default_image = '932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit-kf:20210312.1'
+GENIENLP_VERSION = '3b81a0606a936d087a48984889918b3394fb654c'
+GENIE_VERSION = 'ea146ff975151d98e1602457b7fdecf029b71229'
 WORKDIR_REPO = 'git@github.com:stanford-oval/thingpedia-common-devices.git'
 WORKDIR_VERSION = '1efc491d27c756967890261c6d045fff0755450b'
 GENIE_WORKDIR_REPO = 'git@github.com:stanford-oval/genie-workdirs.git'
