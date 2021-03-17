@@ -900,7 +900,7 @@ def generate_train_eval_pipeline(
     name='Train and eval',
     description='Trains and evaluate on an existing dataset'
 )
-def train_eval_only_pipeline(
+def train_eval_pipeline(
     owner,
     project,
     experiment,

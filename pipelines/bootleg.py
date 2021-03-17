@@ -33,7 +33,7 @@ from .common import *
     name='Bootleg',
     description='Run a Bootleg model to extract and dump candidate features'
 )
-def bootleg(
+def bootleg_only_pipeline(
         owner,
         project,
         experiment,
