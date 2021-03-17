@@ -67,7 +67,7 @@ def bootleg_only_pipeline(
         remove_original=remove_original,
         bootleg_additional_args=bootleg_additional_args
     )
-   
+
 
 def split_bootleg_merge_step(
         owner,
@@ -86,7 +86,7 @@ def split_bootleg_merge_step(
         remove_original='false',
         bootleg_additional_args=''
 ):
-    num_chunks = 4
+    num_chunks = 1
     split_op = split_step(
         image=image,
         task_name=task_name,
@@ -124,63 +124,64 @@ def split_bootleg_merge_step(
     )
     
     merge_op.after(*bootleg_ops)
-
+    
     s3_bootleg_prepped_data = merge_op.outputs['s3_output_datadir']
     
     return s3_bootleg_prepped_data
- 
+
 
 def split_step(
-    image,
-    task_name,
-    s3_datadir,
-    num_chunks
+        image,
+        task_name,
+        s3_datadir,
+        num_chunks
 ):
     split_env = {}
-
+    
     split_op = components.load_component_from_file('components/split_file.yaml')(
-            image=image,
-            task_name=task_name,
-            s3_datadir=s3_datadir,
-            num_chunks=num_chunks)
+        image=image,
+        task_name=task_name,
+        s3_datadir=s3_datadir,
+        num_chunks=num_chunks)
     (split_op.container
-        .set_memory_limit('12Gi')
-        .set_memory_request('12Gi')
-        .set_cpu_limit('7.5')
-        .set_cpu_request('7.5'))
+     .set_memory_limit('12Gi')
+     .set_memory_request('12Gi')
+     .set_cpu_limit('7.5')
+     .set_cpu_request('7.5'))
     (add_env(add_ssh_volume(split_op), split_env))
-
+    
     split_op.execution_options.caching_strategy.max_cache_staleness = "P0D"
-
+    
     return split_op
 
+
 def merge_step(
-    image,
-    task_name,
-    s3_datadir,
-    bootleg_model,
-    num_chunks,
-    remove_original='false'
+        image,
+        task_name,
+        s3_datadir,
+        bootleg_model,
+        num_chunks,
+        remove_original='false'
 ):
     merge_env = {}
-
+    
     merge_op = components.load_component_from_file('components/merge_files.yaml')(
-            image=image,
-            task_name=task_name,
-            s3_datadir=s3_datadir,
-            bootleg_model=bootleg_model,
-            num_chunks=num_chunks,
-            remove_original=remove_original
+        image=image,
+        task_name=task_name,
+        s3_datadir=s3_datadir,
+        bootleg_model=bootleg_model,
+        num_chunks=num_chunks,
+        remove_original=remove_original
     )
     (merge_op.container
-        .set_memory_limit('12Gi')
-        .set_memory_request('12Gi')
-        .set_cpu_limit('7.5')
-        .set_cpu_request('7.5'))
+     .set_memory_limit('12Gi')
+     .set_memory_request('12Gi')
+     .set_cpu_limit('7.5')
+     .set_cpu_request('7.5'))
     (add_env(add_ssh_volume(merge_op), merge_env))
-
+    
     merge_op.execution_options.caching_strategy.max_cache_staleness = "P0D"
-
+    
     return merge_op
 
 
@@ -222,17 +223,16 @@ def bootleg_step(
         additional_args=bootleg_additional_args
     )
     (bootleg_op.container
-     .set_memory_request('120G')
-     .set_memory_limit('120G')
-     .set_cpu_request('31')
-     .set_cpu_limit('31')
+     .set_memory_limit('61G')
+     .set_memory_request('61G')
+     .set_cpu_limit('15')
+     .set_cpu_request('15')
      .add_volume_mount(V1VolumeMount(name='shm', mount_path='/dev/shm'))
      )
     (add_env(add_ssh_volume(bootleg_op), bootleg_env)
      .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-     .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.8xlarge')
+     .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.4xlarge')
      .add_volume(V1Volume(name='shm', empty_dir=V1EmptyDirVolumeSource(medium='Memory')))
      )
     
     return bootleg_op
-
