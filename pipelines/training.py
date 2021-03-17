@@ -1465,7 +1465,7 @@ def eval_only_pipeline(
     name='Train and prediction pipeline',
     description='Train a model and do prediction with it'
 )
-def train_predict_small(
+def train_predict_small_pipeline(
         owner,
         project,
         experiment,
@@ -1561,7 +1561,7 @@ def predict_pipeline(
     name='Predict using g4dn.4xlarge',
     description='Run genienlp predict on a previously trained model'
 )
-def predict_pipeline_small(
+def predict_small_pipeline(
     image=default_image,
     genienlp_version=GENIENLP_VERSION,
     owner='',
