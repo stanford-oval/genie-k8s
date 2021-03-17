@@ -15,7 +15,7 @@ RUN dnf -y install make gettext unzip zip nano xz gcc-c++ diffutils \
         && alternatives --set python /usr/bin/python3.8 \
 	&& pip3 install --upgrade pip \
 	&& pip3 install --use-feature=2020-resolver awscli \
-	&& dnf -y module enable nodejs:10 \
+	&& dnf -y module enable nodejs:12 \
 	&& dnf -y install nodejs \
 	&& dnf clean all \
 	&& rm -fr /root/.cache
