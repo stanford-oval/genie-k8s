@@ -111,10 +111,9 @@ get_make_dir() {
   PROJECT=$1
   # The convention is to have a Makefile in a PROJECT directory at the root of WORKDIR_REPO.
   # For repos with exceptions, we handle them here.
-  REPO_NAME=`basename ${WORKDIR_REPO}`
-  if [ "${REPO_NAME}" == "thingpedia-common-devices.git" ] || [ "${REPO_NAME}" == "SPL.git" ] ; then
-    echo "."
+  if -f ${PROJECT}/Makefile ; then
+    echo ${PROJECT}
   else
-    echo $PROJECT
+    echo .
   fi
 }
