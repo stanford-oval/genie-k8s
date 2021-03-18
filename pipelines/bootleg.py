@@ -223,8 +223,8 @@ def bootleg_step(
         additional_args=bootleg_additional_args
     )
     (bootleg_op.container
-     .set_memory_limit('12Gi')
-     .set_memory_request('12Gi')
+     .set_memory_limit('31G')
+     .set_memory_request('31G')
      .set_cpu_limit('7.5')
      .set_cpu_request('7.5')
      .add_volume_mount(V1VolumeMount(name='shm', mount_path='/dev/shm'))
