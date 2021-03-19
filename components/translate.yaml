@@ -52,11 +52,10 @@ implementation:
       experiment=${s3_datadir#*dataset/}
 
       aws s3 sync --no-progress ${s3_datadir} dataset/${experiment} --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*"
-      # aws s3 sync --no-progress ${s3_datadir} ${experiment}  --exclude '*' --include 'translated/en/*' --include "translated/marian/${tgt_lang}/*" --include "translated/gt/${tgt_lang}/*"
 
-      if [ -d ${experiment} /translated/ ] ; then
-        mv ${experiment} /translated/* ${experiment} /
-        rm -rf ${experiment} /translated
+      if [ -d dataset/${experiment}/translated/ ] ; then
+        mv dataset/${experiment}/translated/* ${experiment}/
+        rm -rf dataset/${experiment}/translated/
       fi
 
       IFS='+'; read -ra input_splits_array <<<"$input_splits"; IFS=' '
@@ -72,13 +71,15 @@ implementation:
         case ${nmt}+${do_alignment} in
           marian+true)
             make -B -j2 geniedir=/opt/genie-toolkit \
-              default_translation_hparams="${translation_arguments} --tgt_lang ${tgt_lang} --model_name_or_path ${model_name_or_path} --replace_qp --force_replace_qp" \
-              all_names="${input_splits_array[*]}" experiment=${experiment} train_output_per_example=${train_output_per_example} skip_translation=false ${experiment}/marian/${tgt_lang}/unquoted-qpis-translated
+              default_translation_hparams="${translation_arguments}" \
+              all_names="${input_splits_array[*]}" experiment=${experiment} model_name_or_path=${model_name_or_path} val_batch_size=5000 \
+              train_output_per_example=${train_output_per_example} skip_translation=false ${experiment}/marian/${tgt_lang}/unquoted-qpis-translated
           ;;
           marian+false)
             make -B -j2 geniedir=/opt/genie-toolkit \
-              default_translation_hparams="${translation_arguments} --tgt_lang ${tgt_lang} --model_name_or_path ${model_name_or_path}" \
-              all_names="${input_splits_array[*]}" experiment=${experiment} train_output_per_example=${train_output_per_example} skip_translation=false ${experiment}/marian/${tgt_lang}/unquoted-qpis-direct-translated
+              default_translation_hparams="${translation_arguments}"  model_name_or_path=${model_name_or_path} val_batch_size=5000 \
+              all_names="${input_splits_array[*]}" experiment=${experiment} model_name_or_path=${model_name_or_path} \
+              train_output_per_example=${train_output_per_example} skip_translation=false ${experiment}/marian/${tgt_lang}/unquoted-qpis-direct-translated
           ;;
           gt+true)
             make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} gt_project_id="multilanguage-273819" gt_project_number="211743822806" gt_credential_file="gt-json/multilanguage-a40fe9320f88.json" train_output_per_example=${train_output_per_example} skip_translation=false ${experiment}/gt/${tgt_lang}/quoted-qpis-translated
