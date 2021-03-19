@@ -51,12 +51,12 @@ implementation:
       # override experiment with dataset path
       experiment=${s3_datadir#*dataset/}
 
-      aws s3 sync --no-progress ${s3_datadir} dataset/$experiment_dir --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*"
-      # aws s3 sync --no-progress ${s3_datadir} $experiment_dir/ --exclude '*' --include 'translated/en/*' --include "translated/marian/${tgt_lang}/*" --include "translated/gt/${tgt_lang}/*"
+      aws s3 sync --no-progress ${s3_datadir} dataset/${experiment} --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*"
+      # aws s3 sync --no-progress ${s3_datadir} ${experiment}  --exclude '*' --include 'translated/en/*' --include "translated/marian/${tgt_lang}/*" --include "translated/gt/${tgt_lang}/*"
 
-      if [ -d $experiment_dir/translated/ ] ; then
-        mv $experiment_dir/translated/* $experiment_dir/
-        rm -rf $experiment_dir/translated
+      if [ -d ${experiment} /translated/ ] ; then
+        mv ${experiment} /translated/* ${experiment} /
+        rm -rf ${experiment} /translated
       fi
 
       IFS='+'; read -ra input_splits_array <<<"$input_splits"; IFS=' '
