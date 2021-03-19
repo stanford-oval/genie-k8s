@@ -429,7 +429,6 @@ def prepare_for_translation_step(
 
 ):
     prepare_for_translation_env = {
-        'GENIENLP_VERSION': genienlp_version,
         'GENIE_VERSION': genie_version,
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
@@ -552,7 +551,6 @@ def post_process_translation_step(
 
 ):
     post_process_translation_env = {
-        'GENIENLP_VERSION': genienlp_version,
         'GENIE_VERSION': genie_version,
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
