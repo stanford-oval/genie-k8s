@@ -89,7 +89,6 @@ def eval_spl_step(
      .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
      .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.2xlarge'))
     
-    eval_op.container.set_image_pull_policy('Always')
     
     return eval_op
 
@@ -146,7 +145,6 @@ def eval_spl_step_cpu(
      )
     (add_env(add_ssh_volume(eval_op), eval_env))
     
-    eval_op.container.set_image_pull_policy('Always')
     
     return eval_op
 
@@ -464,7 +462,6 @@ def prepare_for_translation_step(
     
     prepare_for_translation_op.name = 'prepare-for-translation'
     
-    prepare_for_translation_op.container.set_image_pull_policy('Always')
     
     return prepare_for_translation_op
 
@@ -529,7 +526,6 @@ def do_translation_step(
     
     do_translation_op.name = 'translation'
     
-    do_translation_op.container.set_image_pull_policy('Always')
     
     return do_translation_op
 
@@ -589,7 +585,6 @@ def post_process_translation_step(
     
     post_process_translation_op.name = 'post-process-translation'
     
-    post_process_translation_op.container.set_image_pull_policy('Always')
     
     return post_process_translation_op
 
@@ -872,7 +867,6 @@ def paraphrase_step(
      .add_volume(V1Volume(name='tensorboard',
                           persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
     
-    paraphrase_op.container.set_image_pull_policy('Always')
     
     return paraphrase_op
 
@@ -953,7 +947,6 @@ def paraphrase_step_4gpus(
      .add_volume(V1Volume(name='tensorboard',
                           persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
     
-    paraphrase_op.container.set_image_pull_policy('Always')
     
     return paraphrase_op
 
