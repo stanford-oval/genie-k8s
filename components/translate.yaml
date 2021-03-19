@@ -62,7 +62,7 @@ implementation:
 
       # prepare for translation
       if ${prepare_for_translation}; then
-        make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} process_data
+        make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} process_data_en
         aws s3 sync --no-progress ./${experiment}/en/ ${s3_datadir}translated/en/
       fi
 
