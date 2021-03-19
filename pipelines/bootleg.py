@@ -86,7 +86,7 @@ def split_bootleg_merge_step(
         remove_original='false',
         bootleg_additional_args=''
 ):
-    num_chunks = 4
+    num_chunks = 2
     split_op = split_step(
         image=image,
         task_name=task_name,
@@ -222,15 +222,15 @@ def bootleg_step(
         additional_args=bootleg_additional_args
     )
     (bootleg_op.container
-     .set_memory_request('120G')
-     .set_memory_limit('120G')
-     .set_cpu_request('31')
-     .set_cpu_limit('31')
+     .set_memory_request('60G')
+     .set_memory_limit('60G')
+     .set_cpu_request('15')
+     .set_cpu_limit('15')
      .add_volume_mount(V1VolumeMount(name='shm', mount_path='/dev/shm'))
      )
     (add_env(add_ssh_volume(bootleg_op), bootleg_env)
      .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-     .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.8xlarge')
+     .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.4xlarge')
      .add_volume(V1Volume(name='shm', empty_dir=V1EmptyDirVolumeSource(medium='Memory')))
      )
     
