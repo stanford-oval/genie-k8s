@@ -57,7 +57,7 @@ implementation:
 
       # if not an s3 path assume pretrained model name and save it in genienlp format
       if [[ "${model_name_or_path}" != "s3://"* ]] ; then
-        genienlp train --train_tasks ${task_name} --data "dataset" --train_iterations 0 --subsample 1 --save "$modeldir" --model ${model_type} --pretrained_model ${model_name_or_path} --exist_ok
+        genienlp train --train_tasks ${task_name} --train_iterations 0 --save "$modeldir" --model ${model_type} --pretrained_model ${model_name_or_path} --exist_ok
         s3_output=s3://geniehai/${owner}/workdir/prediction/${task_name}/${model_type}/${model_name_or_path}
       else
         aws s3 sync --no-progress "${model_name_or_path}" "$modeldir"/ --exclude "iteration_*.pth" --exclude "*_optim.pth" --exclude "*eval/*"  --exclude "*.log"
