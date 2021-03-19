@@ -496,7 +496,6 @@ def do_translation_step(
         'WORKDIR_VERSION': workdir_version,
     }
     
-    do_translation_num_gpus = 1
     do_translation_op = components.load_component_from_file('components/translate.yaml')(
         image=image,
         owner=owner,
@@ -516,16 +515,15 @@ def do_translation_step(
         s3_datadir=s3_datadir,
         additional_args=additional_args)
     (do_translation_op.container
-     .set_memory_request('56Gi')
-     .set_memory_limit('56Gi')
+     .set_memory_request('31G')
+     .set_memory_limit('31G')
      .set_cpu_request('7.5')
      .set_cpu_limit('7.5')
-     .set_gpu_limit(str(do_translation_num_gpus))
      .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
      )
     (add_env(add_ssh_volume(do_translation_op), do_translation_env)
      .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-     .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2 * do_translation_num_gpus}xlarge')
+     .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'g4dn.2xlarge')
      .add_volume(V1Volume(name='tensorboard',
                           persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
     
@@ -836,7 +834,6 @@ def paraphrase_step(
         'WORKDIR_VERSION': workdir_version,
     }
     
-    paraphrase_num_gpus = 1
     paraphrase_op = components.load_component_from_file('components/sts-paraphrase.yaml')(
         image=image,
         owner=owner,
@@ -863,16 +860,15 @@ def paraphrase_step(
         s3_datadir=s3_datadir,
         additional_args=additional_args)
     (paraphrase_op.container
-     .set_memory_request('56Gi')
-     .set_memory_limit('56Gi')
+     .set_memory_request('31G')
+     .set_memory_limit('31G')
      .set_cpu_request('7.5')
      .set_cpu_limit('7.5')
-     .set_gpu_limit(str(paraphrase_num_gpus))
      .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
      )
     (add_env(add_ssh_volume(paraphrase_op), paraphrase_env)
      .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-     .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2 * paraphrase_num_gpus}xlarge')
+     .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'g4dn.2xlarge')
      .add_volume(V1Volume(name='tensorboard',
                           persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
     
@@ -918,7 +914,6 @@ def paraphrase_step_4gpus(
         'WORKDIR_VERSION': workdir_version,
     }
     
-    paraphrase_num_gpus = 4
     paraphrase_op = components.load_component_from_file('components/sts-paraphrase.yaml')(
         image=image,
         owner=owner,
@@ -945,16 +940,16 @@ def paraphrase_step_4gpus(
         s3_datadir=s3_datadir,
         additional_args=additional_args)
     (paraphrase_op.container
-     .set_memory_request('56Gi')
-     .set_memory_limit('56Gi')
-     .set_cpu_request('7.5')
-     .set_cpu_limit('7.5')
-     .set_gpu_limit(str(paraphrase_num_gpus))
+     .set_memory_request('64G')
+     .set_memory_limit('64G')
+     .set_cpu_request('16')
+     .set_cpu_limit('16')
+     .set_gpu_limit(str(4))
      .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
      )
     (add_env(add_ssh_volume(paraphrase_op), paraphrase_env)
      .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-     .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2 * paraphrase_num_gpus}xlarge')
+     .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'g4dn.12xlarge')
      .add_volume(V1Volume(name='tensorboard',
                           persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
     
