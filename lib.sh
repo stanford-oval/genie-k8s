@@ -111,7 +111,7 @@ get_make_dir() {
   PROJECT=$1
   # The convention is to have a Makefile in a PROJECT directory at the root of WORKDIR_REPO.
   # For repos with exceptions, we handle them here.
-  if test -f ${PROJECT}/Makefile ; then
+  if test -f workdir/${PROJECT}/Makefile ; then
     echo ${PROJECT}
   else
     echo .
