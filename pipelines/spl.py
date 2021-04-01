@@ -747,10 +747,10 @@ def prepare_translate_pipeline(
 
 
 @dsl.pipeline(
-    name='Translate a dataset',
+    name='Translate and postprocess a dataset',
     description='Translate, and Postprocess dataset'
 )
-def translate_pipeline(
+def translate_postprocess_pipeline(
         owner='mehrad',
         project='spl',
         experiment='',
@@ -795,6 +795,53 @@ def translate_pipeline(
     )
 
 
+@dsl.pipeline(
+    name='Postprocess a dataset (after being translated)',
+    description='Postprocess dataset'
+)
+def postprocess_pipeline(
+        owner='mehrad',
+        project='spl',
+        experiment='',
+        s3_bucket='geniehai',
+        s3_datadir='',
+        model_name_or_path='Helsinki-NLP/opus-mt-en-{}',
+        input_splits='test+eval+train',
+        train_output_per_example='1',
+        nmt='marian',
+        do_alignment='true',
+        src_lang='en',
+        tgt_lang='',
+        image=default_image,
+        genienlp_version='',
+        genie_version='',
+        workdir_repo=GENIE_WORKDIR_REPO,
+        workdir_version=GENIE_WORKDIR_VERSION,
+        additional_args=''
+):
+    all_translation_steps(
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        s3_bucket=s3_bucket,
+        s3_datadir=s3_datadir,
+        model_name_or_path=model_name_or_path,
+        input_splits=input_splits,
+        train_output_per_example=train_output_per_example,
+        nmt=nmt,
+        do_alignment=do_alignment,
+        src_lang=src_lang,
+        tgt_lang=tgt_lang,
+        prepare_for_translation=False,
+        do_translation=False,
+        post_process_translation=True,
+        image=image,
+        genienlp_version=genienlp_version,
+        genie_version=genie_version,
+        workdir_repo=workdir_repo,
+        workdir_version=workdir_version,
+        additional_args=additional_args
+    )
 
 
 #############################
