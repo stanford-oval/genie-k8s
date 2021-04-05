@@ -48,15 +48,19 @@ implementation:
         "bootleg_wiki_kg")
           ckpt_name=bootleg_kg
         ;;
+
+        "bootleg_uncased_mini")
+          ckpt_name=bootleg_wiki
+        ;;
       esac
 
       for ((i=0;i<$num_chunks;i++)); do
-        cat $i/bootleg/${bootleg_model}/prepped_files/train_bootleg/eval/${ckpt_name}/bootleg_labels.jsonl >> merged/train_bootleg_labels.jsonl
-        cat $i/bootleg/${bootleg_model}/prepped_files/eval_bootleg/eval/${ckpt_name}/bootleg_labels.jsonl >> merged/eval_bootleg_labels.jsonl
+        cat $i/bootleg/${bootleg_model}/prepped_files/train_bootleg/${ckpt_name}/bootleg_labels.jsonl >> merged/train_bootleg_labels.jsonl
+        cat $i/bootleg/${bootleg_model}/prepped_files/eval_bootleg/${ckpt_name}/bootleg_labels.jsonl >> merged/eval_bootleg_labels.jsonl
       done
 
-      aws s3 cp --no-progress merged/train_bootleg_labels.jsonl ${s3_datadir}merged/bootleg/${bootleg_model}/prepped_files/train_bootleg/eval/${ckpt_name}/bootleg_labels.jsonl
-      aws s3 cp --no-progress merged/eval_bootleg_labels.jsonl ${s3_datadir}merged/bootleg/${bootleg_model}/prepped_files/eval_bootleg/eval/${ckpt_name}/bootleg_labels.jsonl
+      aws s3 cp --no-progress merged/train_bootleg_labels.jsonl ${s3_datadir}merged/bootleg/${bootleg_model}/prepped_files/train_bootleg/${ckpt_name}/bootleg_labels.jsonl
+      aws s3 cp --no-progress merged/eval_bootleg_labels.jsonl ${s3_datadir}merged/bootleg/${bootleg_model}/prepped_files/eval_bootleg/${ckpt_name}/bootleg_labels.jsonl
 
       if [ "$remove_original" == "true" ] ; then
         aws s3 rm --recursive ${s3_datadir}
