@@ -737,6 +737,7 @@ def bootleg_train_eval_pipeline(
     calibration_additional_args='None',
     valid_set='eval',
     eval_set='',
+    eval_parallel_jobs='2',
     eval_additional_args='',
     s3_database_dir=S3_DATABASE_DIR,
     s3_bootleg_prepped_data='None',
@@ -771,6 +772,7 @@ def bootleg_train_eval_pipeline(
                valid_set=valid_set,
                eval_set=eval_set,
                eval_additional_args=eval_additional_args,
+               eval_parallel_jobs=eval_parallel_jobs,
                s3_database_dir=s3_database_dir,
                s3_bootleg_prepped_data=s3_bootleg_prepped_data,
                bootleg_model=bootleg_model,
@@ -809,6 +811,7 @@ def generate_bootleg_train_eval_pipeline(
     calibration_additional_args='None',
     valid_set='eval',
     eval_set='',
+    eval_parallel_jobs='2',
     eval_additional_args='',
     s3_database_dir=S3_DATABASE_DIR,
     s3_bootleg_prepped_data='None',
@@ -845,6 +848,7 @@ def generate_bootleg_train_eval_pipeline(
                valid_set=valid_set,
                eval_set=eval_set,
                eval_additional_args=eval_additional_args,
+               eval_parallel_jobs=eval_parallel_jobs,
                s3_database_dir=s3_database_dir,
                s3_bootleg_prepped_data=s3_bootleg_prepped_data,
                bootleg_model=bootleg_model,
@@ -883,6 +887,7 @@ def generate_train_eval_pipeline(
     calibration_additional_args='None',
     valid_set='eval',
     eval_set='',
+    eval_parallel_jobs='2',
     eval_additional_args=''
 ):
     everything(do_generate=True,
@@ -914,6 +919,7 @@ def generate_train_eval_pipeline(
                calibration_additional_args=calibration_additional_args,
                valid_set=valid_set,
                eval_set=eval_set,
+               eval_parallel_jobs=eval_parallel_jobs,
                eval_additional_args=eval_additional_args)
 
 
