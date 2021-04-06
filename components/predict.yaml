@@ -40,10 +40,6 @@ implementation:
       fi
 
       case $task_name in
-        *"multilingual"*)
-            dataset_dir=dataset/almond/multilingual
-        ;;
-
         "almond"*)
           dataset_dir=dataset/almond
         ;;

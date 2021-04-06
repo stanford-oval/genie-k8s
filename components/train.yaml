@@ -78,7 +78,7 @@ implementation:
       case $task_name in
         *"multilingual"*)
           for lang in "${TLS[@]}" "${ELS[@]}" ; do
-            aws s3 sync --no-progress ${s3_datadir}${dataset_subfolder} dataset/almond/multilingual --exclude "*/*" --include "*$lang*"
+            aws s3 sync --no-progress ${s3_datadir}${dataset_subfolder} dataset/almond --exclude "*/*" --include "*$lang*"
           done
         ;;
 
