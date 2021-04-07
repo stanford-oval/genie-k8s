@@ -121,7 +121,7 @@ implementation:
       append_to_original
 
       rm ${output_dir}/unfiltered.tsv
-      rm ${output_dir}/paraphrase.results.json
+      rm ${output_dir}/almond_paraphrase.results.json
       
       # upload the new dataset to S3
       aws s3 sync --no-progress output_dataset/ "${s3_output_dir}"
