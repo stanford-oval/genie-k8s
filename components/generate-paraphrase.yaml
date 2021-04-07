@@ -84,7 +84,7 @@ implementation:
 
         # run paraphrase generation
         genienlp predict \
-        --task paraphrase \
+        --task almond_paraphrase \
         --path paraphraser \
         --data ${input_dir} \
         --eval_dir eval_dir \
@@ -102,7 +102,7 @@ implementation:
         genienlp transform-dataset \
           ${input_dir}/train.tsv \
           ${output_dir}/unfiltered.tsv \
-          --query_file ${output_dir}/paraphrase.tsv \
+          --query_file ${output_dir}/almond_paraphrase.tsv \
           --transformation replace_queries \
           --remove_with_heuristics \
           --task ${task_name}
@@ -113,7 +113,7 @@ implementation:
       join
 
       # Delete intermediate files that don't help debugging
-      rm ${output_dir}/paraphrase.tsv
+      rm ${output_dir}/almond_paraphrase.tsv
 
       # upload the new dataset to S3
       aws s3 sync --no-progress output_dataset/ "${s3_output_dir}"
