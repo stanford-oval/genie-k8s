@@ -65,7 +65,7 @@ implementation:
         "metrics_output=${metrics_output}" \
         "s3_metrics_output=${s3_metrics_output}" \
         `if ${is_oracle} ; then echo "evalflags=--oracle" ; fi` \
-        evaluate
+        $@ evaluate
       make \
         geniedir=/opt/genie-toolkit \
         "owner=${owner}" \
@@ -79,7 +79,7 @@ implementation:
         "s3_model_dir=${s3_model_dir}" \
         "metrics_output=${metrics_output}" \
         "s3_metrics_output=${s3_metrics_output}" \
-        evaluate-output-artifacts
+        $@ evaluate-output-artifacts
 
     args: [
       'cmd',
