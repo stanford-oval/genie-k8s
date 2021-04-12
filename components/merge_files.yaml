@@ -32,27 +32,7 @@ implementation:
       mkdir -p dataset/merged
       cd dataset/
 
-      case ${bootleg_model} in
-        "bootleg_wiki")
-          ckpt_name=bootleg_model
-        ;;
-
-        "bootleg_wiki_types")
-          ckpt_name=bootleg_types
-        ;;
-
-        "bootleg_wiki_mini")
-          ckpt_name=bootleg_model_mini
-        ;;
-
-        "bootleg_wiki_kg")
-          ckpt_name=bootleg_kg
-        ;;
-
-        "bootleg_uncased_mini")
-          ckpt_name=bootleg_wiki
-        ;;
-      esac
+      ckpt_name=bootleg_wiki
 
       for ((i=0;i<$num_chunks;i++)); do
         cat $i/bootleg/${bootleg_model}/prepped_files/train_bootleg/${ckpt_name}/bootleg_labels.jsonl >> merged/train_bootleg_labels.jsonl
