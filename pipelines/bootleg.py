@@ -47,6 +47,7 @@ def bootleg_only_pipeline(
         train_languages='en',
         eval_languages='en',
         eval_set='',
+        file_extension='tsv',
         remove_original='false',
         bootleg_additional_args=''
 ):
@@ -64,6 +65,7 @@ def bootleg_only_pipeline(
         train_languages=train_languages,
         eval_languages=eval_languages,
         eval_set=eval_set,
+        file_extension=file_extension,
         remove_original=remove_original,
         bootleg_additional_args=bootleg_additional_args
     )
@@ -84,14 +86,18 @@ def split_bootleg_merge_step(
         eval_languages='en',
         eval_set='',
         remove_original='false',
-        bootleg_additional_args=''
+        bootleg_additional_args='',
+        file_extension='tsv'
+        
 ):
     num_chunks = 2
     split_op = split_step(
         image=image,
         task_name=task_name,
         s3_datadir=s3_datadir,
-        num_chunks=num_chunks
+        num_chunks=num_chunks,
+        eval_split_name=eval_set,
+        file_extension=file_extension
     )
     
     bootleg_ops = []
@@ -120,6 +126,7 @@ def split_bootleg_merge_step(
         s3_datadir=split_op.outputs['s3_output_datadir'],
         bootleg_model=bootleg_model,
         num_chunks=num_chunks,
+        eval_split_name=eval_set,
         remove_original=remove_original
     )
     
@@ -131,18 +138,23 @@ def split_bootleg_merge_step(
 
 
 def split_step(
-        image,
-        task_name,
-        s3_datadir,
-        num_chunks
+    image,
+    task_name,
+    s3_datadir,
+    num_chunks,
+    eval_split_name='eval',
+    file_extension='tsv'
 ):
     split_env = {}
     
     split_op = components.load_component_from_file('components/split_file.yaml')(
-        image=image,
-        task_name=task_name,
-        s3_datadir=s3_datadir,
-        num_chunks=num_chunks)
+            image=image,
+            task_name=task_name,
+            s3_datadir=s3_datadir,
+            num_chunks=num_chunks,
+            eval_split_name=eval_split_name,
+            file_extension=file_extension
+    )
     (split_op.container
      .set_memory_limit('12Gi')
      .set_memory_request('12Gi')
@@ -156,22 +168,24 @@ def split_step(
 
 
 def merge_step(
-        image,
-        task_name,
-        s3_datadir,
-        bootleg_model,
-        num_chunks,
-        remove_original='false'
+    image,
+    task_name,
+    s3_datadir,
+    bootleg_model,
+    num_chunks,
+    eval_split_name='eval',
+    remove_original='false'
 ):
     merge_env = {}
     
     merge_op = components.load_component_from_file('components/merge_files.yaml')(
-        image=image,
-        task_name=task_name,
-        s3_datadir=s3_datadir,
-        bootleg_model=bootleg_model,
-        num_chunks=num_chunks,
-        remove_original=remove_original
+            image=image,
+            task_name=task_name,
+            s3_datadir=s3_datadir,
+            bootleg_model=bootleg_model,
+            num_chunks=num_chunks,
+            eval_split_name=eval_split_name,
+            remove_original=remove_original
     )
     (merge_op.container
      .set_memory_limit('12Gi')
