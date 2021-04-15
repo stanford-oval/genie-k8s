@@ -276,7 +276,7 @@ def eval_step(
 def prediction_step(
     image,
     owner,
-    eval_set,
+    eval_sets,
     task_name,
     model_name_or_path,
     s3_input_datadir,
@@ -295,7 +295,7 @@ def prediction_step(
     predict_op = components.load_component_from_file('components/predict.yaml')(
             image=image,
             owner=owner,
-            eval_set=eval_set,
+            eval_sets=eval_sets,
             task_name=task_name,
             model_name_or_path=model_name_or_path,
             s3_input_datadir=s3_input_datadir,
@@ -324,7 +324,7 @@ def prediction_step(
 def prediction_step_small(
     image,
     owner,
-    eval_set,
+    eval_sets,
     task_name,
     model_name_or_path,
     s3_input_datadir,
@@ -342,7 +342,7 @@ def prediction_step_small(
     predict_op = components.load_component_from_file('components/predict.yaml')(
             image=image,
             owner=owner,
-            eval_set=eval_set,
+            eval_sets=eval_sets,
             task_name=task_name,
             model_name_or_path=model_name_or_path,
             s3_input_datadir=s3_input_datadir,
@@ -1434,7 +1434,7 @@ def train_predict_small_pipeline(
         image=default_image,
         genienlp_version='',
         load_from='None',
-        eval_set='',
+        eval_sets='eval',
         dataset_subfolder='None',
         skip_tensorboard='false',
         train_iterations='',
@@ -1468,7 +1468,7 @@ def train_predict_small_pipeline(
     pred_op = prediction_step_small(
         image=image,
         owner=owner,
-        eval_set=eval_set,
+        eval_sets=eval_sets,
         task_name=task_name,
         model_name_or_path=train_op.outputs['s3_model_dir'],
         s3_input_datadir=s3_datadir,
@@ -1478,7 +1478,6 @@ def train_predict_small_pipeline(
         additional_args=pred_additional_args,
         genienlp_version=genienlp_version
     )
-    
 
 
 @dsl.pipeline(
@@ -1489,7 +1488,7 @@ def predict_pipeline(
     image=default_image,
     genienlp_version=GENIENLP_VERSION,
     owner='',
-    eval_set='',
+    eval_sets='',
     task_name='',
     model_name_or_path='',
     s3_input_datadir='',
@@ -1501,7 +1500,7 @@ def predict_pipeline(
     prediction_step(
         image=image,
         owner=owner,
-        eval_set=eval_set,
+        eval_sets=eval_sets,
         task_name=task_name,
         model_name_or_path=model_name_or_path,
         s3_input_datadir=s3_input_datadir,
@@ -1521,19 +1520,19 @@ def predict_small_pipeline(
     image=default_image,
     genienlp_version=GENIENLP_VERSION,
     owner='',
-    eval_set='',
     task_name='',
     model_name_or_path='',
     s3_input_datadir='',
     model_type='None',
     dataset_subfolder='None',
+    eval_sets='eval test',
     val_batch_size='4000',
     additional_args='',
 ):
     prediction_step_small(
         image=image,
         owner=owner,
-        eval_set=eval_set,
+        eval_sets=eval_sets,
         task_name=task_name,
         model_name_or_path=model_name_or_path,
         s3_input_datadir=s3_input_datadir,

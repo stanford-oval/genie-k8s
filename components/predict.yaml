@@ -4,7 +4,7 @@ description: |
 inputs:
   - {name: image, description: '', default: ''}
   - {name: owner, description: '', default: ''}
-  - {name: eval_set, description: '', default: ''}
+  - {name: eval_sets, description: '', default: ''}
   - {name: task_name, description: '', default: ''}
   - {name: model_name_or_path, description: '', default: ''}
   - {name: s3_input_datadir, description: '', default: ''}
@@ -26,7 +26,7 @@ implementation:
     - -c 
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image owner eval_set task_name model_name_or_path s3_input_datadir model_type dataset_subfolder metrics_output s3_metrics_output val_batch_size" "$@"
+      parse_args "$0" "image owner eval_sets task_name model_name_or_path s3_input_datadir model_type dataset_subfolder metrics_output s3_metrics_output val_batch_size" "$@"
       shift $n
       cd $HOME
 
@@ -60,36 +60,42 @@ implementation:
         s3_output=${model_name_or_path%/}
       fi
 
-      genienlp predict \
-          --data "dataset" \
-          --path "$modeldir" \
-          --eval_dir "./eval" \
-          --evaluate "$eval_set" \
-          --task ${task_name} \
-          --overwrite \
-          --silent \
-          --skip_cache \
-          --val_batch_size ${val_batch_size} \
-          $@
+      S3_METRIC_OUTPUT="$s3_output"/pred/
 
-      mkdir -p `dirname $s3_metrics_output`
-      mkdir -p $metrics_output
+      for e_set in ${eval_sets} ; do
+        genienlp predict \
+            --data "dataset" \
+            --path "$modeldir" \
+            --eval_dir "./eval" \
+            --evaluate valid \
+            --pred_set_name ${e_set} \
+            --task ${task_name} \
+            --overwrite \
+            --silent \
+            --skip_cache \
+            --val_batch_size ${val_batch_size} \
+            $@
 
-      S3_METRIC_OUTPUT="$s3_output"/eval/`date +%s`/
+        # rename val subfolder
+        mv ./eval/valid/ ./eval/$e_set/
 
-      echo $S3_METRIC_OUTPUT >> $s3_metrics_output
-      cp -r ./eval/ $metrics_output/
+        mkdir -p `dirname $s3_metrics_output`
+        mkdir -p $metrics_output
 
-      genienlp write-kf-metrics --eval_file ./eval/${eval_set}/${task_name}.results.json
+        echo $S3_METRIC_OUTPUT >> $s3_metrics_output
+        cp -r ./eval/ $metrics_output/
 
-      aws s3 sync --no-progress "./eval" $S3_METRIC_OUTPUT
+        genienlp write-kf-metrics --eval_file ./eval/${e_set}/${task_name}.results.json
+
+        aws s3 sync --no-progress "./eval" $S3_METRIC_OUTPUT
+      done
 
 
     args: [
       'cmd',
       --image, {inputValue: image},
       --owner, {inputValue: owner},
-      --eval_set, {inputValue: eval_set},
+      --eval_sets, {inputValue: eval_sets},
       --task_name, {inputValue: task_name},
       --model_name_or_path, {inputValue: model_name_or_path},
       --s3_input_datadir, {inputValue: s3_input_datadir},
