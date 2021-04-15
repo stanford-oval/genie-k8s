@@ -6,7 +6,7 @@ inputs:
   - {name: task_name, description: '', default: ''}
   - {name: s3_datadir, description: '', default: ''}
   - {name: bootleg_model, description: '', default: ''}
-  - {name: num_chunks, description: '', default: ''}
+  - {name: num_chunks, description: '', default: '', type: Integer}
   - {name: eval_split_name, description: '', default: ''}
   - {name: remove_original, description: '', default: ''}
 
