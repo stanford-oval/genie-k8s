@@ -142,8 +142,6 @@ def train_step(
         .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*train_num_gpus}xlarge')
         .add_volume(V1Volume(name='tensorboard',
             persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
-
-    train_op.container.set_image_pull_policy('Always')
     
     return train_op
 
@@ -219,9 +217,7 @@ def train_step_4gpus(
      .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2 * train_num_gpus}xlarge')
      .add_volume(V1Volume(name='tensorboard',
                           persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
-    
-    train_op.container.set_image_pull_policy('Always')
-    
+        
     return train_op
 
 
