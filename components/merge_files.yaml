@@ -49,7 +49,7 @@ implementation:
       fi
 
       mkdir -p `dirname $s3_output_datadir`
-      echo ${s3_datadir}merged/bootleg/${bootleg_model}/prepped_files/ > $s3_output_datadir
+      echo ${s3_datadir%/}/merged/bootleg/${bootleg_model}/prepped_files/ > $s3_output_datadir
 
     args: [
       'cmd',

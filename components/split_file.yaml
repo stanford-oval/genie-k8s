@@ -28,7 +28,7 @@ implementation:
 
       /opt/genie-toolkit/sync-repos.sh
 
-      S3_OUTPUT_DATADIR=${s3_datadir}chunked/
+      S3_OUTPUT_DATADIR=${s3_datadir%/}/chunked/
 
       aws s3 sync --no-progress  --exclude "*bootleg*" --exclude "*chunked*" ${s3_datadir} dataset/
 
