@@ -96,7 +96,6 @@ def train_step(
     eval_languages='en',
     s3_bucket='geniehai',
     s3_bootleg_prepped_data='None',
-    bootleg_model='None',
     additional_args=''
 ):
     train_env = {
@@ -127,7 +126,6 @@ def train_step(
             train_languages=train_languages,
             eval_languages=eval_languages,
             s3_bootleg_prepped_data=s3_bootleg_prepped_data,
-            bootleg_model=bootleg_model,
             additional_args=additional_args)
     (train_op.container
         .set_memory_request('56Gi')
@@ -171,7 +169,6 @@ def train_step_4gpus(
         eval_languages='en',
         s3_bucket='geniehai',
         s3_bootleg_prepped_data='None',
-        bootleg_model='None',
         additional_args=''
 ):
     train_env = {
@@ -202,7 +199,6 @@ def train_step_4gpus(
         train_languages=train_languages,
         eval_languages=eval_languages,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
-        bootleg_model=bootleg_model,
         additional_args=additional_args)
     (train_op.container
      .set_memory_request('241G')
@@ -236,7 +232,6 @@ def eval_step(
     workdir_version,
     thingpedia_developer_key,
     s3_database_dir='None',
-    bootleg_model='None',
     is_oracle='false',
     additional_args=''
 ):
@@ -259,7 +254,6 @@ def eval_step(
             parallel_jobs=parallel_jobs,
             s3_model_dir=s3_model_dir,
             s3_database_dir=s3_database_dir,
-            bootleg_model=bootleg_model,
             is_oracle=is_oracle,
             additional_args=additional_args)
     (eval_op.container
@@ -388,7 +382,6 @@ def paraphrase_train_fewshot_step(
     calibration_additional_args,
     s3_bucket,
     s3_database_dir,
-    bootleg_model,
     train_languages,
     eval_languages,
     valid_set,
@@ -413,7 +406,6 @@ def paraphrase_train_fewshot_step(
             s3_datadir=train_s3_datadir,
             s3_bucket=s3_bucket,
             s3_database_dir=s3_database_dir,
-            bootleg_model=bootleg_model,
             image=image,
             genienlp_version=genienlp_version,
             load_from='None',
@@ -463,7 +455,6 @@ def paraphrase_train_fewshot_step(
             s3_datadir=train_s3_datadir,
             s3_bucket=s3_bucket,
             s3_database_dir=s3_database_dir,
-            bootleg_model=bootleg_model,
             image=image,
             genienlp_version=genienlp_version,
             load_from=train_load_from,
@@ -495,7 +486,6 @@ def paraphrase_train_fewshot_step(
             s3_datadir=train_s3_datadir,
             s3_bucket=s3_bucket,
             s3_database_dir=s3_database_dir,
-            bootleg_model=bootleg_model,
             image=image,
             genienlp_version=genienlp_version,
             load_from=train_op.outputs['s3_model_dir'],
@@ -667,7 +657,6 @@ def everything(
         train_s3_datadir=train_s3_datadir,
         s3_bucket=s3_bucket,
         s3_database_dir=s3_database_dir,
-        bootleg_model=bootleg_model,
         train_languages=train_languages,
         eval_languages=eval_languages,
         valid_set=valid_set,
@@ -703,7 +692,6 @@ def everything(
                         workdir_repo=workdir_repo,
                         workdir_version=workdir_version,
                         thingpedia_developer_key=thingpedia_developer_key,
-                        bootleg_model=bootleg_model,
                         is_oracle=is_oracle,
                         additional_args=eval_additional_args)
 
@@ -1391,7 +1379,6 @@ def eval_only_pipeline(
     workdir_version=WORKDIR_VERSION,
     thingpedia_developer_key=default_developer_key,
     s3_database_dir='None',
-    bootleg_model='None',
     is_oracle='false',
     eval_set='',
     parallel_jobs='2',
@@ -1410,7 +1397,6 @@ def eval_only_pipeline(
         workdir_version=workdir_version,
         thingpedia_developer_key=thingpedia_developer_key,
         s3_database_dir=s3_database_dir,
-        bootleg_model=bootleg_model,
         is_oracle=is_oracle,
         eval_set=eval_set,
         parallel_jobs=parallel_jobs,
@@ -1438,7 +1424,6 @@ def train_predict_small_pipeline(
         dataset_subfolder='None',
         skip_tensorboard='false',
         train_iterations='',
-        bootleg_model='None',
         s3_bootleg_prepped_data='None',
         train_additional_args='',
         val_batch_size='1000',
@@ -1446,17 +1431,16 @@ def train_predict_small_pipeline(
 ):
     
     train_op = train_step(
+        image=image,
         owner=owner,
         project=project,
         experiment=experiment,
+        genienlp_version=genienlp_version,
         model=model,
         task_name=task_name,
         s3_datadir=s3_datadir,
         s3_bucket=s3_bucket,
         s3_database_dir=s3_database_dir,
-        bootleg_model=bootleg_model,
-        image=image,
-        genienlp_version=genienlp_version,
         load_from=load_from,
         dataset_subfolder=dataset_subfolder,
         skip_tensorboard=skip_tensorboard,
@@ -1468,15 +1452,17 @@ def train_predict_small_pipeline(
     pred_op = prediction_step_small(
         image=image,
         owner=owner,
-        eval_sets=eval_sets,
+        genienlp_version=genienlp_version,
         task_name=task_name,
+        eval_sets=eval_sets,
         model_name_or_path=train_op.outputs['s3_model_dir'],
         s3_input_datadir=s3_datadir,
+        s3_database_dir=s3_database_dir,
         model_type=model_type,
         dataset_subfolder=dataset_subfolder,
         val_batch_size=val_batch_size,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
         additional_args=pred_additional_args,
-        genienlp_version=genienlp_version
     )
 
 
