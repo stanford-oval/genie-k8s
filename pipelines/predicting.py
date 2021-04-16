@@ -1,3 +1,110 @@
+from kfp import dsl
+from kfp import components
+from kubernetes.client import V1Toleration
+
+from . import train_step
+from .common import *
+
+
+def prediction_step(
+    image,
+    owner,
+    genienlp_version,
+    task_name,
+    eval_sets,
+    model_name_or_path,
+    s3_input_datadir,
+    s3_database_dir,
+    s3_bootleg_prepped_data,
+    model_type,
+    dataset_subfolder,
+    val_batch_size,
+    additional_args,
+):
+
+    predict_env = {
+        'GENIENLP_VERSION': genienlp_version,
+    }
+
+    predict_num_gpus = 4
+    predict_op = components.load_component_from_file('components/predict.yaml')(
+            image=image,
+            owner=owner,
+            eval_sets=eval_sets,
+            task_name=task_name,
+            model_name_or_path=model_name_or_path,
+            s3_input_datadir=s3_input_datadir,
+            s3_database_dir=s3_database_dir,
+            s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+            model_type=model_type,
+            dataset_subfolder=dataset_subfolder,
+            val_batch_size=val_batch_size,
+            additional_args=additional_args)
+    (predict_op.container
+        .set_memory_request('150G')
+        .set_memory_limit('150G')
+        .set_cpu_request('16')
+        .set_cpu_limit('16')
+        # not supported yet in the version of kfp we're using
+        #.set_ephemeral_storage_request('75G')
+        #.set_ephemeral_storage_limit('75G')
+        .set_gpu_limit(str(predict_num_gpus))
+    )
+    (add_env(add_ssh_volume(predict_op), predict_env)
+        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.12xlarge'))
+
+    return predict_op
+
+
+
+def prediction_step_small(
+    image,
+    owner,
+    genienlp_version,
+    task_name,
+    eval_sets,
+    model_name_or_path,
+    s3_input_datadir,
+    s3_database_dir,
+    s3_bootleg_prepped_data,
+    model_type,
+    dataset_subfolder,
+    val_batch_size,
+    additional_args,
+):
+
+    predict_env = {
+        'GENIENLP_VERSION': genienlp_version
+    }
+
+    predict_op = components.load_component_from_file('components/predict.yaml')(
+            image=image,
+            owner=owner,
+            eval_sets=eval_sets,
+            task_name=task_name,
+            model_name_or_path=model_name_or_path,
+            s3_input_datadir=s3_input_datadir,
+            s3_database_dir=s3_database_dir,
+            s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+            model_type=model_type,
+            dataset_subfolder=dataset_subfolder,
+            val_batch_size=val_batch_size,
+            additional_args=additional_args)
+    (predict_op.container
+     .set_memory_limit('61G')
+     .set_memory_request('61G')
+     .set_cpu_limit('15')
+     .set_cpu_request('15')
+     )
+    (add_env(add_ssh_volume(predict_op), predict_env)
+     .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+     .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.4xlarge')
+     )
+
+    return predict_op
+
+
 @dsl.pipeline(
     name='Train and prediction pipeline',
     description='Train a model and do prediction with it'
@@ -52,10 +159,10 @@ def train_predict_small_pipeline(
         model_name_or_path=train_op.outputs['s3_model_dir'],
         s3_input_datadir=s3_datadir,
         s3_database_dir=s3_database_dir,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
         model_type=model_type,
         dataset_subfolder=dataset_subfolder,
         val_batch_size=val_batch_size,
-        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
         additional_args=pred_additional_args,
     )
 
@@ -66,12 +173,14 @@ def train_predict_small_pipeline(
 )
 def predict_pipeline(
         image=default_image,
-        genienlp_version=GENIENLP_VERSION,
         owner='',
         eval_sets='',
         task_name='',
+        genienlp_version=GENIENLP_VERSION,
         model_name_or_path='',
         s3_input_datadir='',
+        s3_database_dir='None',
+        s3_bootleg_prepped_data='None',
         model_type='None',
         dataset_subfolder='None',
         val_batch_size='4000',
@@ -84,6 +193,8 @@ def predict_pipeline(
         task_name=task_name,
         model_name_or_path=model_name_or_path,
         s3_input_datadir=s3_input_datadir,
+        s3_database_dir=s3_database_dir,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
         model_type=model_type,
         dataset_subfolder=dataset_subfolder,
         val_batch_size=val_batch_size,
@@ -98,11 +209,13 @@ def predict_pipeline(
 )
 def predict_small_pipeline(
         image=default_image,
-        genienlp_version=GENIENLP_VERSION,
         owner='',
         task_name='',
+        genienlp_version=GENIENLP_VERSION,
         model_name_or_path='',
         s3_input_datadir='',
+        s3_database_dir='None',
+        s3_bootleg_prepped_data='None',
         model_type='None',
         dataset_subfolder='None',
         eval_sets='eval test',
@@ -116,6 +229,8 @@ def predict_small_pipeline(
         task_name=task_name,
         model_name_or_path=model_name_or_path,
         s3_input_datadir=s3_input_datadir,
+        s3_database_dir=s3_database_dir,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
         model_type=model_type,
         dataset_subfolder=dataset_subfolder,
         val_batch_size=val_batch_size,
