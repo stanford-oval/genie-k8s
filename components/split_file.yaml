@@ -5,7 +5,10 @@ inputs:
   - {name: image, description: '', default: ''}
   - {name: task_name, description: '', default: ''}
   - {name: s3_datadir, description: '', default: ''}
-  - {name: num_chunks, description: '', default: ''}
+  - {name: num_chunks, description: '', default: '', type: Integer}
+  - {name: eval_split_name, description: '', default: ''}
+  - {name: file_extension, description: '', default: ''}
+
 
 outputs:
   - {name: s3_output_datadir}
@@ -19,13 +22,13 @@ implementation:
     - -c 
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image task_name s3_datadir num_chunks s3_output_datadir" "$@"
+      parse_args "$0" "image task_name s3_datadir num_chunks eval_split_name file_extension s3_output_datadir" "$@"
       shift $n
       cd $HOME
 
       /opt/genie-toolkit/sync-repos.sh
 
-      S3_OUTPUT_DATADIR=${s3_datadir}chunked/
+      S3_OUTPUT_DATADIR=${s3_datadir%/}/chunked/
 
       aws s3 sync --no-progress  --exclude "*bootleg*" --exclude "*chunked*" ${s3_datadir} dataset/
 
@@ -34,7 +37,7 @@ implementation:
       all_dirs=()
 
       case $task_name in
-        *"multilingual"*)
+        *"multilingual"* | "cross_ner")
           for dir in * ; do all_dirs+=($dir) ; done
         ;;
 
@@ -49,18 +52,18 @@ implementation:
 
       for dir in ${all_dirs[*]} ; do
         mkdir -p $dir/chunked/
-        train_dataset_size=`wc -l < $dir/train.tsv`
-        eval_dataset_size=`wc -l < $dir/eval.tsv`
+        train_dataset_size=`wc -l < $dir/train."$file_extension"`
+        eval_dataset_size=`wc -l < $dir/$eval_split_name."$file_extension"`
 
         # round up split size
         train_split_size=$(((train_dataset_size + num_chunks - 1) / num_chunks))
         eval_split_size=$(((eval_dataset_size + num_chunks - 1) / num_chunks))
 
-        split -a 1 -d -l $train_split_size --additional-suffix=.tsv $dir/train.tsv $dir/chunked/train
-        split -a 1 -d -l $eval_split_size --additional-suffix=.tsv $dir/eval.tsv $dir/chunked/eval
+        split -a 1 -d -l $train_split_size --additional-suffix=."$file_extension" $dir/train."$file_extension" $dir/chunked/train
+        split -a 1 -d -l $eval_split_size --additional-suffix=."$file_extension" $dir/$eval_split_name."$file_extension" $dir/chunked/eval
         for ((i=0;i<$num_chunks;i++)); do
-          aws s3 cp --no-progress $dir/chunked/train"$i".tsv "$S3_OUTPUT_DATADIR"$i/$dir/train.tsv
-          aws s3 cp --no-progress $dir/chunked/eval"$i".tsv "$S3_OUTPUT_DATADIR"$i/$dir/eval.tsv
+          aws s3 cp --no-progress $dir/chunked/train"$i"."$file_extension" "$S3_OUTPUT_DATADIR"$i/$dir/train."$file_extension"
+          aws s3 cp --no-progress $dir/chunked/eval"$i"."$file_extension" "$S3_OUTPUT_DATADIR"$i/$dir/$eval_split_name."$file_extension"
         done
       done
 
@@ -74,5 +77,7 @@ implementation:
       --task_name, { inputValue: task_name },
       --s3_datadir, {inputValue: s3_datadir},
       --num_chunks, {inputValue: num_chunks},
+      --eval_split_name, {inputValue: eval_split_name},
+      --file_extension, { inputValue: file_extension },
       --s3_output_datadir, {outputPath: s3_output_datadir},
     ]

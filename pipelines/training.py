@@ -142,8 +142,6 @@ def train_step(
         .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*train_num_gpus}xlarge')
         .add_volume(V1Volume(name='tensorboard',
             persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
-
-    train_op.container.set_image_pull_policy('Always')
     
     return train_op
 
@@ -219,9 +217,7 @@ def train_step_4gpus(
      .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2 * train_num_gpus}xlarge')
      .add_volume(V1Volume(name='tensorboard',
                           persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
-    
-    train_op.container.set_image_pull_policy('Always')
-    
+        
     return train_op
 
 
@@ -594,6 +590,7 @@ def everything(
     train_additional_args='',
     train_iterations='80000',
     valid_set='eval',
+    file_extension='tsv',
     train_s3_datadir='',
     train_dataset_subfolder='None',
     calibrate='false',
@@ -647,6 +644,7 @@ def everything(
                         train_languages=train_languages,
                         eval_languages=eval_languages,
                         eval_set=valid_set,
+                        file_extension=file_extension,
                         remove_original=remove_original,
                         bootleg_additional_args=bootleg_additional_args
         )
@@ -737,6 +735,8 @@ def bootleg_train_eval_pipeline(
     calibration_additional_args='None',
     valid_set='eval',
     eval_set='',
+    eval_parallel_jobs='2',
+    file_extension='tsv',
     eval_additional_args='',
     s3_database_dir=S3_DATABASE_DIR,
     s3_bootleg_prepped_data='None',
@@ -770,7 +770,9 @@ def bootleg_train_eval_pipeline(
                calibration_additional_args=calibration_additional_args,
                valid_set=valid_set,
                eval_set=eval_set,
+               file_extension=file_extension,
                eval_additional_args=eval_additional_args,
+               eval_parallel_jobs=eval_parallel_jobs,
                s3_database_dir=s3_database_dir,
                s3_bootleg_prepped_data=s3_bootleg_prepped_data,
                bootleg_model=bootleg_model,
@@ -809,6 +811,8 @@ def generate_bootleg_train_eval_pipeline(
     calibration_additional_args='None',
     valid_set='eval',
     eval_set='',
+    eval_parallel_jobs='2',
+    file_extension='tsv',
     eval_additional_args='',
     s3_database_dir=S3_DATABASE_DIR,
     s3_bootleg_prepped_data='None',
@@ -844,7 +848,9 @@ def generate_bootleg_train_eval_pipeline(
                calibration_additional_args=calibration_additional_args,
                valid_set=valid_set,
                eval_set=eval_set,
+               file_extension=file_extension,
                eval_additional_args=eval_additional_args,
+               eval_parallel_jobs=eval_parallel_jobs,
                s3_database_dir=s3_database_dir,
                s3_bootleg_prepped_data=s3_bootleg_prepped_data,
                bootleg_model=bootleg_model,
@@ -883,6 +889,7 @@ def generate_train_eval_pipeline(
     calibration_additional_args='None',
     valid_set='eval',
     eval_set='',
+    eval_parallel_jobs='2',
     eval_additional_args=''
 ):
     everything(do_generate=True,
@@ -914,6 +921,7 @@ def generate_train_eval_pipeline(
                calibration_additional_args=calibration_additional_args,
                valid_set=valid_set,
                eval_set=eval_set,
+               eval_parallel_jobs=eval_parallel_jobs,
                eval_additional_args=eval_additional_args)
 
 
