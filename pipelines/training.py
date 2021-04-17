@@ -479,6 +479,7 @@ def everything(
     thingpedia_developer_key=default_developer_key,
     s3_bucket='geniehai',
     s3_database_dir='None',
+    s3_bootleg_subfolder='None',
     bootleg_model='None',
     train_languages='en',
     eval_languages='en',
@@ -538,6 +539,7 @@ def everything(
                         s3_datadir=train_s3_datadir,
                         s3_bucket=s3_bucket,
                         s3_database_dir=s3_database_dir,
+                        s3_bootleg_subfolder=s3_bootleg_subfolder,
                         image=image,
                         genienlp_version=genienlp_version,
                         bootleg_model=bootleg_model,
@@ -637,6 +639,7 @@ def bootleg_train_eval_pipeline(
     file_extension='tsv',
     eval_additional_args='',
     s3_database_dir=S3_DATABASE_DIR,
+    s3_bootleg_subfolder='None',
     s3_bootleg_prepped_data='None',
     bootleg_model='',
     bootleg_additional_args=''
@@ -673,6 +676,7 @@ def bootleg_train_eval_pipeline(
                eval_parallel_jobs=eval_parallel_jobs,
                s3_database_dir=s3_database_dir,
                s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+               s3_bootleg_subfolder=s3_bootleg_subfolder,
                bootleg_model=bootleg_model,
                bootleg_additional_args=bootleg_additional_args
                )
@@ -714,6 +718,7 @@ def generate_bootleg_train_eval_pipeline(
     eval_additional_args='',
     s3_database_dir=S3_DATABASE_DIR,
     s3_bootleg_prepped_data='None',
+    s3_bootleg_subfolder='None',
     bootleg_model='',
     bootleg_additional_args=''
 ):
@@ -751,6 +756,7 @@ def generate_bootleg_train_eval_pipeline(
                eval_parallel_jobs=eval_parallel_jobs,
                s3_database_dir=s3_database_dir,
                s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+               s3_bootleg_subfolder=s3_bootleg_subfolder,
                bootleg_model=bootleg_model,
                bootleg_additional_args=bootleg_additional_args
                )
@@ -835,6 +841,7 @@ def train_eval_pipeline(
     s3_datadir,
     s3_database_dir='None',
     dataset_subfolder='None',
+    s3_bootleg_subfolder='None',
     image=default_image,
     genienlp_version=GENIENLP_VERSION,
     genie_version=GENIE_VERSION,
@@ -868,6 +875,7 @@ def train_eval_pipeline(
                model=model,
                train_s3_datadir=s3_datadir,
                s3_database_dir=s3_database_dir,
+               s3_bootleg_subfolder=s3_bootleg_subfolder,
                train_dataset_subfolder=dataset_subfolder,
                image=image,
                genienlp_version=genienlp_version,

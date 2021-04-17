@@ -5,6 +5,7 @@ inputs:
   - {name: image, description: '', default: ''}
   - {name: task_name, description: '', default: ''}
   - {name: s3_datadir, description: '', default: ''}
+  - {name: s3_bootleg_subfolder, description: ''}
   - {name: bootleg_model, description: '', default: ''}
   - {name: num_chunks, description: '', default: '', type: Integer}
   - {name: eval_split_name, description: '', default: ''}
@@ -22,11 +23,17 @@ implementation:
     - -c
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image task_name s3_datadir bootleg_model num_chunks eval_split_name remove_original s3_output_datadir" "$@"
+      parse_args "$0" "image task_name s3_datadir s3_bootleg_subfolder bootleg_model num_chunks eval_split_name remove_original s3_output_datadir" "$@"
       shift $n
       cd $HOME
 
       /opt/genie-toolkit/sync-repos.sh
+
+      if test "${s3_bootleg_subfolder}" != "None" ; then
+        s3_bootleg_subfolder=${s3_bootleg_subfolder}/
+      else
+        s3_bootleg_subfolder=
+      fi
 
       aws s3 sync --no-progress ${s3_datadir} dataset/
 
@@ -36,16 +43,15 @@ implementation:
       ckpt_name=bootleg_wiki
 
       for ((i=0;i<$num_chunks;i++)); do
-        cat $i/bootleg/${bootleg_model}/prepped_files/train_bootleg/${ckpt_name}/bootleg_labels.jsonl >> merged/train_bootleg_labels.jsonl
-        cat $i/bootleg/${bootleg_model}/prepped_files/"$eval_split_name"_bootleg/${ckpt_name}/bootleg_labels.jsonl >> merged/"$eval_split_name"_bootleg_labels.jsonl
+        cat $i/bootleg/${bootleg_model}/prepped_files/${s3_bootleg_subfolder}train_bootleg/${ckpt_name}/bootleg_labels.jsonl >> merged/train_bootleg_labels.jsonl
+        cat $i/bootleg/${bootleg_model}/prepped_files/${s3_bootleg_subfolder}"$eval_split_name"_bootleg/${ckpt_name}/bootleg_labels.jsonl >> merged/"$eval_split_name"_bootleg_labels.jsonl
       done
 
-      aws s3 cp --no-progress merged/train_bootleg_labels.jsonl ${s3_datadir}merged/bootleg/${bootleg_model}/prepped_files/train_bootleg/${ckpt_name}/bootleg_labels.jsonl
-      aws s3 cp --no-progress merged/"$eval_split_name"_bootleg_labels.jsonl ${s3_datadir}merged/bootleg/${bootleg_model}/prepped_files/"$eval_split_name"_bootleg/${ckpt_name}/bootleg_labels.jsonl
-
+      aws s3 cp --no-progress merged/train_bootleg_labels.jsonl ${s3_datadir%/}/merged/bootleg/${bootleg_model}/prepped_files/${s3_bootleg_subfolder}train_bootleg/${ckpt_name}/bootleg_labels.jsonl
+      aws s3 cp --no-progress merged/"$eval_split_name"_bootleg_labels.jsonl ${s3_datadir%/}/merged/bootleg/${bootleg_model}/prepped_files/${s3_bootleg_subfolder}"$eval_split_name"_bootleg/${ckpt_name}/bootleg_labels.jsonl
 
       if [ "$remove_original" == "true" ] ; then
-        aws s3 rm --recursive ${s3_datadir}
+        aws s3 rm --recursive ${s3_datadir} --exclude '*bootleg*'
       fi
 
       mkdir -p `dirname $s3_output_datadir`
@@ -56,6 +62,7 @@ implementation:
       --image, {inputValue: image},
       --task_name, { inputValue: task_name },
       --s3_datadir, {inputValue: s3_datadir},
+      --s3_bootleg_subfolder, {inputValue: s3_bootleg_subfolder},
       --bootleg_model, {inputValue: bootleg_model},
       --num_chunks, {inputValue: num_chunks},
       --eval_split_name, {inputValue: eval_split_name},
