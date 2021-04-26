@@ -135,7 +135,7 @@ def bootleg_train_predict_small_pipeline(
         train_additional_args='',
         bootleg_model='None',
         bootleg_additional_args='',
-        val_batch_size='1000',
+        val_batch_size='4000',
         pred_additional_args='--evaluate valid --overwrite'
 ):
     
@@ -220,7 +220,7 @@ def train_predict_small_pipeline(
         train_iterations='',
         s3_bootleg_prepped_data='None',
         train_additional_args='',
-        val_batch_size='1000',
+        val_batch_size='4000',
         pred_additional_args='--evaluate valid --overwrite'
 ):
     train_op = train_step(
