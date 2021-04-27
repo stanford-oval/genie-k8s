@@ -75,10 +75,10 @@ our_pipeline_version = None
 if not args.kf_pipeline_version:
     # choose latest
     our_pipeline_version = pipeline_versions[-1]
-
-for v in pipeline_versions:
-    if v.name == args.kf_pipeline_version:
-        our_pipeline_version = v
+else:
+    for v in pipeline_versions:
+        if v.name == args.kf_pipeline_version:
+            our_pipeline_version = v
 
 if our_pipeline_version is None:
     raise ValueError('No pipelines with this version were found')

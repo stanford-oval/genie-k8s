@@ -96,7 +96,6 @@ def train_step(
     eval_languages='en',
     s3_bucket='geniehai',
     s3_bootleg_prepped_data='None',
-    bootleg_model='None',
     additional_args=''
 ):
     train_env = {
@@ -127,7 +126,6 @@ def train_step(
             train_languages=train_languages,
             eval_languages=eval_languages,
             s3_bootleg_prepped_data=s3_bootleg_prepped_data,
-            bootleg_model=bootleg_model,
             additional_args=additional_args)
     (train_op.container
         .set_memory_request('56Gi')
@@ -171,7 +169,6 @@ def train_step_4gpus(
         eval_languages='en',
         s3_bucket='geniehai',
         s3_bootleg_prepped_data='None',
-        bootleg_model='None',
         additional_args=''
 ):
     train_env = {
@@ -202,7 +199,6 @@ def train_step_4gpus(
         train_languages=train_languages,
         eval_languages=eval_languages,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
-        bootleg_model=bootleg_model,
         additional_args=additional_args)
     (train_op.container
      .set_memory_request('241G')
@@ -236,7 +232,6 @@ def eval_step(
     workdir_version,
     thingpedia_developer_key,
     s3_database_dir='None',
-    bootleg_model='None',
     is_oracle='false',
     additional_args=''
 ):
@@ -259,7 +254,6 @@ def eval_step(
             parallel_jobs=parallel_jobs,
             s3_model_dir=s3_model_dir,
             s3_database_dir=s3_database_dir,
-            bootleg_model=bootleg_model,
             is_oracle=is_oracle,
             additional_args=additional_args)
     (eval_op.container
@@ -272,96 +266,6 @@ def eval_step(
         .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.4xlarge'))
 
     return eval_op
-
-def prediction_step(
-    image,
-    owner,
-    eval_set,
-    task_name,
-    model_name_or_path,
-    s3_input_datadir,
-    model_type,
-    dataset_subfolder,
-    val_batch_size,
-    genienlp_version,
-    additional_args
-):
-
-    predict_env = {
-        'GENIENLP_VERSION': genienlp_version,
-    }
-
-    predict_num_gpus=4
-    predict_op = components.load_component_from_file('components/predict.yaml')(
-            image=image,
-            owner=owner,
-            eval_set=eval_set,
-            task_name=task_name,
-            model_name_or_path=model_name_or_path,
-            s3_input_datadir=s3_input_datadir,
-            model_type=model_type,
-            dataset_subfolder=dataset_subfolder,
-            val_batch_size=val_batch_size,
-            additional_args=additional_args)
-    (predict_op.container
-        .set_memory_request('150G')
-        .set_memory_limit('150G')
-        .set_cpu_request('16')
-        .set_cpu_limit('16')
-        # not supported yet in the version of kfp we're using
-        #.set_ephemeral_storage_request('75G')
-        #.set_ephemeral_storage_limit('75G')
-        .set_gpu_limit(str(predict_num_gpus))
-    )
-    (add_env(add_ssh_volume(predict_op), predict_env)
-        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.12xlarge'))
-
-    return predict_op
-
-
-
-def prediction_step_small(
-    image,
-    owner,
-    eval_set,
-    task_name,
-    model_name_or_path,
-    s3_input_datadir,
-    model_type,
-    dataset_subfolder,
-    val_batch_size,
-    genienlp_version,
-    additional_args
-):
-
-    predict_env = {
-        'GENIENLP_VERSION': genienlp_version
-    }
-
-    predict_op = components.load_component_from_file('components/predict.yaml')(
-            image=image,
-            owner=owner,
-            eval_set=eval_set,
-            task_name=task_name,
-            model_name_or_path=model_name_or_path,
-            s3_input_datadir=s3_input_datadir,
-            model_type=model_type,
-            dataset_subfolder=dataset_subfolder,
-            val_batch_size=val_batch_size,
-            additional_args=additional_args)
-    (predict_op.container
-     .set_memory_limit('61G')
-     .set_memory_request('61G')
-     .set_cpu_limit('15')
-     .set_cpu_request('15')
-     )
-    (add_env(add_ssh_volume(predict_op), predict_env)
-     .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-     .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.4xlarge')
-     )
-
-    return predict_op
 
 
 
@@ -388,7 +292,6 @@ def paraphrase_train_fewshot_step(
     calibration_additional_args,
     s3_bucket,
     s3_database_dir,
-    bootleg_model,
     train_languages,
     eval_languages,
     valid_set,
@@ -413,7 +316,6 @@ def paraphrase_train_fewshot_step(
             s3_datadir=train_s3_datadir,
             s3_bucket=s3_bucket,
             s3_database_dir=s3_database_dir,
-            bootleg_model=bootleg_model,
             image=image,
             genienlp_version=genienlp_version,
             load_from='None',
@@ -463,7 +365,6 @@ def paraphrase_train_fewshot_step(
             s3_datadir=train_s3_datadir,
             s3_bucket=s3_bucket,
             s3_database_dir=s3_database_dir,
-            bootleg_model=bootleg_model,
             image=image,
             genienlp_version=genienlp_version,
             load_from=train_load_from,
@@ -495,7 +396,6 @@ def paraphrase_train_fewshot_step(
             s3_datadir=train_s3_datadir,
             s3_bucket=s3_bucket,
             s3_database_dir=s3_database_dir,
-            bootleg_model=bootleg_model,
             image=image,
             genienlp_version=genienlp_version,
             load_from=train_op.outputs['s3_model_dir'],
@@ -579,6 +479,7 @@ def everything(
     thingpedia_developer_key=default_developer_key,
     s3_bucket='geniehai',
     s3_database_dir='None',
+    s3_bootleg_subfolder='None',
     bootleg_model='None',
     train_languages='en',
     eval_languages='en',
@@ -638,6 +539,7 @@ def everything(
                         s3_datadir=train_s3_datadir,
                         s3_bucket=s3_bucket,
                         s3_database_dir=s3_database_dir,
+                        s3_bootleg_subfolder=s3_bootleg_subfolder,
                         image=image,
                         genienlp_version=genienlp_version,
                         bootleg_model=bootleg_model,
@@ -667,7 +569,6 @@ def everything(
         train_s3_datadir=train_s3_datadir,
         s3_bucket=s3_bucket,
         s3_database_dir=s3_database_dir,
-        bootleg_model=bootleg_model,
         train_languages=train_languages,
         eval_languages=eval_languages,
         valid_set=valid_set,
@@ -703,7 +604,6 @@ def everything(
                         workdir_repo=workdir_repo,
                         workdir_version=workdir_version,
                         thingpedia_developer_key=thingpedia_developer_key,
-                        bootleg_model=bootleg_model,
                         is_oracle=is_oracle,
                         additional_args=eval_additional_args)
 
@@ -739,6 +639,7 @@ def bootleg_train_eval_pipeline(
     file_extension='tsv',
     eval_additional_args='',
     s3_database_dir=S3_DATABASE_DIR,
+    s3_bootleg_subfolder='None',
     s3_bootleg_prepped_data='None',
     bootleg_model='',
     bootleg_additional_args=''
@@ -775,6 +676,7 @@ def bootleg_train_eval_pipeline(
                eval_parallel_jobs=eval_parallel_jobs,
                s3_database_dir=s3_database_dir,
                s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+               s3_bootleg_subfolder=s3_bootleg_subfolder,
                bootleg_model=bootleg_model,
                bootleg_additional_args=bootleg_additional_args
                )
@@ -816,6 +718,7 @@ def generate_bootleg_train_eval_pipeline(
     eval_additional_args='',
     s3_database_dir=S3_DATABASE_DIR,
     s3_bootleg_prepped_data='None',
+    s3_bootleg_subfolder='None',
     bootleg_model='',
     bootleg_additional_args=''
 ):
@@ -853,6 +756,7 @@ def generate_bootleg_train_eval_pipeline(
                eval_parallel_jobs=eval_parallel_jobs,
                s3_database_dir=s3_database_dir,
                s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+               s3_bootleg_subfolder=s3_bootleg_subfolder,
                bootleg_model=bootleg_model,
                bootleg_additional_args=bootleg_additional_args
                )
@@ -937,6 +841,7 @@ def train_eval_pipeline(
     s3_datadir,
     s3_database_dir='None',
     dataset_subfolder='None',
+    s3_bootleg_subfolder='None',
     image=default_image,
     genienlp_version=GENIENLP_VERSION,
     genie_version=GENIE_VERSION,
@@ -970,6 +875,7 @@ def train_eval_pipeline(
                model=model,
                train_s3_datadir=s3_datadir,
                s3_database_dir=s3_database_dir,
+               s3_bootleg_subfolder=s3_bootleg_subfolder,
                train_dataset_subfolder=dataset_subfolder,
                image=image,
                genienlp_version=genienlp_version,
@@ -1391,7 +1297,6 @@ def eval_only_pipeline(
     workdir_version=WORKDIR_VERSION,
     thingpedia_developer_key=default_developer_key,
     s3_database_dir='None',
-    bootleg_model='None',
     is_oracle='false',
     eval_set='',
     parallel_jobs='2',
@@ -1410,141 +1315,10 @@ def eval_only_pipeline(
         workdir_version=workdir_version,
         thingpedia_developer_key=thingpedia_developer_key,
         s3_database_dir=s3_database_dir,
-        bootleg_model=bootleg_model,
         is_oracle=is_oracle,
         eval_set=eval_set,
         parallel_jobs=parallel_jobs,
         additional_args=additional_args)
-
-
-@dsl.pipeline(
-    name='Train and prediction pipeline',
-    description='Train a model and do prediction with it'
-)
-def train_predict_small_pipeline(
-        owner,
-        project,
-        experiment,
-        model,
-        task_name,
-        s3_datadir,
-        s3_bucket='geniehai',
-        s3_database_dir='None',
-        model_type='',
-        image=default_image,
-        genienlp_version='',
-        load_from='None',
-        eval_set='',
-        dataset_subfolder='None',
-        skip_tensorboard='false',
-        train_iterations='',
-        bootleg_model='None',
-        s3_bootleg_prepped_data='None',
-        train_additional_args='',
-        val_batch_size='1000',
-        pred_additional_args='--evaluate valid --overwrite'
-):
-    
-    train_op = train_step(
-        owner=owner,
-        project=project,
-        experiment=experiment,
-        model=model,
-        task_name=task_name,
-        s3_datadir=s3_datadir,
-        s3_bucket=s3_bucket,
-        s3_database_dir=s3_database_dir,
-        bootleg_model=bootleg_model,
-        image=image,
-        genienlp_version=genienlp_version,
-        load_from=load_from,
-        dataset_subfolder=dataset_subfolder,
-        skip_tensorboard=skip_tensorboard,
-        train_iterations=train_iterations,
-        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
-        additional_args=train_additional_args
-    )
-    
-    pred_op = prediction_step_small(
-        image=image,
-        owner=owner,
-        eval_set=eval_set,
-        task_name=task_name,
-        model_name_or_path=train_op.outputs['s3_model_dir'],
-        s3_input_datadir=s3_datadir,
-        model_type=model_type,
-        dataset_subfolder=dataset_subfolder,
-        val_batch_size=val_batch_size,
-        additional_args=pred_additional_args,
-        genienlp_version=genienlp_version
-    )
-    
-
-
-@dsl.pipeline(
-    name='Predict',
-    description='Run genienlp predict on a previously trained model'
-)
-def predict_pipeline(
-    image=default_image,
-    genienlp_version=GENIENLP_VERSION,
-    owner='',
-    eval_set='',
-    task_name='',
-    model_name_or_path='',
-    s3_input_datadir='',
-    model_type='None',
-    dataset_subfolder='None',
-    val_batch_size='4000',
-    additional_args='',
-):
-    prediction_step(
-        image=image,
-        owner=owner,
-        eval_set=eval_set,
-        task_name=task_name,
-        model_name_or_path=model_name_or_path,
-        s3_input_datadir=s3_input_datadir,
-        model_type=model_type,
-        dataset_subfolder=dataset_subfolder,
-        val_batch_size=val_batch_size,
-        additional_args=additional_args,
-        genienlp_version=genienlp_version
-        )
-
-
-@dsl.pipeline(
-    name='Predict using g4dn.4xlarge',
-    description='Run genienlp predict on a previously trained model'
-)
-def predict_small_pipeline(
-    image=default_image,
-    genienlp_version=GENIENLP_VERSION,
-    owner='',
-    eval_set='',
-    task_name='',
-    model_name_or_path='',
-    s3_input_datadir='',
-    model_type='None',
-    dataset_subfolder='None',
-    val_batch_size='4000',
-    additional_args='',
-):
-    prediction_step_small(
-        image=image,
-        owner=owner,
-        eval_set=eval_set,
-        task_name=task_name,
-        model_name_or_path=model_name_or_path,
-        s3_input_datadir=s3_input_datadir,
-        model_type=model_type,
-        dataset_subfolder=dataset_subfolder,
-        val_batch_size=val_batch_size,
-        additional_args=additional_args,
-        genienlp_version=genienlp_version,
-        )
-
-
 
 
 @dsl.pipeline(
