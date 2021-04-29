@@ -49,7 +49,7 @@ implementation:
       cd workdir/${MAKEDIR}
 
       if test "${s3_database_dir}" != None ; then
-        aws s3 sync --no-progress ${s3_database_dir}/eval/ ./database/
+        aws s3 sync --no-progress ${s3_database_dir}/bootleg/ ./database/
       fi
 
       IFS='+'; read -ra PLS <<<"$pred_languages"; IFS=' '

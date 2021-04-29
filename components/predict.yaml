@@ -54,7 +54,7 @@ implementation:
       aws s3 sync --no-progress ${s3_input_datadir}${dataset_subfolder} $dataset_dir --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*"
 
       if test "${s3_database_dir}" != None ; then
-        aws s3 sync --no-progress ${s3_database_dir}/eval/ ./database/
+        aws s3 sync --no-progress ${s3_database_dir}/bootleg/ ./database/
       fi
 
       if test "${s3_bootleg_prepped_data}" != None ; then
