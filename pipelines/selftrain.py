@@ -138,6 +138,7 @@ def selftrain_pipeline(
     user_gen_datadir, user_model = paraphrase_train_fewshot_step(
         do_paraphrase=True,
         do_fewshot=True,
+        do_bootleg=False,
         owner=owner,
         project=project,
         experiment=experiment,
@@ -177,6 +178,7 @@ def selftrain_pipeline(
     agent_gen_datadir, agent_model = paraphrase_train_fewshot_step(
         do_paraphrase=True,
         do_fewshot=True,
+        do_bootleg=False,
         owner=owner,
         project=project,
         experiment=experiment,
@@ -329,6 +331,7 @@ def selftrain_nopara_pipeline(
     user_gen_datadir, user_model = paraphrase_train_fewshot_step(
         do_paraphrase=False,
         do_fewshot=True,
+        do_bootleg=False,
         owner=owner,
         project=project,
         experiment=experiment,
@@ -368,6 +371,7 @@ def selftrain_nopara_pipeline(
     agent_gen_datadir, agent_model = paraphrase_train_fewshot_step(
         do_paraphrase=False,
         do_fewshot=True,
+        do_bootleg=False,
         owner=owner,
         project=project,
         experiment=experiment,
