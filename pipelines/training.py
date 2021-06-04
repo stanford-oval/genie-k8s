@@ -1102,6 +1102,83 @@ def generate_train_fewshot_eval_pipeline(
                eval_parallel_jobs=eval_parallel_jobs,
                eval_additional_args=eval_additional_args)
 
+
+
+@dsl.pipeline(
+    name='bootleg, train, fewshot, and eval',
+    description='Runs the whole training pipeline, with fewshot finetuning (no generation)'
+)
+def bootleg_train_fewshot_eval_pipeline(
+    owner,
+    project,
+    experiment,
+    model,
+    s3_datadir,
+    image=default_image,
+    genienlp_version=GENIENLP_VERSION,
+    genie_version=GENIE_VERSION,
+    workdir_repo=WORKDIR_REPO,
+    workdir_version=WORKDIR_VERSION,
+    thingpedia_developer_key=default_developer_key,
+    train_task_name='',
+    train_load_from='None',
+    train_additional_args='',
+    train_iterations='80000',
+    calibrate='false',
+    calibration_ood_file='None',
+    is_correct_params='',
+    is_probably_correct_params='',
+    is_ood_params='',
+    calibration_additional_args='None',
+    fewshot_train_iterations='20000',
+    valid_set='eval',
+    eval_set='',
+    eval_parallel_jobs='2',
+    eval_additional_args='',
+    s3_database_dir=S3_DATABASE_DIR,
+    s3_bootleg_prepped_data='None',
+    s3_bootleg_subfolder='None',
+    bootleg_model='',
+    bootleg_additional_args=''
+):
+    everything(do_generate=False,
+               do_bootleg=True,
+               do_paraphrase=False,
+               do_fewshot=True,
+               owner=owner,
+               project=project,
+               experiment=experiment,
+               model=model,
+               train_s3_datadir=s3_datadir,
+               image=image,
+               genienlp_version=genienlp_version,
+               genie_version=genie_version,
+               workdir_repo=workdir_repo,
+               workdir_version=workdir_version,
+               thingpedia_developer_key=thingpedia_developer_key,
+               train_task_name=train_task_name,
+               train_load_from=train_load_from,
+               train_additional_args=train_additional_args,
+               train_iterations=train_iterations,
+               calibrate=calibrate,
+               calibration_ood_file=calibration_ood_file,
+               is_correct_params=is_correct_params,
+               is_probably_correct_params=is_probably_correct_params,
+               is_ood_params=is_ood_params,
+               calibration_additional_args=calibration_additional_args,
+               fewshot_train_iterations=fewshot_train_iterations,
+               valid_set=valid_set,
+               eval_set=eval_set,
+               eval_parallel_jobs=eval_parallel_jobs,
+               eval_additional_args=eval_additional_args,
+               s3_database_dir=s3_database_dir,
+               s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+               s3_bootleg_subfolder=s3_bootleg_subfolder,
+               bootleg_model=bootleg_model,
+               bootleg_additional_args=bootleg_additional_args)
+
+
+
     
 @dsl.pipeline(
     name='Generate, bootleg, train, fewshot, and eval',
