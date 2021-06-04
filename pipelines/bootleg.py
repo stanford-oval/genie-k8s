@@ -93,7 +93,7 @@ def split_bootleg_merge_step(
         file_extension='tsv'
         
 ):
-    num_chunks = 2
+    num_chunks = 1
     split_op = split_step(
         image=image,
         task_name=task_name,
