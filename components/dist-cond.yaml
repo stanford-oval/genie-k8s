@@ -1,0 +1,59 @@
+name: Train DIST-COND
+description: |
+  Train a DIST-COND model
+inputs:
+  - {name: owner, description: ''}
+  - {name: project, description: ''}
+  - {name: experiment, description: ''}
+  - {name: commit_hash, description: ''}
+  - {name: model, description: ''}
+  - {name: s3_datadir, description: ''}
+  - {name: image, description: ''}
+  - {name: additional_args, description: ''}
+outputs:
+  - {name: s3_model_dir}
+implementation:
+  container:
+    image: '{{inputs.parameters.image}}'
+    command:
+    - /bin/bash
+    - -e
+    - -c
+    - |
+      . /opt/genie-toolkit/lib.sh
+      parse_args "$0" "image owner project experiment commit_hash model s3_datadir s3_model_dir" "$@"
+      shift $n
+      set -x
+      cd $HOME
+
+      git clone https://github.com/Mehrad0711/DatasetCondensation.git ./DatasetCondensation
+
+      cd DatasetCondensation
+      git pull -r
+      git checkout ${commit_hash}
+
+      mkdir -p "/shared/tensorboard/${project}/${experiment}/${owner}/${model}"
+
+
+      python3 main_text.py \
+        --tensorboard_dir /shared/tensorboard/${project}/${experiment}/${owner}/${model} \
+        $@
+
+      S3_MODEL_DIR=s3://geniehai/${owner}/models/${project}/${experiment}/${model}/`date +%s`/
+      aws s3 sync --no-progress ./result/ ${S3_MODEL_DIR}
+      mkdir -p `dirname $s3_model_dir`
+      echo ${S3_MODEL_DIR} > $s3_model_dir
+
+    args: [
+      'cmd',
+      --image, {inputValue: image},
+      --owner, {inputValue: owner},
+      --project, {inputValue: project},
+      --experiment, {inputValue: experiment},
+      --commit_hash, {inputValue: commit_hash},
+      --model, {inputValue: model},
+      --s3_datadir, {inputValue: s3_datadir},
+      --s3_model_dir, {outputPath: s3_model_dir},
+      --,
+      {inputValue: additional_args},
+    ]
