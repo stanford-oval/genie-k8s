@@ -52,15 +52,19 @@ implementation:
 
       for dir in ${all_dirs[*]} ; do
         mkdir -p $dir/chunked/
-        train_dataset_size=`wc -l < $dir/train."$file_extension"`
-        eval_dataset_size=`wc -l < $dir/$eval_split_name."$file_extension"`
+        if [ "$file_extension" == "txt"] ; then
+          awk -vRS= -v "n=$(gawk -vRS= 'END {print NR}' $dir/train."$file_extension")" '{printf "%s", $0 RT > "$dir/chunked/train" int((NR-1)*"$num_chunks"/n) ."$file_extension"}' $dir/train."$file_extension"
+        else
+          train_dataset_size=`wc -l < $dir/train."$file_extension"`
+          eval_dataset_size=`wc -l < $dir/$eval_split_name."$file_extension"`
 
-        # round up split size
-        train_split_size=$(((train_dataset_size + num_chunks - 1) / num_chunks))
-        eval_split_size=$(((eval_dataset_size + num_chunks - 1) / num_chunks))
+          # round up split size
+          train_split_size=$(((train_dataset_size + num_chunks - 1) / num_chunks))
+          eval_split_size=$(((eval_dataset_size + num_chunks - 1) / num_chunks))
 
-        split -a 1 -d -l $train_split_size --additional-suffix=."$file_extension" $dir/train."$file_extension" $dir/chunked/train
-        split -a 1 -d -l $eval_split_size --additional-suffix=."$file_extension" $dir/$eval_split_name."$file_extension" $dir/chunked/eval
+          split -a 1 -d -l $train_split_size --additional-suffix=."$file_extension" $dir/train."$file_extension" $dir/chunked/train
+          split -a 1 -d -l $eval_split_size --additional-suffix=."$file_extension" $dir/$eval_split_name."$file_extension" $dir/chunked/eval
+
         for ((i=0;i<$num_chunks;i++)); do
           aws s3 cp --no-progress $dir/chunked/train"$i"."$file_extension" "$S3_OUTPUT_DATADIR"$i/$dir/train."$file_extension"
           aws s3 cp --no-progress $dir/chunked/eval"$i"."$file_extension" "$S3_OUTPUT_DATADIR"$i/$dir/$eval_split_name."$file_extension"
