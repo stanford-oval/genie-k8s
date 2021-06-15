@@ -103,7 +103,6 @@ def selftrain_pipeline(
     calibrate='false',
     calibration_ood_file='None',
     is_correct_params='',
-    is_probably_correct_params='',
     is_ood_params='',
     calibration_additional_args='None',
     fewshot_train_iterations='20000',
@@ -153,7 +152,6 @@ def selftrain_pipeline(
         calibrate=calibrate,
         calibration_ood_file=calibration_ood_file,
         is_correct_params=is_correct_params,
-        is_probably_correct_params=is_probably_correct_params,
         is_ood_params=is_ood_params,
         calibration_additional_args=calibration_additional_args,
         s3_bucket=s3_bucket,
@@ -193,7 +191,6 @@ def selftrain_pipeline(
         calibrate=calibrate,
         calibration_ood_file='None', # OOD file is for user only
         is_correct_params='', # agent's calibration doesn't need thresholding
-        is_probably_correct_params='', # agent's calibration doesn't need thresholding
         is_ood_params='', # agent's calibration doesn't need thresholding
         calibration_additional_args=calibration_additional_args,
         s3_bucket=s3_bucket,
@@ -249,7 +246,6 @@ def selftrain_pipeline(
             calibrate=calibrate,
             calibration_ood_file=calibration_ood_file,
             is_correct_params=is_correct_params,
-            is_probably_correct_params=is_probably_correct_params,
             is_ood_params=is_ood_params,
             calibration_additional_args=calibration_additional_args,
             train_iterations=selftrain_train_iterations,
@@ -304,7 +300,6 @@ def selftrain_nopara_pipeline(
     calibrate='false',
     calibration_ood_file='None',
     is_correct_params='',
-    is_probably_correct_params='',
     is_ood_params='',
     calibration_additional_args='None',
     auto_annotate_additional_args='',
@@ -354,7 +349,6 @@ def selftrain_nopara_pipeline(
         calibrate=calibrate,
         calibration_ood_file=calibration_ood_file,
         is_correct_params=is_correct_params,
-        is_probably_correct_params=is_probably_correct_params,
         is_ood_params=is_ood_params,
         calibration_additional_args=calibration_additional_args,
         filtering_train_iterations='',
@@ -394,7 +388,6 @@ def selftrain_nopara_pipeline(
         calibrate=calibrate,
         calibration_ood_file='None', # OOD file is for user only
         is_correct_params='', # agent's calibration doesn't need thresholding
-        is_probably_correct_params='', # agent's calibration doesn't need thresholding
         is_ood_params='', # agent's calibration doesn't need thresholding
         calibration_additional_args=calibration_additional_args,
         filtering_train_iterations='',
@@ -442,7 +435,6 @@ def selftrain_nopara_pipeline(
             calibrate=calibrate,
             calibration_ood_file=calibration_ood_file,
             is_correct_params=is_correct_params,
-            is_probably_correct_params=is_probably_correct_params,
             is_ood_params=is_ood_params,
             calibration_additional_args=calibration_additional_args,
             train_iterations=selftrain_train_iterations,
@@ -495,7 +487,6 @@ def selftrain_only_pipeline(
     calibrate='false',
     calibration_ood_file='None',
     is_correct_params='',
-    is_probably_correct_params='',
     is_ood_params='',
     calibration_additional_args='None',
     auto_annotate_additional_args='',
@@ -539,7 +530,6 @@ def selftrain_only_pipeline(
             calibrate=calibrate,
             calibration_ood_file=calibration_ood_file,
             is_correct_params=is_correct_params,
-            is_probably_correct_params=is_probably_correct_params,
             is_ood_params=is_ood_params,
             calibration_additional_args=calibration_additional_args,
             train_iterations=selftrain_train_iterations,
