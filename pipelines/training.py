@@ -85,11 +85,6 @@ def train_step(
     train_iterations,
     skip_tensorboard,
     valid_set='eval',
-    calibrate='false',
-    calibration_ood_file='None',
-    is_correct_params='',
-    is_ood_params='',
-    calibration_additional_args='None',
     s3_database_dir='None',
     train_languages='en',
     eval_languages='en',
@@ -116,11 +111,6 @@ def train_step(
             train_iterations=train_iterations,
             skip_tensorboard=skip_tensorboard,
             valid_set=valid_set,
-            calibrate=calibrate,
-            calibration_ood_file=calibration_ood_file,
-            is_correct_params=is_correct_params,
-            is_ood_params=is_ood_params,
-            calibration_additional_args=calibration_additional_args,
             train_languages=train_languages,
             eval_languages=eval_languages,
             s3_bootleg_prepped_data=s3_bootleg_prepped_data,
@@ -138,8 +128,64 @@ def train_step(
         .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*train_num_gpus}xlarge')
         .add_volume(V1Volume(name='tensorboard',
             persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
-    
+
     return train_op
+
+
+def calibrate_step(
+    image,
+    s3_bucket,
+    owner,
+    task_name,
+    project,
+    experiment,
+    model,
+    s3_model_dir,
+    s3_datadir,
+    s3_database_dir,
+    dataset_subfolder,
+    genienlp_version,
+    s3_bootleg_prepped_data,
+    valid_set,
+    calibration_ood_file,
+    is_correct_params,
+    is_ood_params,
+    additional_args
+):
+    calibrate_env = {
+        'GENIENLP_VERSION': genienlp_version,
+    }
+    calibrate_num_gpus = 1
+    calibrate_op = components.load_component_from_file('components/calibrate.yaml')(
+            image=image,
+            s3_bucket=s3_bucket,
+            owner=owner,
+            task_name=task_name,
+            project=project,
+            experiment=experiment,
+            model=model,
+            s3_model_dir=s3_model_dir,
+            s3_datadir=s3_datadir,
+            s3_database_dir=s3_database_dir,
+            dataset_subfolder=dataset_subfolder,
+            s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+            valid_set=valid_set,
+            calibration_ood_file=calibration_ood_file,
+            is_correct_params=is_correct_params,
+            is_ood_params=is_ood_params,
+            additional_args=additional_args)
+    (calibrate_op.container
+        .set_memory_request('56Gi')
+        .set_memory_limit('56Gi')
+        .set_cpu_request('7.5')
+        .set_cpu_limit('7.5')
+        .set_gpu_limit(str(calibrate_num_gpus))
+    )
+    (add_env(add_ssh_volume(calibrate_op), calibrate_env)
+        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*calibrate_num_gpus}xlarge'))
+
+    return calibrate_op
 
 
 def train_step_4gpus(
@@ -156,11 +202,6 @@ def train_step_4gpus(
         train_iterations,
         skip_tensorboard,
         valid_set='eval',
-        calibrate='false',
-        calibration_ood_file='None',
-        is_correct_params='',
-        is_ood_params='',
-        calibration_additional_args='None',
         s3_database_dir='None',
         train_languages='en',
         eval_languages='en',
@@ -187,11 +228,6 @@ def train_step_4gpus(
         train_iterations=train_iterations,
         skip_tensorboard=skip_tensorboard,
         valid_set=valid_set,
-        calibrate=calibrate,
-        calibration_ood_file=calibration_ood_file,
-        is_correct_params=is_correct_params,
-        is_ood_params=is_ood_params,
-        calibration_additional_args=calibration_additional_args,
         train_languages=train_languages,
         eval_languages=eval_languages,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
@@ -209,7 +245,7 @@ def train_step_4gpus(
      .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2 * train_num_gpus}xlarge')
      .add_volume(V1Volume(name='tensorboard',
                           persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
-        
+
     return train_op
 
 
@@ -268,6 +304,7 @@ def paraphrase_train_fewshot_step(
     do_paraphrase,
     do_fewshot,
     do_bootleg,
+    do_calibrate,
     owner,
     project,
     experiment,
@@ -280,7 +317,6 @@ def paraphrase_train_fewshot_step(
     train_additional_args,
     train_iterations,
     train_s3_datadir,
-    calibrate,
     calibration_ood_file,
     is_correct_params,
     is_ood_params,
@@ -326,7 +362,7 @@ def paraphrase_train_fewshot_step(
                         remove_original=remove_original,
                         bootleg_additional_args=bootleg_additional_args
         )
-    
+
     if do_paraphrase:
         pretrain_op = train_step(
             owner=owner,
@@ -376,7 +412,7 @@ def paraphrase_train_fewshot_step(
                                         additional_args=filtering_additional_args)
 
         train_s3_datadir = paraphrase_filtering_op.outputs['s3_output_datadir']
-        
+
         if do_bootleg:
             s3_bootleg_prepped_data = split_bootleg_merge_step(
                             owner=owner,
@@ -415,11 +451,6 @@ def paraphrase_train_fewshot_step(
             dataset_subfolder=train_dataset_subfolder,
             skip_tensorboard='false',
             valid_set=valid_set,
-            calibrate=calibrate,
-            calibration_ood_file=calibration_ood_file,
-            is_correct_params=is_correct_params,
-            is_ood_params=is_ood_params,
-            calibration_additional_args=calibration_additional_args,
             train_iterations=train_iterations,
             s3_bootleg_prepped_data=s3_bootleg_prepped_data,
             additional_args=train_additional_args,
@@ -447,7 +478,7 @@ def paraphrase_train_fewshot_step(
                             remove_original=remove_original,
                             bootleg_additional_args=bootleg_additional_args
             )
-        
+
         model = '%s-fs' % (model,)
         fewshot_op = train_step(
             owner=owner,
@@ -465,14 +496,34 @@ def paraphrase_train_fewshot_step(
             eval_languages=eval_languages,
             dataset_subfolder='fewshot/',
             skip_tensorboard='false',
-            calibrate=calibrate,
-            calibration_ood_file=calibration_ood_file,
-            calibration_additional_args=calibration_additional_args,
             train_iterations=fewshot_train_iterations,
             s3_bootleg_prepped_data=s3_bootleg_prepped_data,
             additional_args=train_additional_args,
         )
         eval_model = fewshot_op.outputs['s3_model_dir']
+
+    if do_calibrate:
+        calibrate_op = calibrate_step(
+            image=image,
+            s3_bucket=s3_bucket,
+            owner=owner,
+            task_name=train_task_name,
+            project=project,
+            experiment=experiment,
+            model='%s-calib' % (model,),
+            s3_datadir=train_s3_datadir,
+            s3_model_dir=eval_model,
+            s3_database_dir=s3_database_dir,
+            dataset_subfolder='fewshot/' if do_fewshot else train_dataset_subfolder,
+            genienlp_version=genienlp_version,
+            s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+            valid_set=valid_set,
+            calibration_ood_file=calibration_ood_file,
+            is_correct_params=is_correct_params,
+            is_ood_params=is_ood_params,
+            additional_args=calibration_additional_args
+        )
+        eval_model = calibrate_op.outputs['s3_model_output_dir']
 
     return train_s3_datadir, eval_model
 
@@ -528,6 +579,7 @@ def everything(
     do_bootleg,
     do_paraphrase,
     do_fewshot,
+    do_calibrate,
     owner,
     project,
     experiment,
@@ -556,7 +608,6 @@ def everything(
     file_extension='tsv',
     train_s3_datadir='',
     train_dataset_subfolder='None',
-    calibrate='false',
     calibration_ood_file='None',
     is_correct_params='',
     is_ood_params='',
@@ -590,11 +641,12 @@ def everything(
                                                     thingpedia_developer_key=thingpedia_developer_key,
                                                     additional_args=generate_dataset_additional_args)
         train_s3_datadir = generate_dataset_op.outputs['s3_datadir']
-    
+
     train_s3_datadir, eval_model = paraphrase_train_fewshot_step(
         do_paraphrase=do_paraphrase,
         do_fewshot=do_fewshot,
         do_bootleg=do_bootleg,
+        do_calibrate=do_calibrate,
         owner=owner,
         project=project,
         experiment=experiment,
@@ -616,7 +668,6 @@ def everything(
         valid_set=valid_set,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
         train_dataset_subfolder=train_dataset_subfolder,
-        calibrate=calibrate,
         calibration_ood_file=calibration_ood_file,
         is_correct_params=is_correct_params,
         is_ood_params=is_ood_params,
@@ -671,11 +722,6 @@ def bootleg_train_eval_pipeline(
     train_load_from='None',
     train_additional_args='',
     train_iterations='80000',
-    calibrate='false',
-    calibration_ood_file='None',
-    is_correct_params='',
-    is_ood_params='',
-    calibration_additional_args='None',
     valid_set='eval',
     eval_set='',
     eval_parallel_jobs='2',
@@ -706,11 +752,6 @@ def bootleg_train_eval_pipeline(
                train_load_from=train_load_from,
                train_additional_args=train_additional_args,
                train_iterations=train_iterations,
-               calibrate=calibrate,
-               calibration_ood_file=calibration_ood_file,
-               is_correct_params=is_correct_params,
-               is_ood_params=is_ood_params,
-               calibration_additional_args=calibration_additional_args,
                valid_set=valid_set,
                eval_set=eval_set,
                file_extension=file_extension,
@@ -747,11 +788,6 @@ def generate_bootleg_train_eval_pipeline(
     train_load_from='None',
     train_additional_args='',
     train_iterations='80000',
-    calibrate='false',
-    calibration_ood_file='None',
-    is_correct_params='',
-    is_ood_params='',
-    calibration_additional_args='None',
     valid_set='eval',
     eval_set='',
     eval_parallel_jobs='2',
@@ -767,6 +803,7 @@ def generate_bootleg_train_eval_pipeline(
                do_bootleg=True,
                do_paraphrase=False,
                do_fewshot=False,
+               do_calibrate=False,
                owner=owner,
                project=project,
                experiment=experiment,
@@ -784,11 +821,6 @@ def generate_bootleg_train_eval_pipeline(
                train_load_from=train_load_from,
                train_additional_args=train_additional_args,
                train_iterations=train_iterations,
-               calibrate=calibrate,
-               calibration_ood_file=calibration_ood_file,
-               is_correct_params=is_correct_params,
-               is_ood_params=is_ood_params,
-               calibration_additional_args=calibration_additional_args,
                valid_set=valid_set,
                eval_set=eval_set,
                file_extension=file_extension,
@@ -825,11 +857,6 @@ def generate_train_eval_pipeline(
     train_load_from='None',
     train_additional_args='',
     train_iterations='80000',
-    calibrate='false',
-    calibration_ood_file='None',
-    is_correct_params='',
-    is_ood_params='',
-    calibration_additional_args='None',
     valid_set='eval',
     eval_set='',
     eval_parallel_jobs='2',
@@ -839,6 +866,7 @@ def generate_train_eval_pipeline(
                do_bootleg=False,
                do_paraphrase=False,
                do_fewshot=False,
+               do_calibrate=False,
                owner=owner,
                project=project,
                experiment=experiment,
@@ -856,11 +884,6 @@ def generate_train_eval_pipeline(
                train_load_from=train_load_from,
                train_additional_args=train_additional_args,
                train_iterations=train_iterations,
-               calibrate=calibrate,
-               calibration_ood_file=calibration_ood_file,
-               is_correct_params=is_correct_params,
-               is_ood_params=is_ood_params,
-               calibration_additional_args=calibration_additional_args,
                valid_set=valid_set,
                eval_set=eval_set,
                eval_parallel_jobs=eval_parallel_jobs,
@@ -890,11 +913,6 @@ def train_eval_pipeline(
     train_load_from='None',
     train_iterations='80000',
     train_additional_args='',
-    calibrate='false',
-    calibration_ood_file='None',
-    is_correct_params='',
-    is_ood_params='',
-    calibration_additional_args='None',
     valid_set='eval',
     eval_set='',
     eval_parallel_jobs='2',
@@ -907,6 +925,7 @@ def train_eval_pipeline(
                do_bootleg=False,
                do_paraphrase=False,
                do_fewshot=False,
+               do_calibrate=False,
                owner=owner,
                project=project,
                experiment=experiment,
@@ -925,11 +944,6 @@ def train_eval_pipeline(
                train_load_from=train_load_from,
                train_iterations=train_iterations,
                train_additional_args=train_additional_args,
-               calibrate=calibrate,
-               calibration_ood_file=calibration_ood_file,
-               is_correct_params=is_correct_params,
-               is_ood_params=is_ood_params,
-               calibration_additional_args=calibration_additional_args,
                valid_set=valid_set,
                eval_set=eval_set,
                eval_parallel_jobs=eval_parallel_jobs,
@@ -961,11 +975,6 @@ def generate_paraphrase_train_eval_pipeline(
     train_load_from='None',
     train_additional_args='',
     train_iterations='80000',
-    calibrate='false',
-    calibration_ood_file='None',
-    is_correct_params='',
-    is_ood_params='',
-    calibration_additional_args='None',
     filtering_train_iterations='10000',
     filtering_batch_size='4000',
     keep_original_duplicates='false',
@@ -982,6 +991,7 @@ def generate_paraphrase_train_eval_pipeline(
                do_bootleg=False,
                do_paraphrase=True,
                do_fewshot=False,
+               do_calibrate=False,
                owner=owner,
                project=project,
                experiment=experiment,
@@ -999,11 +1009,6 @@ def generate_paraphrase_train_eval_pipeline(
                train_load_from=train_load_from,
                train_additional_args=train_additional_args,
                train_iterations=train_iterations,
-               calibrate=calibrate,
-               calibration_ood_file=calibration_ood_file,
-               is_correct_params=is_correct_params,
-               is_ood_params=is_ood_params,
-               calibration_additional_args=calibration_additional_args,
                filtering_train_iterations=filtering_train_iterations,
                filtering_batch_size=filtering_batch_size,
                keep_original_duplicates=keep_original_duplicates,
@@ -1039,11 +1044,6 @@ def generate_train_fewshot_eval_pipeline(
     train_load_from='None',
     train_additional_args='',
     train_iterations='80000',
-    calibrate='false',
-    calibration_ood_file='None',
-    is_correct_params='',
-    is_ood_params='',
-    calibration_additional_args='None',
     fewshot_train_iterations='20000',
     valid_set='eval',
     eval_set='',
@@ -1054,6 +1054,7 @@ def generate_train_fewshot_eval_pipeline(
                do_bootleg=False,
                do_paraphrase=False,
                do_fewshot=True,
+               do_calibrate=False,
                owner=owner,
                project=project,
                experiment=experiment,
@@ -1071,18 +1072,13 @@ def generate_train_fewshot_eval_pipeline(
                train_load_from=train_load_from,
                train_additional_args=train_additional_args,
                train_iterations=train_iterations,
-               calibrate=calibrate,
-               calibration_ood_file=calibration_ood_file,
-               is_correct_params=is_correct_params,
-               is_ood_params=is_ood_params,
-               calibration_additional_args=calibration_additional_args,
                fewshot_train_iterations=fewshot_train_iterations,
                valid_set=valid_set,
                eval_set=eval_set,
                eval_parallel_jobs=eval_parallel_jobs,
                eval_additional_args=eval_additional_args)
 
-    
+
 @dsl.pipeline(
     name='Generate, bootleg, train, fewshot, and eval',
     description='Runs the whole training pipeline, with fewshot finetuning'
@@ -1105,11 +1101,6 @@ def generate_bootleg_train_fewshot_eval_pipeline(
     train_load_from='None',
     train_additional_args='',
     train_iterations='80000',
-    calibrate='false',
-    calibration_ood_file='None',
-    is_correct_params='',
-    is_ood_params='',
-    calibration_additional_args='None',
     fewshot_train_iterations='20000',
     valid_set='eval',
     eval_set='',
@@ -1125,6 +1116,7 @@ def generate_bootleg_train_fewshot_eval_pipeline(
                do_bootleg=True,
                do_paraphrase=False,
                do_fewshot=True,
+               do_calibrate=False,
                owner=owner,
                project=project,
                experiment=experiment,
@@ -1142,7 +1134,77 @@ def generate_bootleg_train_fewshot_eval_pipeline(
                train_load_from=train_load_from,
                train_additional_args=train_additional_args,
                train_iterations=train_iterations,
-               calibrate=calibrate,
+               fewshot_train_iterations=fewshot_train_iterations,
+               valid_set=valid_set,
+               eval_set=eval_set,
+               eval_parallel_jobs=eval_parallel_jobs,
+               eval_additional_args=eval_additional_args,
+               s3_database_dir=s3_database_dir,
+               s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+               s3_bootleg_subfolder=s3_bootleg_subfolder,
+               bootleg_model=bootleg_model,
+               bootleg_additional_args=bootleg_additional_args)
+
+
+@dsl.pipeline(
+    name='Generate, bootleg, train, fewshot, calibrate, and eval',
+    description='Runs the whole training pipeline, with fewshot finetuning and calibration'
+)
+def generate_bootleg_train_fewshot_calibrate_eval_pipeline(
+    owner,
+    project,
+    experiment,
+    model,
+    dataset,
+    image=default_image,
+    genienlp_version=GENIENLP_VERSION,
+    genie_version=GENIE_VERSION,
+    workdir_repo=WORKDIR_REPO,
+    workdir_version=WORKDIR_VERSION,
+    thingpedia_developer_key=default_developer_key,
+    generate_dataset_parallel='6',
+    generate_dataset_additional_args='',
+    train_task_name='',
+    train_load_from='None',
+    train_additional_args='',
+    train_iterations='80000',
+    calibration_ood_file='None',
+    is_correct_params='',
+    is_ood_params='',
+    calibration_additional_args='',
+    fewshot_train_iterations='20000',
+    valid_set='eval',
+    eval_set='',
+    eval_parallel_jobs='2',
+    eval_additional_args='',
+    s3_database_dir=S3_DATABASE_DIR,
+    s3_bootleg_prepped_data='None',
+    s3_bootleg_subfolder='None',
+    bootleg_model='',
+    bootleg_additional_args=''
+):
+    everything(do_generate=True,
+               do_bootleg=True,
+               do_paraphrase=False,
+               do_fewshot=True,
+               do_calibrate=True,
+               owner=owner,
+               project=project,
+               experiment=experiment,
+               model=model,
+               dataset=dataset,
+               image=image,
+               genienlp_version=genienlp_version,
+               genie_version=genie_version,
+               workdir_repo=workdir_repo,
+               workdir_version=workdir_version,
+               thingpedia_developer_key=thingpedia_developer_key,
+               generate_dataset_parallel=generate_dataset_parallel,
+               generate_dataset_additional_args=generate_dataset_additional_args,
+               train_task_name=train_task_name,
+               train_load_from=train_load_from,
+               train_additional_args=train_additional_args,
+               train_iterations=train_iterations,
                calibration_ood_file=calibration_ood_file,
                is_correct_params=is_correct_params,
                is_ood_params=is_ood_params,
