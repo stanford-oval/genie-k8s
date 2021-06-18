@@ -126,6 +126,7 @@ implementation:
             --evaluate valid \
             --save_confidence_features \
             --confidence_feature_path "$modeldir/is_correct_confidence_feature_file.pkl" \
+            --database_dir ./database/ \
             ${calibration_additional_args}
 
         # for detecting parser's mistakes
@@ -147,6 +148,7 @@ implementation:
             --save_confidence_features \
             --confidence_feature_path "$modeldir/is_ood_confidence_feature_file.pkl" \
             --override_confidence_labels '$ood ;' \
+            --database_dir ./database/ \
             ${calibration_additional_args}
 
           # for out-of-domain detection
