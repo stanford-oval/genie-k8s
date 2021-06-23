@@ -45,10 +45,16 @@ implementation:
       for ((i=0;i<$num_chunks;i++)); do
         cat $i/bootleg/${bootleg_model}/prepped_files/${s3_bootleg_subfolder}train_bootleg/${ckpt_name}/bootleg_labels.jsonl >> merged/train_bootleg_labels.jsonl
         cat $i/bootleg/${bootleg_model}/prepped_files/${s3_bootleg_subfolder}"$eval_split_name"_bootleg/${ckpt_name}/bootleg_labels.jsonl >> merged/"$eval_split_name"_bootleg_labels.jsonl
+        if test -f $i/bootleg/${bootleg_model}/prepped_files/${s3_bootleg_subfolder}test_bootleg/${ckpt_name}/bootleg_labels.jsonl ; then
+          cat $i/bootleg/${bootleg_model}/prepped_files/${s3_bootleg_subfolder}test_bootleg/${ckpt_name}/bootleg_labels.jsonl >> merged/test_bootleg_labels.jsonl
+        fi
       done
 
       aws s3 cp --no-progress merged/train_bootleg_labels.jsonl ${s3_datadir%/}/merged/bootleg/${bootleg_model}/prepped_files/${s3_bootleg_subfolder}train_bootleg/${ckpt_name}/bootleg_labels.jsonl
       aws s3 cp --no-progress merged/"$eval_split_name"_bootleg_labels.jsonl ${s3_datadir%/}/merged/bootleg/${bootleg_model}/prepped_files/${s3_bootleg_subfolder}"$eval_split_name"_bootleg/${ckpt_name}/bootleg_labels.jsonl
+        if test -f merged/test_bootleg_labels.jsonl ; then
+          aws s3 cp --no-progress merged/test_bootleg_labels.jsonl ${s3_datadir%/}/merged/bootleg/${bootleg_model}/prepped_files/${s3_bootleg_subfolder}test_bootleg/${ckpt_name}/bootleg_labels.jsonl
+        fi
 
       if [ "$remove_original" == "true" ] ; then
         aws s3 rm --recursive ${s3_datadir} --exclude '*bootleg*'
