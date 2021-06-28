@@ -70,6 +70,47 @@ def generate_dataset_step(
 
     return generate_dataset_op
 
+def generate_dataset_step_w_gpu(
+    image,
+    owner,
+    project,
+    experiment,
+    dataset,
+    parallel,
+    genie_version,
+    workdir_repo,
+    workdir_version,
+    thingpedia_developer_key,
+    additional_args
+):
+    gen_dataset_env = {
+        'GENIE_VERSION': genie_version,
+        'WORKDIR_REPO': workdir_repo,
+        'WORKDIR_VERSION': workdir_version,
+        'THINGPEDIA_DEVELOPER_KEY': thingpedia_developer_key,
+    }
+    num_gpus = 1
+    generate_dataset_op = components.load_component_from_file('components/generate-dataset.yaml')(
+            image=image,
+            s3_bucket='geniehai',
+            owner=owner,
+            project=project,
+            experiment=experiment,
+            dataset=dataset,
+            parallel=parallel,
+            additional_args=additional_args)
+    (generate_dataset_op.container
+        .set_memory_limit('55Gi')
+        .set_memory_request('55Gi')
+        .set_cpu_limit('15.5')
+        .set_cpu_request('15.5')
+        .set_gpu_limit(str(num_gpus))
+    )
+    (add_env(add_ssh_volume(generate_dataset_op), gen_dataset_env)
+        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*num_gpus}xlarge'))
+
+    return generate_dataset_op
 
 def train_step(
     image,
@@ -625,21 +666,34 @@ def everything(
     eval_additional_args='',
     is_oracle='false',
     remove_original='false',
-    bootleg_additional_args=''
+    bootleg_additional_args='',
+    generate_w_gpu=False
 ):
-
     if do_generate:
-        generate_dataset_op = generate_dataset_step(image=image,
-                                                    owner=owner,
-                                                    project=project,
-                                                    experiment=experiment,
-                                                    dataset=dataset,
-                                                    parallel=generate_dataset_parallel,
-                                                    genie_version=genie_version,
-                                                    workdir_repo=workdir_repo,
-                                                    workdir_version=workdir_version,
-                                                    thingpedia_developer_key=thingpedia_developer_key,
-                                                    additional_args=generate_dataset_additional_args)
+        if generate_w_gpu:
+            generate_dataset_op = generate_dataset_step_w_gpu(image=image,
+                                                              owner=owner,
+                                                              project=project,
+                                                              experiment=experiment,
+                                                              dataset=dataset,
+                                                              parallel=generate_dataset_parallel,
+                                                              genie_version=genie_version,
+                                                              workdir_repo=workdir_repo,
+                                                              workdir_version=workdir_version,
+                                                              thingpedia_developer_key=thingpedia_developer_key,
+                                                              additional_args=generate_dataset_additional_args)
+        else:
+            generate_dataset_op = generate_dataset_step(image=image,
+                                                        owner=owner,
+                                                        project=project,
+                                                        experiment=experiment,
+                                                        dataset=dataset,
+                                                        parallel=generate_dataset_parallel,
+                                                        genie_version=genie_version,
+                                                        workdir_repo=workdir_repo,
+                                                        workdir_version=workdir_version,
+                                                        thingpedia_developer_key=thingpedia_developer_key,
+                                                        additional_args=generate_dataset_additional_args)
         train_s3_datadir = generate_dataset_op.outputs['s3_datadir']
 
     train_s3_datadir, eval_model = paraphrase_train_fewshot_step(
@@ -1020,6 +1074,76 @@ def generate_paraphrase_train_eval_pipeline(
                eval_set=eval_set,
                eval_parallel_jobs=eval_parallel_jobs,
                eval_additional_args=eval_additional_args)
+
+
+@dsl.pipeline(
+    name='Generate, paraphrase, train, and eval',
+    description='Runs the whole training pipeline, including autoparaphrasing, and using GPU machine for generate'
+)
+def gpu_generate_paraphrase_train_eval_pipeline(
+    owner,
+    project,
+    experiment,
+    model,
+    dataset,
+    image=default_image,
+    genienlp_version=GENIENLP_VERSION,
+    genie_version=GENIE_VERSION,
+    workdir_repo=WORKDIR_REPO,
+    workdir_version=WORKDIR_VERSION,
+    thingpedia_developer_key=default_developer_key,
+    generate_dataset_parallel='6',
+    generate_dataset_additional_args='',
+    train_task_name='',
+    train_load_from='None',
+    train_additional_args='',
+    train_iterations='80000',
+    filtering_train_iterations='10000',
+    filtering_batch_size='4000',
+    keep_original_duplicates='false',
+    paraphrasing_model=PARAPHRASING_MODEL,
+    paraphrase_subfolder='user',
+    paraphrase_additional_args='',
+    filtering_additional_args='',
+    valid_set='eval',
+    eval_set='',
+    eval_parallel_jobs='2',
+    eval_additional_args=''
+):
+    everything(do_generate=True,
+               do_bootleg=False,
+               do_paraphrase=True,
+               do_fewshot=False,
+               do_calibrate=False,
+               owner=owner,
+               project=project,
+               experiment=experiment,
+               model=model,
+               dataset=dataset,
+               image=image,
+               genienlp_version=genienlp_version,
+               genie_version=genie_version,
+               workdir_repo=workdir_repo,
+               workdir_version=workdir_version,
+               thingpedia_developer_key=thingpedia_developer_key,
+               generate_dataset_parallel=generate_dataset_parallel,
+               generate_dataset_additional_args=generate_dataset_additional_args,
+               train_task_name=train_task_name,
+               train_load_from=train_load_from,
+               train_additional_args=train_additional_args,
+               train_iterations=train_iterations,
+               filtering_train_iterations=filtering_train_iterations,
+               filtering_batch_size=filtering_batch_size,
+               keep_original_duplicates=keep_original_duplicates,
+               paraphrasing_model=paraphrasing_model,
+               paraphrase_subfolder=paraphrase_subfolder,
+               paraphrase_additional_args=paraphrase_additional_args,
+               filtering_additional_args=filtering_additional_args,
+               valid_set=valid_set,
+               eval_set=eval_set,
+               eval_parallel_jobs=eval_parallel_jobs,
+               eval_additional_args=eval_additional_args,
+               generate_w_gpu=True)
 
 
 @dsl.pipeline(
