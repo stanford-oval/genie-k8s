@@ -61,10 +61,21 @@ implementation:
 
         split -a 1 -d -l $train_split_size --additional-suffix=."$file_extension" $dir/train."$file_extension" $dir/chunked/train
         split -a 1 -d -l $eval_split_size --additional-suffix=."$file_extension" $dir/$eval_split_name."$file_extension" $dir/chunked/eval
+
         for ((i=0;i<$num_chunks;i++)); do
           aws s3 cp --no-progress $dir/chunked/train"$i"."$file_extension" "$S3_OUTPUT_DATADIR"$i/$dir/train."$file_extension"
           aws s3 cp --no-progress $dir/chunked/eval"$i"."$file_extension" "$S3_OUTPUT_DATADIR"$i/$dir/$eval_split_name."$file_extension"
         done
+
+        if test -f $dir/test."$file_extension" ; then
+          test_dataset_size=`wc -l < $dir/test."$file_extension"`
+          test_split_size=$(((test_dataset_size + num_chunks - 1) / num_chunks))
+          split -a 1 -d -l $test_split_size --additional-suffix=."$file_extension" $dir/test."$file_extension" $dir/chunked/test
+          for ((i=0;i<$num_chunks;i++)); do
+            aws s3 cp --no-progress $dir/chunked/test"$i"."$file_extension" "$S3_OUTPUT_DATADIR"$i/$dir/test."$file_extension"
+          done
+        fi
+
       done
 
       mkdir -p `dirname $s3_output_datadir`

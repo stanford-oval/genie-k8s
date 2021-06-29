@@ -66,11 +66,16 @@ implementation:
         genienlp train --train_tasks ${task_name} --train_iterations 0 --save "$modeldir" --model ${model_type} --pretrained_model ${model_name_or_path} --exist_ok
         s3_output=s3://geniehai/${owner}/workdir/prediction/${task_name}/${model_type}/${model_name_or_path}
       else
-        aws s3 sync --no-progress "${model_name_or_path}" "$modeldir"/ --exclude "iteration_*.pth" --exclude "*_optim.pth" --exclude "*eval/*"  --exclude "*.log"
+        aws s3 sync --no-progress "${model_name_or_path}" "$modeldir"/ --exclude "iteration_*.pth" --exclude "*_optim.pth" --exclude "*eval/*" --exclude '*pred/*' --exclude "*.log"
         s3_output=${model_name_or_path%/}
       fi
 
       S3_METRIC_OUTPUT="$s3_output"/pred/
+
+      mkdir -p `dirname $s3_metrics_output`
+      mkdir -p $metrics_output
+
+      echo $S3_METRIC_OUTPUT >> $s3_metrics_output
 
       for e_set in ${eval_sets} ; do
         genienlp predict \
@@ -88,18 +93,13 @@ implementation:
 
         # rename val subfolder
         mv ./eval/valid/ ./eval/$e_set/
-
-        mkdir -p `dirname $s3_metrics_output`
-        mkdir -p $metrics_output
-
-        echo $S3_METRIC_OUTPUT >> $s3_metrics_output
-        cp -r ./eval/ $metrics_output/
-
-        genienlp write-kf-metrics --eval_file ./eval/${e_set}/${task_name}.results.json
-
-        aws s3 sync --no-progress "./eval" $S3_METRIC_OUTPUT
       done
 
+      cp -r ./eval/* $metrics_output/
+
+      genienlp write-kf-metrics --eval_results `for e_set in ${eval_sets} ; do echo ./eval/${e_set}/${task_name}.results.json ; done`
+
+      aws s3 sync --no-progress "./eval" $S3_METRIC_OUTPUT
 
     args: [
       'cmd',
