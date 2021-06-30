@@ -108,7 +108,7 @@ def generate_dataset_step_w_gpu(
     )
     (add_env(add_ssh_volume(generate_dataset_op), gen_dataset_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*num_gpus}xlarge'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.12xlarge'))
 
     return generate_dataset_op
 
