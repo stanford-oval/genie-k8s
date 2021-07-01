@@ -31,11 +31,11 @@ from kubernetes.client.models import (
 # Get the Thingpedia key from environment variable
 default_developer_key = os.getenv('THINGPEDIA_DEVELOPER_KEY')
 
-default_image = '932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit-kf:20210615.1'
-GENIENLP_VERSION = '73d917d26259a092da14bbbde321edfaf428d64a'
-GENIE_VERSION = '46e1fdac5f2f55f57b6e8686bd40251a7af02007'
+default_image = '932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit-kf:20210630.1'
+GENIENLP_VERSION = 'da9e58f6744a23d1f710b12cebfcc391f5356076'
+GENIE_VERSION = 'ad20a6a6dbc117193bbc36ac86f92a4e65a8a924'
 WORKDIR_REPO = 'git@github.com:stanford-oval/thingpedia-common-devices.git'
-WORKDIR_VERSION = '0ed1d35d680dfe87451e4894c5afc1e06765c857'
+WORKDIR_VERSION = '6c9a283393b3d43b20dc4363fe863f14e8926078'
 GENIE_WORKDIR_REPO = 'git@github.com:stanford-oval/genie-workdirs.git'
 GENIE_WORKDIR_VERSION = 'master'
 PARAPHRASING_MODEL = 's3://geniehai/sinaj/models/schemaorg/paraphrase/bart-large-speedup-megabatch-5m/'
