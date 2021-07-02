@@ -9,6 +9,7 @@ inputs:
   - {name: experiment, description: '', default: ''}
   - {name: dataset, description: '', default: ''}
   - {name: parallel, description: '', default: ''}
+  - {name: valid_set, description: '', default: ''}
   - {name: additional_args, description: '', default: ''}
 outputs:
   - {name: s3_datadir}
@@ -22,7 +23,7 @@ implementation:
     - -c
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image s3_bucket owner project experiment dataset parallel s3_datadir" "$@"
+      parse_args "$0" "image s3_bucket owner project experiment dataset parallel valid_set s3_datadir" "$@"
       shift $n
       cd $HOME
 
@@ -43,6 +44,7 @@ implementation:
           "s3_bucket=${s3_bucket}" \
           thingpedia_cli=thingpedia \
           "experiment=${experiment}" \
+          "valid_set=${valid_set}"\
           $@ \
           datadir
 
@@ -79,6 +81,7 @@ implementation:
       --experiment, {inputValue: experiment},
       --dataset, {inputValue: dataset},
       --parallel, {inputValue: parallel},
+      --valid_set, {inputValue: valid_set},
       --s3_datadir, {outputPath: s3_datadir},
       --, {inputValue: additional_args}
     ]

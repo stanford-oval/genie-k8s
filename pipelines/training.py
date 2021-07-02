@@ -39,6 +39,7 @@ def generate_dataset_step(
     experiment,
     dataset,
     parallel,
+    valid_set,
     genie_version,
     workdir_repo,
     workdir_version,
@@ -59,6 +60,7 @@ def generate_dataset_step(
             experiment=experiment,
             dataset=dataset,
             parallel=parallel,
+            valid_set=valid_set,
             additional_args=additional_args)
     (generate_dataset_op.container
         .set_memory_limit('55Gi')
@@ -77,6 +79,7 @@ def generate_dataset_step_w_gpu(
     experiment,
     dataset,
     parallel,
+    valid_set,
     genie_version,
     workdir_repo,
     workdir_version,
@@ -98,6 +101,7 @@ def generate_dataset_step_w_gpu(
             experiment=experiment,
             dataset=dataset,
             parallel=parallel,
+            valid_set=valid_set,
             additional_args=additional_args)
     (generate_dataset_op.container
         .set_memory_limit('55Gi')
@@ -677,6 +681,7 @@ def everything(
                                                               experiment=experiment,
                                                               dataset=dataset,
                                                               parallel=generate_dataset_parallel,
+                                                              valid_set=valid_set,
                                                               genie_version=genie_version,
                                                               workdir_repo=workdir_repo,
                                                               workdir_version=workdir_version,
@@ -689,6 +694,7 @@ def everything(
                                                         experiment=experiment,
                                                         dataset=dataset,
                                                         parallel=generate_dataset_parallel,
+                                                        valid_set=valid_set,
                                                         genie_version=genie_version,
                                                         workdir_repo=workdir_repo,
                                                         workdir_version=workdir_version,
