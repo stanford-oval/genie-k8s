@@ -79,12 +79,13 @@ implementation:
       run_parser() {
         # get parser output for paraphrased utterances
         mkdir -p filtering_dataset/${filtering_dir}
-        cp ${output_dir}/unfiltered.tsv filtering_dataset/${filtering_dir}/eval.tsv
+        cp ${output_dir}/unfiltered.tsv filtering_dataset/${filtering_dir}/unfiltered.tsv
         genienlp predict \
           --data ./filtering_dataset \
           --path filtering_model \
           --eval_dir ./eval_dir \
           --evaluate valid \
+          --pred_set_name unfiltered \
           --task ${task_name} \
           --overwrite \
           --silent \
@@ -101,7 +102,8 @@ implementation:
         genienlp transform-dataset \
           ${output_dir}/unfiltered.tsv \
           ${output_dir}/filtered.tsv \
-          --bootleg_file results_temp/XXX
+          --bootleg_file results_temp/unfiltered_bootleg/bootleg_wiki/bootleg_labels.jsonl \
+          --bootleg_output_file results_temp/filtered_bootleg/bootleg_wiki/bootleg_labels.jsonl \
           --thrown_away ${output_dir}/thrown_away.tsv \
           --thingtalk_gold_file eval_dir/valid/${task_name}.tsv \
           --transformation remove_wrong_thingtalk \
@@ -115,10 +117,16 @@ implementation:
         genienlp transform-dataset \
           ${output_dir}/temp.tsv \
           ${output_dir}/filtered.tsv \
+          --bootleg_file results_temp/filtered_bootleg/bootleg_wiki/bootleg_labels.jsonl \
+          --bootleg_output_file results_temp/temp_bootleg/bootleg_wiki/bootleg_labels.jsonl \
           --remove_duplicates \
           --task ${task_name}
         rm ${output_dir}/temp.tsv
         cat ${output_dir}/filtered.tsv >> ${output_dir}/train.tsv
+        cat results_temp/temp_bootleg/bootleg_wiki/bootleg_labels.jsonl >> results_temp/train_bootleg/bootleg_wiki/bootleg_labels.jsonl
+        if test `wc -l ${output_dir}/train.tsv` != `wc -l results_temp/train_bootleg/bootleg_wiki/bootleg_labels.jsonl` ; then
+          echo 'Error: number of examples in final train and bootleg files should be the same' ; exit 1
+        fi
       }
 
      
