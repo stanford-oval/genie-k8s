@@ -43,7 +43,7 @@ implementation:
         aws s3 sync --no-progress ${s3_bootleg_prepped_data} results_temp --exclude '*' --include '*bootleg_labels.jsonl'
       fi
 
-      aws s3 sync --no-progress "${s3_input_datadir}" input_dataset/
+      aws s3 sync --no-progress  --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*" "${s3_input_datadir}" input_dataset/
       aws s3 sync --no-progress --exclude '*/dataset/*' --exclude '*/cache/*' --exclude 'iteration_*.pth' --exclude '*_optim.pth' "${filtering_model}" filtering_model/
 
       mkdir -p output_dataset
@@ -99,6 +99,7 @@ implementation:
 
       filter() {
         # remove paraphrases that do not preserve the meaning according to the parser
+        mkdir -p results_temp/filtered_bootleg/bootleg_wiki/
         genienlp transform-dataset \
           ${output_dir}/unfiltered.tsv \
           ${output_dir}/filtered.tsv \
@@ -114,6 +115,7 @@ implementation:
         # append paraphrases to the end of the original training file and remove duplicates
         cp ${input_dir}/train.tsv ${output_dir}/train.tsv
         cp ${output_dir}/filtered.tsv ${output_dir}/temp.tsv
+        mkdir -p results_temp/temp_bootleg/bootleg_wiki/
         genienlp transform-dataset \
           ${output_dir}/temp.tsv \
           ${output_dir}/filtered.tsv \
@@ -124,7 +126,7 @@ implementation:
         rm ${output_dir}/temp.tsv
         cat ${output_dir}/filtered.tsv >> ${output_dir}/train.tsv
         cat results_temp/temp_bootleg/bootleg_wiki/bootleg_labels.jsonl >> results_temp/train_bootleg/bootleg_wiki/bootleg_labels.jsonl
-        if test `wc -l ${output_dir}/train.tsv` != `wc -l results_temp/train_bootleg/bootleg_wiki/bootleg_labels.jsonl` ; then
+        if test `cat ${output_dir}/train.tsv | wc -l` != `cat results_temp/train_bootleg/bootleg_wiki/bootleg_labels.jsonl | wc -l` ; then
           echo 'Error: number of examples in final train and bootleg files should be the same' ; exit 1
         fi
       }

@@ -1917,3 +1917,40 @@ def paraphrase_only_pipeline(
                     paraphrase_additional_args,
                     filtering_additional_args,
                     )
+
+@dsl.pipeline(
+    name='Paraphrase filtering',
+    description='Runs only paraphrase filtering step'
+)
+def paraphrase_filtering_pipeline(
+    image,
+    owner,
+    project,
+    experiment,
+    dataset,
+    s3_input_datadir,
+    train_task_name,
+    filtering_model,
+    filtering_batch_size,
+    genienlp_version,
+    s3_database_dir=S3_DATABASE_DIR,
+    paraphrase_subfolder='None',
+    s3_bootleg_prepped_data='',
+    additional_args=''):
+    
+    paraphrase_filtering_op = paraphrase_filtering_step(
+        image=image,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        dataset=dataset,
+        s3_input_datadir=s3_input_datadir,
+        s3_database_dir=s3_database_dir,
+        train_task_name=train_task_name,
+        filtering_model=filtering_model,
+        filtering_batch_size=filtering_batch_size,
+        genienlp_version=genienlp_version,
+        paraphrase_subfolder=paraphrase_subfolder,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+        additional_args=additional_args)
+    

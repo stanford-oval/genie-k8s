@@ -33,7 +33,7 @@ implementation:
       
       /opt/genie-toolkit/sync-repos.sh 
 
-      aws s3 sync --no-progress "${s3_input_datadir}" input_dataset/
+      aws s3 sync --no-progress --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*" "${s3_input_datadir}" input_dataset/
       aws s3 sync --no-progress --exclude '*checkpoint*' "${paraphrasing_model}" paraphraser/
 
       mkdir -p output_dataset
