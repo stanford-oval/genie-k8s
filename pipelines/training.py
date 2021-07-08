@@ -486,27 +486,6 @@ def paraphrase_train_fewshot_step(
 
         train_s3_datadir = paraphrase_filtering_op.outputs['s3_output_datadir']
 
-        if do_bootleg:
-            s3_bootleg_prepped_data = split_bootleg_merge_step(
-                            owner=owner,
-                            project=project,
-                            experiment=experiment,
-                            task_name=train_task_name,
-                            s3_datadir=train_s3_datadir,
-                            s3_bucket=s3_bucket,
-                            s3_database_dir=s3_database_dir,
-                            s3_bootleg_subfolder=s3_bootleg_subfolder,
-                            image=image,
-                            genienlp_version=genienlp_version,
-                            bootleg_model=bootleg_model,
-                            train_languages=train_languages,
-                            eval_languages=eval_languages,
-                            data_splits=bootleg_data_splits,
-                            file_extension=file_extension,
-                            remove_original=remove_original,
-                            bootleg_additional_args=bootleg_additional_args
-            )
-
     train_op = train_step(
             owner=owner,
             project=project,

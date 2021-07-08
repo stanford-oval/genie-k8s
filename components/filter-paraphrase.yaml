@@ -151,7 +151,9 @@ implementation:
       
       # upload the new dataset to S3
       aws s3 sync --no-progress output_dataset/ "${s3_output_dir}"
-    
+      aws s3 sync --no-progress results_temp/ ${s3_original_bootleg_prepped_data} --exclude '*' --include '*bootleg_labels.jsonl'
+
+
     args: [
       'cmd',
       --image, {inputValue: image},
