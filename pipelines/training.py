@@ -481,6 +481,7 @@ def paraphrase_train_fewshot_step(
                                         genienlp_version=genienlp_version,
                                         paraphrase_subfolder=paraphrase_subfolder,
                                         s3_bootleg_prepped_data=paraphrase_s3_bootleg_prepped_data,
+                                        s3_original_bootleg_prepped_data=s3_bootleg_prepped_data,
                                         additional_args=filtering_additional_args)
 
         train_s3_datadir = paraphrase_filtering_op.outputs['s3_output_datadir']
@@ -1936,6 +1937,7 @@ def paraphrase_filtering_pipeline(
     s3_database_dir=S3_DATABASE_DIR,
     paraphrase_subfolder='None',
     s3_bootleg_prepped_data='',
+    s3_original_bootleg_prepped_data='',
     additional_args=''):
     
     paraphrase_filtering_op = paraphrase_filtering_step(
@@ -1952,5 +1954,6 @@ def paraphrase_filtering_pipeline(
         genienlp_version=genienlp_version,
         paraphrase_subfolder=paraphrase_subfolder,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+        s3_original_bootleg_prepped_data=s3_original_bootleg_prepped_data,
         additional_args=additional_args)
     

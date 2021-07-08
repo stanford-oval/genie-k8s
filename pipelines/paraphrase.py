@@ -95,6 +95,7 @@ def paraphrase_filtering_step(
     genienlp_version,
     paraphrase_subfolder,
     s3_bootleg_prepped_data,
+    s3_original_bootleg_prepped_data,
     additional_args
 ):
     paraphrase_env = {
@@ -116,6 +117,7 @@ def paraphrase_filtering_step(
         filtering_batch_size=filtering_batch_size,
         paraphrase_subfolder=paraphrase_subfolder,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+        s3_original_bootleg_prepped_data=s3_original_bootleg_prepped_data,
         additional_args=additional_args)
     (paraphrase_op.container
         .set_memory_request('150G')
