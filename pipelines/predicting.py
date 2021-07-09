@@ -117,9 +117,9 @@ def bootleg_train_predict_small_pipeline(
         task_name,
         s3_datadir,
         s3_bucket='geniehai',
-        s3_database_dir='None',
+        s3_database_dir=S3_DATABASE_DIR,
         s3_bootleg_subfolder='None',
-        model_type='',
+        model_type='None',
         image=default_image,
         genienlp_version='',
         load_from='None',
@@ -133,10 +133,11 @@ def bootleg_train_predict_small_pipeline(
         skip_tensorboard='false',
         train_iterations='',
         train_additional_args='',
-        bootleg_model='None',
+        bootleg_model='',
+        bootleg_data_splits='train eval',
         bootleg_additional_args='',
         val_batch_size='4000',
-        pred_additional_args='--evaluate valid --overwrite'
+        pred_additional_args=''
 ):
     
     s3_bootleg_prepped_data = split_bootleg_merge_step(
@@ -153,7 +154,7 @@ def bootleg_train_predict_small_pipeline(
         bootleg_model=bootleg_model,
         train_languages=train_languages,
         eval_languages=eval_languages,
-        eval_set=valid_set,
+        data_splits=bootleg_data_splits,
         file_extension=file_extension,
         remove_original=remove_original,
         bootleg_additional_args=bootleg_additional_args
@@ -221,7 +222,7 @@ def train_predict_small_pipeline(
         s3_bootleg_prepped_data='None',
         train_additional_args='',
         val_batch_size='4000',
-        pred_additional_args='--evaluate valid --overwrite'
+        pred_additional_args=''
 ):
     train_op = train_step(
         image=image,
