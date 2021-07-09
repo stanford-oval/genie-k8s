@@ -167,8 +167,6 @@ def split_step(
      .set_cpu_request('7.5'))
     (add_env(add_ssh_volume(split_op), split_env))
     
-    split_op.execution_options.caching_strategy.max_cache_staleness = "P0D"
-    
     return split_op
 
 
@@ -200,8 +198,6 @@ def merge_step(
      .set_cpu_limit('7.5')
      .set_cpu_request('7.5'))
     (add_env(add_ssh_volume(merge_op), merge_env))
-    
-    merge_op.execution_options.caching_strategy.max_cache_staleness = "P0D"
     
     return merge_op
 
