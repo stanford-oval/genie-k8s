@@ -1200,6 +1200,7 @@ def gpu_generate_bootleg_paraphrase_train_eval_pipeline(
     s3_bootleg_prepped_data='None',
     s3_bootleg_subfolder='None',
     bootleg_model='',
+    bootleg_data_splits='train eval',
     bootleg_additional_args=''
 ):
     everything(do_generate=True,
@@ -1239,6 +1240,7 @@ def gpu_generate_bootleg_paraphrase_train_eval_pipeline(
                s3_bootleg_prepped_data=s3_bootleg_prepped_data,
                s3_bootleg_subfolder=s3_bootleg_subfolder,
                bootleg_model=bootleg_model,
+               bootleg_data_splits=bootleg_data_splits,
                bootleg_additional_args=bootleg_additional_args,
                generate_w_gpu=True)
 
