@@ -40,13 +40,15 @@ implementation:
       mkdir -p dataset/merged
       cd dataset/
 
+      timestamp=`date +%s`
+
       ckpt_name=bootleg_wiki
 
       for split in ${data_splits} ; do
         for ((i=0;i<$num_chunks;i++)); do
           cat $i/bootleg/${bootleg_model}/prepped_files/${s3_bootleg_subfolder}${split}_bootleg/${ckpt_name}/bootleg_labels.jsonl >> merged/${split}_bootleg_labels.jsonl
         done
-        aws s3 cp --no-progress merged/${split}_bootleg_labels.jsonl ${s3_datadir%/}/merged/bootleg/${bootleg_model}/prepped_files/${s3_bootleg_subfolder}${split}_bootleg/${ckpt_name}/bootleg_labels.jsonl
+        aws s3 cp --no-progress merged/${split}_bootleg_labels.jsonl ${s3_datadir%/}/merged/bootleg/${bootleg_model}/prepped_files/${timestamp}/${s3_bootleg_subfolder}${split}_bootleg/${ckpt_name}/bootleg_labels.jsonl
       done
 
       if [ "$remove_original" == "true" ] ; then
@@ -54,7 +56,7 @@ implementation:
       fi
 
       mkdir -p `dirname $s3_output_datadir`
-      echo ${s3_datadir%/}/merged/bootleg/${bootleg_model}/prepped_files/ > $s3_output_datadir
+      echo ${s3_datadir%/}/merged/bootleg/${bootleg_model}/prepped_files/${timestamp}/ > $s3_output_datadir
 
     args: [
       'cmd',
