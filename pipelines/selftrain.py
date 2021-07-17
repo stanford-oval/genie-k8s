@@ -168,6 +168,12 @@ def selftrain_pipeline(
         paraphrase_subfolder='user',
         paraphrase_additional_args=paraphrase_additional_args,
         filtering_additional_args=filtering_additional_args,
+        s3_bootleg_subfolder='None',
+        bootleg_model='None',
+        bootleg_data_splits='',
+        bootleg_additional_args='',
+        file_extension='tsv',
+        remove_original='false',
     )
 
     # autoparaphrase and few-shot finetune the agent model
@@ -207,6 +213,12 @@ def selftrain_pipeline(
         paraphrase_subfolder='agent',
         paraphrase_additional_args=paraphrase_additional_args,
         filtering_additional_args=filtering_additional_args,
+        s3_bootleg_subfolder='None',
+        bootleg_model='None',
+        bootleg_data_splits='',
+        bootleg_additional_args='',
+        file_extension='tsv',
+        remove_original='false',
     )
 
     auto_annotate_op = auto_annotate_step(
@@ -354,6 +366,12 @@ def selftrain_nopara_pipeline(
         paraphrase_subfolder='user',
         paraphrase_additional_args='',
         filtering_additional_args='',
+        s3_bootleg_subfolder='None',
+        bootleg_model='None',
+        bootleg_data_splits='',
+        bootleg_additional_args='',
+        file_extension='tsv',
+        remove_original='false',
     )
 
     # autoparaphrase and few-shot finetune the agent model
@@ -393,6 +411,12 @@ def selftrain_nopara_pipeline(
         paraphrase_subfolder='agent',
         paraphrase_additional_args='',
         filtering_additional_args='',
+        s3_bootleg_subfolder='None',
+        bootleg_model='None',
+        bootleg_data_splits='',
+        bootleg_additional_args='',
+        file_extension='tsv',
+        remove_original='false',
     )
 
     auto_annotate_op = auto_annotate_step(
