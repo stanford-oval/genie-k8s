@@ -47,7 +47,7 @@ def bootleg_only_pipeline(
         bootleg_model='',
         train_languages='en',
         eval_languages='en',
-        eval_set='',
+        data_splits='train eval',
         file_extension='tsv',
         remove_original='false',
         bootleg_additional_args=''
@@ -66,7 +66,7 @@ def bootleg_only_pipeline(
         bootleg_model=bootleg_model,
         train_languages=train_languages,
         eval_languages=eval_languages,
-        eval_set=eval_set,
+        data_splits=data_splits,
         file_extension=file_extension,
         remove_original=remove_original,
         bootleg_additional_args=bootleg_additional_args
@@ -87,7 +87,7 @@ def split_bootleg_merge_step(
         bootleg_model='',
         train_languages='en',
         eval_languages='en',
-        eval_set='',
+        data_splits='train eval',
         remove_original='false',
         bootleg_additional_args='',
         file_extension='tsv'
@@ -99,7 +99,7 @@ def split_bootleg_merge_step(
         task_name=task_name,
         s3_datadir=s3_datadir,
         num_chunks=num_chunks,
-        eval_split_name=eval_set,
+        data_splits=data_splits,
         file_extension=file_extension
     )
     
@@ -119,7 +119,7 @@ def split_bootleg_merge_step(
             bootleg_model=bootleg_model,
             train_languages=train_languages,
             eval_languages=eval_languages,
-            eval_set=eval_set,
+            data_splits=data_splits,
             dataset_subfolder=str(i),
             bootleg_additional_args=bootleg_additional_args)
         bootleg_ops.append(bootleg_op)
@@ -131,7 +131,7 @@ def split_bootleg_merge_step(
         s3_bootleg_subfolder=s3_bootleg_subfolder,
         bootleg_model=bootleg_model,
         num_chunks=num_chunks,
-        eval_split_name=eval_set,
+        data_splits=data_splits,
         remove_original=remove_original
     )
     
@@ -147,8 +147,8 @@ def split_step(
     task_name,
     s3_datadir,
     num_chunks,
-    eval_split_name='eval',
-    file_extension='tsv'
+    data_splits,
+    file_extension
 ):
     split_env = {}
     
@@ -157,7 +157,7 @@ def split_step(
             task_name=task_name,
             s3_datadir=s3_datadir,
             num_chunks=num_chunks,
-            eval_split_name=eval_split_name,
+            data_splits=data_splits,
             file_extension=file_extension
     )
     (split_op.container
@@ -166,8 +166,6 @@ def split_step(
      .set_cpu_limit('7.5')
      .set_cpu_request('7.5'))
     (add_env(add_ssh_volume(split_op), split_env))
-    
-    split_op.execution_options.caching_strategy.max_cache_staleness = "P0D"
     
     return split_op
 
@@ -179,7 +177,7 @@ def merge_step(
     s3_bootleg_subfolder,
     bootleg_model,
     num_chunks,
-    eval_split_name='eval',
+    data_splits,
     remove_original='false'
 ):
     merge_env = {}
@@ -191,7 +189,7 @@ def merge_step(
             s3_bootleg_subfolder=s3_bootleg_subfolder,
             bootleg_model=bootleg_model,
             num_chunks=num_chunks,
-            eval_split_name=eval_split_name,
+            data_splits=data_splits,
             remove_original=remove_original
     )
     (merge_op.container
@@ -200,8 +198,6 @@ def merge_step(
      .set_cpu_limit('7.5')
      .set_cpu_request('7.5'))
     (add_env(add_ssh_volume(merge_op), merge_env))
-    
-    merge_op.execution_options.caching_strategy.max_cache_staleness = "P0D"
     
     return merge_op
 
@@ -220,7 +216,7 @@ def bootleg_step(
         bootleg_model='',
         train_languages='en',
         eval_languages='en',
-        eval_set='',
+        data_splits='train eval',
         dataset_subfolder='None',
         bootleg_additional_args=''
 ):
@@ -235,7 +231,7 @@ def bootleg_step(
         task_name=task_name,
         project=project,
         experiment=experiment,
-        eval_set=eval_set,
+        data_splits=data_splits,
         s3_datadir=s3_datadir,
         s3_database_dir=s3_database_dir,
         s3_bootleg_subfolder=s3_bootleg_subfolder,

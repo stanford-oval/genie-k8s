@@ -13,6 +13,8 @@ python3 upload_pipeline.py bootleg_only_pipeline bootleg-only
 python3 upload_pipeline.py generate_bootleg_train_eval_pipeline generate-bootleg-train-eval
 python3 upload_pipeline.py bootleg_train_eval_pipeline bootleg-train-eval
 python3 upload_pipeline.py generate_paraphrase_train_eval_pipeline generate-paraphrase-train-eval
+python3 upload_pipeline.py gpu_generate_paraphrase_train_eval_pipeline gpu-generate-paraphrase-train-eval
+python3 upload_pipeline.py gpu_generate_bootleg_paraphrase_train_eval_pipeline gpu-generate-bootleg-paraphrase-train-eval
 python3 upload_pipeline.py generate_train_fewshot_eval_pipeline generate-train-fewshot-eval
 python3 upload_pipeline.py generate_paraphrase_train_fewshot_eval_pipeline generate-paraphrase-train-fewshot-eval
 python3 upload_pipeline.py eval_only_pipeline eval-only

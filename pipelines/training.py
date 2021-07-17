@@ -39,6 +39,7 @@ def generate_dataset_step(
     experiment,
     dataset,
     parallel,
+    valid_set,
     genie_version,
     workdir_repo,
     workdir_version,
@@ -59,6 +60,7 @@ def generate_dataset_step(
             experiment=experiment,
             dataset=dataset,
             parallel=parallel,
+            valid_set=valid_set,
             additional_args=additional_args)
     (generate_dataset_op.container
         .set_memory_limit('55Gi')
@@ -70,6 +72,49 @@ def generate_dataset_step(
 
     return generate_dataset_op
 
+def generate_dataset_step_w_gpu(
+    image,
+    owner,
+    project,
+    experiment,
+    dataset,
+    parallel,
+    valid_set,
+    genie_version,
+    workdir_repo,
+    workdir_version,
+    thingpedia_developer_key,
+    additional_args
+):
+    gen_dataset_env = {
+        'GENIE_VERSION': genie_version,
+        'WORKDIR_REPO': workdir_repo,
+        'WORKDIR_VERSION': workdir_version,
+        'THINGPEDIA_DEVELOPER_KEY': thingpedia_developer_key,
+    }
+    num_gpus = 1
+    generate_dataset_op = components.load_component_from_file('components/generate-dataset.yaml')(
+            image=image,
+            s3_bucket='geniehai',
+            owner=owner,
+            project=project,
+            experiment=experiment,
+            dataset=dataset,
+            parallel=parallel,
+            valid_set=valid_set,
+            additional_args=additional_args)
+    (generate_dataset_op.container
+        .set_memory_limit('55Gi')
+        .set_memory_request('55Gi')
+        .set_cpu_request('7.5')
+        .set_cpu_limit('7.5')
+        .set_gpu_limit(str(num_gpus))
+    )
+    (add_env(add_ssh_volume(generate_dataset_op), gen_dataset_env)
+        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.12xlarge'))
+
+    return generate_dataset_op
 
 def train_step(
     image,
@@ -325,6 +370,7 @@ def paraphrase_train_fewshot_step(
     s3_database_dir,
     s3_bootleg_subfolder,
     bootleg_model,
+    bootleg_data_splits,
     train_languages,
     eval_languages,
     valid_set,
@@ -342,6 +388,7 @@ def paraphrase_train_fewshot_step(
     file_extension,
     remove_original,
 ):
+    
     if do_bootleg:
         s3_bootleg_prepped_data = split_bootleg_merge_step(
                         owner=owner,
@@ -357,7 +404,7 @@ def paraphrase_train_fewshot_step(
                         bootleg_model=bootleg_model,
                         train_languages=train_languages,
                         eval_languages=eval_languages,
-                        eval_set=valid_set,
+                        data_splits=bootleg_data_splits,
                         file_extension=file_extension,
                         remove_original=remove_original,
                         bootleg_additional_args=bootleg_additional_args
@@ -398,28 +445,14 @@ def paraphrase_train_fewshot_step(
                                         paraphrase_subfolder=paraphrase_subfolder,
                                         additional_args=paraphrase_additional_args)
 
-        paraphrase_filtering_op = paraphrase_filtering_step(image=image,
-                                        owner=owner,
-                                        project=project,
-                                        experiment=experiment,
-                                        dataset=dataset,
-                                        s3_input_datadir=paraphrase_generation_op.outputs['s3_output_datadir'],
-                                        train_task_name=train_task_name,
-                                        filtering_model=pretrain_op.outputs['s3_model_dir'],
-                                        filtering_batch_size=filtering_batch_size,
-                                        genienlp_version=genienlp_version,
-                                        paraphrase_subfolder=paraphrase_subfolder,
-                                        additional_args=filtering_additional_args)
-
-        train_s3_datadir = paraphrase_filtering_op.outputs['s3_output_datadir']
-
+        paraphrase_s3_bootleg_prepped_data = 'None'
         if do_bootleg:
-            s3_bootleg_prepped_data = split_bootleg_merge_step(
+            paraphrase_s3_bootleg_prepped_data = split_bootleg_merge_step(
                             owner=owner,
                             project=project,
                             experiment=experiment,
                             task_name=train_task_name,
-                            s3_datadir=train_s3_datadir,
+                            s3_datadir=paraphrase_generation_op.outputs['s3_output_datadir'],
                             s3_bucket=s3_bucket,
                             s3_database_dir=s3_database_dir,
                             s3_bootleg_subfolder=s3_bootleg_subfolder,
@@ -428,11 +461,30 @@ def paraphrase_train_fewshot_step(
                             bootleg_model=bootleg_model,
                             train_languages=train_languages,
                             eval_languages=eval_languages,
-                            eval_set=valid_set,
+                            data_splits='unfiltered',
                             file_extension=file_extension,
                             remove_original=remove_original,
                             bootleg_additional_args=bootleg_additional_args
             )
+
+        paraphrase_filtering_op = paraphrase_filtering_step(
+                                        image=image,
+                                        owner=owner,
+                                        project=project,
+                                        experiment=experiment,
+                                        dataset=dataset,
+                                        s3_input_datadir=paraphrase_generation_op.outputs['s3_output_datadir'],
+                                        s3_database_dir=s3_database_dir,
+                                        train_task_name=train_task_name,
+                                        filtering_model=pretrain_op.outputs['s3_model_dir'],
+                                        filtering_batch_size=filtering_batch_size,
+                                        genienlp_version=genienlp_version,
+                                        paraphrase_subfolder=paraphrase_subfolder,
+                                        s3_bootleg_prepped_data=paraphrase_s3_bootleg_prepped_data,
+                                        s3_original_bootleg_prepped_data=s3_bootleg_prepped_data,
+                                        additional_args=filtering_additional_args)
+
+        train_s3_datadir = paraphrase_filtering_op.outputs['s3_output_datadir']
 
     train_op = train_step(
             owner=owner,
@@ -458,8 +510,9 @@ def paraphrase_train_fewshot_step(
     eval_model = train_op.outputs['s3_model_dir']
 
     if do_fewshot:
+        few_shot_s3_bootleg_prepped_data = 'None'
         if do_bootleg:
-            s3_bootleg_prepped_data = split_bootleg_merge_step(
+            few_shot_s3_bootleg_prepped_data = split_bootleg_merge_step(
                             owner=owner,
                             project=project,
                             experiment=experiment,
@@ -473,7 +526,7 @@ def paraphrase_train_fewshot_step(
                             bootleg_model=bootleg_model,
                             train_languages=train_languages,
                             eval_languages=eval_languages,
-                            eval_set=valid_set,
+                            data_splits=bootleg_data_splits,
                             file_extension=file_extension,
                             remove_original=remove_original,
                             bootleg_additional_args=bootleg_additional_args
@@ -497,7 +550,7 @@ def paraphrase_train_fewshot_step(
             dataset_subfolder='fewshot/',
             skip_tensorboard='false',
             train_iterations=fewshot_train_iterations,
-            s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+            s3_bootleg_prepped_data=few_shot_s3_bootleg_prepped_data,
             additional_args=train_additional_args,
         )
         eval_model = fewshot_op.outputs['s3_model_dir']
@@ -594,6 +647,7 @@ def everything(
     s3_bucket='geniehai',
     s3_database_dir='None',
     s3_bootleg_subfolder='None',
+    bootleg_data_splits='train eval',
     bootleg_model='None',
     train_languages='en',
     eval_languages='en',
@@ -625,21 +679,36 @@ def everything(
     eval_additional_args='',
     is_oracle='false',
     remove_original='false',
-    bootleg_additional_args=''
+    bootleg_additional_args='',
+    generate_w_gpu=False
 ):
-
     if do_generate:
-        generate_dataset_op = generate_dataset_step(image=image,
-                                                    owner=owner,
-                                                    project=project,
-                                                    experiment=experiment,
-                                                    dataset=dataset,
-                                                    parallel=generate_dataset_parallel,
-                                                    genie_version=genie_version,
-                                                    workdir_repo=workdir_repo,
-                                                    workdir_version=workdir_version,
-                                                    thingpedia_developer_key=thingpedia_developer_key,
-                                                    additional_args=generate_dataset_additional_args)
+        if generate_w_gpu:
+            generate_dataset_op = generate_dataset_step_w_gpu(image=image,
+                                                              owner=owner,
+                                                              project=project,
+                                                              experiment=experiment,
+                                                              dataset=dataset,
+                                                              parallel=generate_dataset_parallel,
+                                                              valid_set=valid_set,
+                                                              genie_version=genie_version,
+                                                              workdir_repo=workdir_repo,
+                                                              workdir_version=workdir_version,
+                                                              thingpedia_developer_key=thingpedia_developer_key,
+                                                              additional_args=generate_dataset_additional_args)
+        else:
+            generate_dataset_op = generate_dataset_step(image=image,
+                                                        owner=owner,
+                                                        project=project,
+                                                        experiment=experiment,
+                                                        dataset=dataset,
+                                                        parallel=generate_dataset_parallel,
+                                                        valid_set=valid_set,
+                                                        genie_version=genie_version,
+                                                        workdir_repo=workdir_repo,
+                                                        workdir_version=workdir_version,
+                                                        thingpedia_developer_key=thingpedia_developer_key,
+                                                        additional_args=generate_dataset_additional_args)
         train_s3_datadir = generate_dataset_op.outputs['s3_datadir']
 
     train_s3_datadir, eval_model = paraphrase_train_fewshot_step(
@@ -663,6 +732,7 @@ def everything(
         s3_database_dir=s3_database_dir,
         s3_bootleg_subfolder=s3_bootleg_subfolder,
         bootleg_model=bootleg_model,
+        bootleg_data_splits=bootleg_data_splits,
         train_languages=train_languages,
         eval_languages=eval_languages,
         valid_set=valid_set,
@@ -737,6 +807,7 @@ def bootleg_train_eval_pipeline(
                do_bootleg=True,
                do_paraphrase=False,
                do_fewshot=False,
+               do_calibrate=False,
                owner=owner,
                project=project,
                experiment=experiment,
@@ -1020,6 +1091,158 @@ def generate_paraphrase_train_eval_pipeline(
                eval_set=eval_set,
                eval_parallel_jobs=eval_parallel_jobs,
                eval_additional_args=eval_additional_args)
+
+
+@dsl.pipeline(
+    name='Generate, paraphrase, train, and eval',
+    description='Runs the whole training pipeline, including autoparaphrasing, and using GPU machine for generate'
+)
+def gpu_generate_paraphrase_train_eval_pipeline(
+    owner,
+    project,
+    experiment,
+    model,
+    dataset,
+    image=default_image,
+    genienlp_version=GENIENLP_VERSION,
+    genie_version=GENIE_VERSION,
+    workdir_repo=WORKDIR_REPO,
+    workdir_version=WORKDIR_VERSION,
+    thingpedia_developer_key=default_developer_key,
+    generate_dataset_parallel='6',
+    generate_dataset_additional_args='',
+    train_task_name='',
+    train_load_from='None',
+    train_additional_args='',
+    train_iterations='80000',
+    filtering_train_iterations='10000',
+    filtering_batch_size='4000',
+    keep_original_duplicates='false',
+    paraphrasing_model=PARAPHRASING_MODEL,
+    paraphrase_subfolder='user',
+    paraphrase_additional_args='',
+    filtering_additional_args='',
+    valid_set='eval',
+    eval_set='',
+    eval_parallel_jobs='2',
+    eval_additional_args=''
+):
+    everything(do_generate=True,
+               do_bootleg=False,
+               do_paraphrase=True,
+               do_fewshot=False,
+               do_calibrate=False,
+               owner=owner,
+               project=project,
+               experiment=experiment,
+               model=model,
+               dataset=dataset,
+               image=image,
+               genienlp_version=genienlp_version,
+               genie_version=genie_version,
+               workdir_repo=workdir_repo,
+               workdir_version=workdir_version,
+               thingpedia_developer_key=thingpedia_developer_key,
+               generate_dataset_parallel=generate_dataset_parallel,
+               generate_dataset_additional_args=generate_dataset_additional_args,
+               train_task_name=train_task_name,
+               train_load_from=train_load_from,
+               train_additional_args=train_additional_args,
+               train_iterations=train_iterations,
+               filtering_train_iterations=filtering_train_iterations,
+               filtering_batch_size=filtering_batch_size,
+               keep_original_duplicates=keep_original_duplicates,
+               paraphrasing_model=paraphrasing_model,
+               paraphrase_subfolder=paraphrase_subfolder,
+               paraphrase_additional_args=paraphrase_additional_args,
+               filtering_additional_args=filtering_additional_args,
+               valid_set=valid_set,
+               eval_set=eval_set,
+               eval_parallel_jobs=eval_parallel_jobs,
+               eval_additional_args=eval_additional_args,
+               generate_w_gpu=True)
+
+
+@dsl.pipeline(
+    name='Generate, bootleg, paraphrase, train, and eval',
+    description='Runs the whole training pipeline, including bootleg and autoparaphrasing, and using GPU machine for generate'
+)
+def gpu_generate_bootleg_paraphrase_train_eval_pipeline(
+    owner,
+    project,
+    experiment,
+    model,
+    dataset,
+    image=default_image,
+    genienlp_version=GENIENLP_VERSION,
+    genie_version=GENIE_VERSION,
+    workdir_repo=WORKDIR_REPO,
+    workdir_version=WORKDIR_VERSION,
+    thingpedia_developer_key=default_developer_key,
+    generate_dataset_parallel='6',
+    generate_dataset_additional_args='',
+    train_task_name='',
+    train_load_from='None',
+    train_additional_args='',
+    train_iterations='80000',
+    filtering_train_iterations='10000',
+    filtering_batch_size='4000',
+    keep_original_duplicates='false',
+    paraphrasing_model=PARAPHRASING_MODEL,
+    paraphrase_subfolder='user',
+    paraphrase_additional_args='',
+    filtering_additional_args='',
+    valid_set='eval',
+    eval_set='',
+    eval_parallel_jobs='2',
+    eval_additional_args='',
+    s3_database_dir=S3_DATABASE_DIR,
+    s3_bootleg_prepped_data='None',
+    s3_bootleg_subfolder='None',
+    bootleg_model='',
+    bootleg_data_splits='train eval',
+    bootleg_additional_args=''
+):
+    everything(do_generate=True,
+               do_bootleg=True,
+               do_paraphrase=True,
+               do_fewshot=False,
+               do_calibrate=False,
+               owner=owner,
+               project=project,
+               experiment=experiment,
+               model=model,
+               dataset=dataset,
+               image=image,
+               genienlp_version=genienlp_version,
+               genie_version=genie_version,
+               workdir_repo=workdir_repo,
+               workdir_version=workdir_version,
+               thingpedia_developer_key=thingpedia_developer_key,
+               generate_dataset_parallel=generate_dataset_parallel,
+               generate_dataset_additional_args=generate_dataset_additional_args,
+               train_task_name=train_task_name,
+               train_load_from=train_load_from,
+               train_additional_args=train_additional_args,
+               train_iterations=train_iterations,
+               filtering_train_iterations=filtering_train_iterations,
+               filtering_batch_size=filtering_batch_size,
+               keep_original_duplicates=keep_original_duplicates,
+               paraphrasing_model=paraphrasing_model,
+               paraphrase_subfolder=paraphrase_subfolder,
+               paraphrase_additional_args=paraphrase_additional_args,
+               filtering_additional_args=filtering_additional_args,
+               valid_set=valid_set,
+               eval_set=eval_set,
+               eval_parallel_jobs=eval_parallel_jobs,
+               eval_additional_args=eval_additional_args,
+               s3_database_dir=s3_database_dir,
+               s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+               s3_bootleg_subfolder=s3_bootleg_subfolder,
+               bootleg_model=bootleg_model,
+               bootleg_data_splits=bootleg_data_splits,
+               bootleg_additional_args=bootleg_additional_args,
+               generate_w_gpu=True)
 
 
 @dsl.pipeline(
@@ -1332,11 +1555,6 @@ def generate_paraphrase_train_fewshot_eval_pipeline(
     train_load_from='None',
     train_additional_args='',
     train_iterations='80000',
-    calibrate='false',
-    calibration_ood_file='None',
-    is_correct_params='',
-    is_ood_params='',
-    calibration_additional_args='None',
     fewshot_train_iterations='20000',
     filtering_train_iterations='10000',
     filtering_batch_size='4000',
@@ -1354,6 +1572,7 @@ def generate_paraphrase_train_fewshot_eval_pipeline(
                do_bootleg=False,
                do_paraphrase=True,
                do_fewshot=True,
+               do_calibrate=False,
                owner=owner,
                project=project,
                experiment=experiment,
@@ -1371,11 +1590,6 @@ def generate_paraphrase_train_fewshot_eval_pipeline(
                train_load_from=train_load_from,
                train_additional_args=train_additional_args,
                train_iterations=train_iterations,
-               calibrate=calibrate,
-               calibration_ood_file=calibration_ood_file,
-               is_correct_params=is_correct_params,
-               is_ood_params=is_ood_params,
-               calibration_additional_args=calibration_additional_args,
                fewshot_train_iterations=fewshot_train_iterations,
                filtering_train_iterations=filtering_train_iterations,
                filtering_batch_size=filtering_batch_size,
@@ -1411,11 +1625,6 @@ def paraphrase_train_fewshot_eval_pipeline(
     train_load_from='None',
     train_additional_args='',
     train_iterations='80000',
-    calibrate='false',
-    calibration_ood_file='None',
-    is_correct_params='',
-    is_ood_params='',
-    calibration_additional_args='None',
     fewshot_train_iterations='20000',
     filtering_train_iterations='10000',
     filtering_batch_size='4000',
@@ -1433,6 +1642,7 @@ def paraphrase_train_fewshot_eval_pipeline(
                do_bootleg=False,
                do_paraphrase=True,
                do_fewshot=True,
+               do_calibrate=False,
                owner=owner,
                project=project,
                experiment=experiment,
@@ -1449,11 +1659,6 @@ def paraphrase_train_fewshot_eval_pipeline(
                train_load_from=train_load_from,
                train_additional_args=train_additional_args,
                train_iterations=train_iterations,
-               calibrate=calibrate,
-               calibration_ood_file=calibration_ood_file,
-               is_correct_params=is_correct_params,
-               is_ood_params=is_ood_params,
-               calibration_additional_args=calibration_additional_args,
                fewshot_train_iterations=fewshot_train_iterations,
                filtering_train_iterations=filtering_train_iterations,
                filtering_batch_size=filtering_batch_size,
@@ -1466,6 +1671,86 @@ def paraphrase_train_fewshot_eval_pipeline(
                eval_set=eval_set,
                eval_parallel_jobs=eval_parallel_jobs,
                eval_additional_args=eval_additional_args)
+
+
+
+@dsl.pipeline(
+    name='Bootleg, paraphrase, train, and eval',
+    description='Runs the whole training pipeline on an existing dataset folder, with autoparaphrasing and bootleg'
+)
+def bootleg_paraphrase_train_eval_pipeline(
+    owner,
+    project,
+    experiment,
+    model,
+    s3_datadir,
+    s3_database_dir=S3_DATABASE_DIR,
+    s3_bootleg_prepped_data='None',
+    s3_bootleg_subfolder='None',
+    bootleg_model='None',
+    bootleg_data_splits='train eval',
+    bootleg_additional_args='',
+    dataset='',
+    image=default_image,
+    genienlp_version=GENIENLP_VERSION,
+    genie_version=GENIE_VERSION,
+    workdir_repo=WORKDIR_REPO,
+    workdir_version=WORKDIR_VERSION,
+    thingpedia_developer_key=default_developer_key,
+    train_task_name='',
+    train_load_from='None',
+    train_additional_args='',
+    train_iterations='80000',
+    filtering_train_iterations='10000',
+    filtering_batch_size='4000',
+    keep_original_duplicates='false',
+    paraphrasing_model=PARAPHRASING_MODEL,
+    paraphrase_subfolder='user',
+    paraphrase_additional_args='',
+    filtering_additional_args='',
+    valid_set='eval',
+    eval_set='',
+    eval_parallel_jobs='2',
+    eval_additional_args=''
+):
+    everything(do_generate=False,
+               do_bootleg=True,
+               do_paraphrase=True,
+               do_fewshot=False,
+               do_calibrate=False,
+               train_s3_datadir=s3_datadir,
+               owner=owner,
+               project=project,
+               experiment=experiment,
+               model=model,
+               dataset=dataset,
+               image=image,
+               genienlp_version=genienlp_version,
+               genie_version=genie_version,
+               workdir_repo=workdir_repo,
+               workdir_version=workdir_version,
+               thingpedia_developer_key=thingpedia_developer_key,
+               train_task_name=train_task_name,
+               train_load_from=train_load_from,
+               train_additional_args=train_additional_args,
+               train_iterations=train_iterations,
+               filtering_train_iterations=filtering_train_iterations,
+               filtering_batch_size=filtering_batch_size,
+               keep_original_duplicates=keep_original_duplicates,
+               paraphrasing_model=paraphrasing_model,
+               paraphrase_subfolder=paraphrase_subfolder,
+               paraphrase_additional_args=paraphrase_additional_args,
+               filtering_additional_args=filtering_additional_args,
+               valid_set=valid_set,
+               eval_set=eval_set,
+               eval_parallel_jobs=eval_parallel_jobs,
+               eval_additional_args=eval_additional_args,
+               s3_database_dir=s3_database_dir,
+               s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+               s3_bootleg_subfolder=s3_bootleg_subfolder,
+               bootleg_model=bootleg_model,
+               bootleg_data_splits=bootleg_data_splits,
+               bootleg_additional_args=bootleg_additional_args)
 
 
 @dsl.pipeline(
@@ -1490,11 +1775,6 @@ def paraphrase_train_eval_pipeline(
     train_load_from='None',
     train_additional_args='',
     train_iterations='80000',
-    calibrate='false',
-    calibration_ood_file='None',
-    is_correct_params='',
-    is_ood_params='',
-    calibration_additional_args='None',
     filtering_train_iterations='10000',
     filtering_batch_size='4000',
     keep_original_duplicates='false',
@@ -1511,6 +1791,7 @@ def paraphrase_train_eval_pipeline(
                do_bootleg=False,
                do_paraphrase=True,
                do_fewshot=False,
+               do_calibrate=False,
                owner=owner,
                project=project,
                experiment=experiment,
@@ -1527,11 +1808,6 @@ def paraphrase_train_eval_pipeline(
                train_load_from=train_load_from,
                train_additional_args=train_additional_args,
                train_iterations=train_iterations,
-               calibrate=calibrate,
-               calibration_ood_file=calibration_ood_file,
-               is_correct_params=is_correct_params,
-               is_ood_params=is_ood_params,
-               calibration_additional_args=calibration_additional_args,
                filtering_train_iterations=filtering_train_iterations,
                filtering_batch_size=filtering_batch_size,
                keep_original_duplicates=keep_original_duplicates,
@@ -1623,3 +1899,42 @@ def paraphrase_only_pipeline(
                     paraphrase_additional_args,
                     filtering_additional_args,
                     )
+
+@dsl.pipeline(
+    name='Paraphrase filtering',
+    description='Runs only paraphrase filtering step'
+)
+def paraphrase_filtering_pipeline(
+    image,
+    owner,
+    project,
+    experiment,
+    dataset,
+    s3_input_datadir,
+    train_task_name,
+    filtering_model,
+    filtering_batch_size,
+    genienlp_version,
+    s3_database_dir=S3_DATABASE_DIR,
+    paraphrase_subfolder='None',
+    s3_bootleg_prepped_data='',
+    s3_original_bootleg_prepped_data='',
+    additional_args=''):
+    
+    paraphrase_filtering_op = paraphrase_filtering_step(
+        image=image,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        dataset=dataset,
+        s3_input_datadir=s3_input_datadir,
+        s3_database_dir=s3_database_dir,
+        train_task_name=train_task_name,
+        filtering_model=filtering_model,
+        filtering_batch_size=filtering_batch_size,
+        genienlp_version=genienlp_version,
+        paraphrase_subfolder=paraphrase_subfolder,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+        s3_original_bootleg_prepped_data=s3_original_bootleg_prepped_data,
+        additional_args=additional_args)
+    

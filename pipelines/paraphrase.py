@@ -88,18 +88,21 @@ def paraphrase_filtering_step(
     experiment,
     dataset,
     s3_input_datadir,
+    s3_database_dir,
     train_task_name,
     filtering_model,
     filtering_batch_size,
     genienlp_version,
     paraphrase_subfolder,
+    s3_bootleg_prepped_data,
+    s3_original_bootleg_prepped_data,
     additional_args
 ):
     paraphrase_env = {
         'GENIENLP_VERSION': genienlp_version,
     }
 
-    paraphrase_num_gpus=4
+    paraphrase_num_gpus = 4
     paraphrase_op = components.load_component_from_file('components/filter-paraphrase.yaml')(
         image=image,
         s3_bucket='geniehai',
@@ -109,9 +112,12 @@ def paraphrase_filtering_step(
         experiment=experiment,
         dataset=dataset,
         s3_input_datadir=s3_input_datadir,
+        s3_database_dir=s3_database_dir,
         filtering_model=filtering_model,
         filtering_batch_size=filtering_batch_size,
         paraphrase_subfolder=paraphrase_subfolder,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+        s3_original_bootleg_prepped_data=s3_original_bootleg_prepped_data,
         additional_args=additional_args)
     (paraphrase_op.container
         .set_memory_request('150G')
