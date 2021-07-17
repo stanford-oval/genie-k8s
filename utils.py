@@ -19,8 +19,8 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 # OR OTHER DEALINGS IN THE SOFTWARE.
 
-from datetime import datetime
 import os
+from datetime import datetime
 
 import kfp
 
@@ -47,7 +47,9 @@ def list_pipeline_versions(client, pipeline_id):
     resp = client.pipelines.list_pipeline_versions(resource_key_type="PIPELINE", resource_key_id=pipeline_id, page_size=100)
     pipeline_versions = resp.versions
     while resp.next_page_token:
-        resp = client.pipelines.list_pipeline_versions(resource_key_type="PIPELINE", resource_key_id=pipeline_id, page_size=100, page_token=resp.next_page_token)
+        resp = client.pipelines.list_pipeline_versions(
+            resource_key_type="PIPELINE", resource_key_id=pipeline_id, page_size=100, page_token=resp.next_page_token
+        )
         pipeline_versions.extend(resp.versions)
     return pipeline_versions
 
@@ -72,7 +74,9 @@ def upload_pipeline(name, pipeline):
     if pid:
         resp = client.pipeline_uploads.upload_pipeline_version(compiled_pipeline_path, name=version, pipelineid=pid)
     else:
-        resp = client.pipeline_uploads.upload_pipeline(compiled_pipeline_path, name=name, description=pipeline._component_description)
+        resp = client.pipeline_uploads.upload_pipeline(
+            compiled_pipeline_path, name=name, description=pipeline._component_description
+        )
 
     os.remove(compiled_pipeline_path)
     return resp
@@ -82,10 +86,10 @@ def prepare_unknown_args(args_list):
 
     assert len(args_list) % 2 == 0, args_list
     assert all(args_list[i].startswith(("-", "--")) for i in range(0, len(args_list), 2))
-    
+
     cleaned_args = {}
     for i in range(0, len(args_list), 2):
-        arg, value = args_list[i], args_list[i+1]
+        arg, value = args_list[i], args_list[i + 1]
         cleaned_args[arg.strip('-')] = value
 
     return cleaned_args

@@ -14,7 +14,7 @@ inputs:
 outputs:
   - {name: s3_datadir}
   - {name: MLPipeline UI metadata, type: UI metadata}
-implementation: 
+implementation:
   container:
     image: '{{inputs.parameters.image}}'
     command:
@@ -27,9 +27,9 @@ implementation:
       shift $n
       cd $HOME
 
-      /opt/genie-toolkit/sync-repos.sh 
+      /opt/genie-toolkit/sync-repos.sh
       MAKEDIR=`get_make_dir ${project}`
-      
+
       cat >> workdir/config.mk <<EOF
       developer_key = ${THINGPEDIA_DEVELOPER_KEY}
       EOF
@@ -52,7 +52,7 @@ implementation:
       aws s3 sync --no-progress datadir/ ${S3_DATADIR}
       mkdir -p `dirname $s3_datadir`
       echo ${S3_DATADIR}  > $s3_datadir
-      
+
       if test -f datadir/stats ; then
         cat > /tmp/mlpipeline-ui-metadata.json <<EOF
       {"outputs" : [
@@ -69,9 +69,9 @@ implementation:
       ]}
       EOF
       else
-        echo '{"outputs":[]}' > /tmp/mlpipeline-ui-metadata.json 
+        echo '{"outputs":[]}' > /tmp/mlpipeline-ui-metadata.json
       fi
-    
+
     args: [
       'cmd',
       --image, {inputValue: image},

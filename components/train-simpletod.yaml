@@ -31,18 +31,18 @@ implementation:
       ln -s "/shared/tensorboard/${project}/${experiment}/${owner}/${model}" "./runs"
 
       ./train_dst.sh 0 gpt2 distilgpt2 ${train_batch_size} $@
-      
+
       S3_MODEL_DIR=s3://geniehai/${owner}/models/${project}/${experiment}/${model}/`date +%s`/
       aws s3 sync --no-progress output/ ${S3_MODEL_DIR}
-      
+
       mkdir -p `dirname $s3_model_dir`
       echo ${S3_MODEL_DIR} > $s3_model_dir
-      
+
       checkpoint=$(ls output/distilgpt2/ | grep -o '[0-9]*' | sort -nr | head -n1)
       python3 generate_dialogue.py --checkpoint ./output/distilgpt2/checkpoint-${checkpoint} --split_set test
       ls -al
       aws s3 cp --no-progress *.json ${S3_MODEL_DIR}
-    
+
     args: [
       'cmd',
       --image, {inputValue: image},
@@ -53,5 +53,5 @@ implementation:
       --s3_datadir, {inputValue: s3_datadir},
       --s3_model_dir, {outputPath: s3_model_dir},
       --,
-      {inputValue: additional_args}, 
+      {inputValue: additional_args},
     ]

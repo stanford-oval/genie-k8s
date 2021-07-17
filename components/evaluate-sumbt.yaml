@@ -22,11 +22,11 @@ implementation:
     - -c
     - |
       . k8s/lib.sh
-      
+
       parse_args "$0" "image owner project experiment s3_datadir s3_model_dir metrics_output" "$@"
       shift $n
       set -x
-      
+
       aws s3 sync --no-progress ${s3_datadir} data/
       aws s3 sync --no-progress ${s3_model_dir} save/
       python3 code/main-multislot.py --data_dir "data/" --output_dir "save/" \

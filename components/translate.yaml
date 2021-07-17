@@ -28,7 +28,7 @@ implementation:
     command:
     - /bin/bash
     - -ex
-    - -c 
+    - -c
     - |
       . /opt/genie-toolkit/lib.sh
 

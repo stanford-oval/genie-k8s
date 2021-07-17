@@ -30,10 +30,10 @@ implementation:
 
       S3_MODEL_DIR=s3://geniehai/${owner}/models/${project}/${experiment}/${model}/`date +%s`/
       aws s3 sync --no-progress save/ ${S3_MODEL_DIR}
-            
+
       mkdir -p `dirname $s3_model_dir`
       echo ${S3_MODEL_DIR} > $s3_model_dir
-    
+
     args: [
       'cmd',
       --owner, {inputValue: owner},
@@ -43,5 +43,5 @@ implementation:
       --s3_datadir, {inputValue: s3_datadir},
       --s3_model_dir, {outputPath: s3_model_dir},
       --,
-      {inputValue: additional_args}, 
+      {inputValue: additional_args},
     ]

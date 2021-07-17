@@ -21,22 +21,22 @@ implementation:
     - -c
     - |
       . k8s/lib.sh
-      
+
       parse_args "$0" "owner project experiment s3_datadir s3_model_dir metrics_output" "$@"
       shift $n
       set -x
-      
+
       aws s3 sync --no-progress ${s3_datadir} data/
       aws s3 sync --no-progress ${s3_model_dir} save/
       ls -d save/TRADE*/ || ln -s . save/TRADE
       (cd save ; ls lang-all.pkl || ln -s TRADE*/lang-all.pkl lang-all.pkl )
       (cd save ; ls mem-lang-all.pkl || ln -s TRADE*/mem-lang-all.pkl mem-lang-all.pkl )
-      
+
       # note: myTest is very, very broken, and assumes a very specific directory layout inside save/
       best_model=$(ls -d save/TRADE*/HDD*BSZ* | sort -r | head -n1)
-      
+
       mkdir -p ${metrics_output}
-      
+
       echo "Everything" > ${metrics_output}/results
       python3 myTest.py -gs=1 -path "$best_model" "-bsz=32" $@ | tee -a ${metrics_output}/results
       for pred_file in prediction_*; do
@@ -52,7 +52,7 @@ implementation:
           cp ${pred_file} ${metrics_output}/predictions/${d}/
         done
       done
-      
+
       grep -E 'Joint Acc|Everything|Only ' ${metrics_output}/results | sed -E -e 's/F1/Fone/g' -e '/^(Only |Everything)/!s/[^0-9 .]/ /g' -e '/^(Only |Everything)/!s/ +/\t/g' > results.csv
       sed -i -E 's/[\t\n]+/,/g' results.csv
       cat results.csv

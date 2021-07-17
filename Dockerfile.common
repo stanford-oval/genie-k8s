@@ -11,7 +11,7 @@ RUN dnf -y install make gettext unzip zip nano xz gcc-c++ diffutils \
 	&& dnf -y install python38 \
 	python38-devel \
 	python38-pip \
-	python38-wheel \ 
+	python38-wheel \
         && alternatives --set python /usr/bin/python3.8 \
 	&& pip3 install --upgrade pip \
 	&& pip3 install --use-feature=2020-resolver awscli \

@@ -21,12 +21,7 @@
 
 import os
 
-from kubernetes.client.models import (
-    V1VolumeMount,
-    V1Volume,
-    V1EnvVar,
-    V1SecretVolumeSource
-)
+from kubernetes.client.models import V1EnvVar, V1SecretVolumeSource, V1Volume, V1VolumeMount
 
 # Get the Thingpedia key from environment variable
 default_developer_key = os.getenv('THINGPEDIA_DEVELOPER_KEY')
@@ -46,8 +41,7 @@ SSH_VOLUME = 'ssh-secrets-k425k8d8h8'
 
 
 def add_ssh_volume(op):
-    op.add_volume(V1Volume(name='ssh-v',
-                           secret=V1SecretVolumeSource(secret_name=SSH_VOLUME, default_mode=0o600)))
+    op.add_volume(V1Volume(name='ssh-v', secret=V1SecretVolumeSource(secret_name=SSH_VOLUME, default_mode=0o600)))
     op.container.add_volume_mount(V1VolumeMount(name='ssh-v', mount_path='/root/.ssh'))
     return op
 
