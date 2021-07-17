@@ -19,40 +19,37 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 # OR OTHER DEALINGS IN THE SOFTWARE.
 
-from kfp import components
-from kfp import dsl
+from kfp import components, dsl
 from kubernetes.client import V1Toleration
-from kubernetes.client.models import (
-    V1PersistentVolumeClaimVolumeSource
-)
+from kubernetes.client.models import V1PersistentVolumeClaimVolumeSource
 
 from .common import *
 from .training import train_step, train_step_4gpus
-
 
 #############################
 #####  Training & Evaluation
 #############################
 
+
 def eval_spl_step(
-        owner='mehrad',
-        project='spl',
-        experiment='',
-        model='',
-        task_name='almond_multilingual',
-        s3_datadir='',
-        s3_model_dir='',
-        s3_database_dir='None',
-        image=default_image,
-        genienlp_version='',
-        genie_version='',
-        workdir_repo=GENIE_WORKDIR_REPO,
-        workdir_version=GENIE_WORKDIR_VERSION,
-        pred_languages='',
-        eval_set='eval',
-        annotated_set_name='annotated',
-        is_oracle='false',
-        additional_args='--evaluate valid --overwrite'
+    owner='mehrad',
+    project='spl',
+    experiment='',
+    model='',
+    task_name='almond_multilingual',
+    s3_datadir='',
+    s3_model_dir='',
+    s3_database_dir='None',
+    image=default_image,
+    genienlp_version='',
+    genie_version='',
+    workdir_repo=GENIE_WORKDIR_REPO,
+    workdir_version=GENIE_WORKDIR_VERSION,
+    pred_languages='',
+    eval_set='eval',
+    annotated_set_name='annotated',
+    is_oracle='false',
+    additional_args='--evaluate valid --overwrite',
 ):
     eval_env = {
         'GENIENLP_VERSION': genienlp_version,
@@ -60,7 +57,7 @@ def eval_spl_step(
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
     }
-    
+
     eval_op = components.load_component_from_file('components/evaluate-spl.yaml')(
         image=image,
         owner=owner,
@@ -75,45 +72,44 @@ def eval_spl_step(
         s3_datadir=s3_datadir,
         s3_model_dir=s3_model_dir,
         s3_database_dir=s3_database_dir,
-        additional_args=additional_args)
-    (eval_op.container
-     .set_memory_request('56Gi')
-     .set_memory_limit('56Gi')
-     .set_cpu_request('7.5')
-     .set_cpu_limit('7.5')
-     .set_gpu_limit('1')
-     )
-    (add_env(add_ssh_volume(eval_op), eval_env)
-     .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-     .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.2xlarge'))
-    
-    
+        additional_args=additional_args,
+    )
+    (
+        eval_op.container.set_memory_request('56Gi')
+        .set_memory_limit('56Gi')
+        .set_cpu_request('7.5')
+        .set_cpu_limit('7.5')
+        .set_gpu_limit('1')
+    )
+    (
+        add_env(add_ssh_volume(eval_op), eval_env)
+        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'p3.2xlarge')
+    )
+
     return eval_op
 
 
-@dsl.pipeline(
-    name='Eval SPL',
-    description='Evaluate a model for SPL experiments'
-)
+@dsl.pipeline(name='Eval SPL', description='Evaluate a model for SPL experiments')
 def eval_spl_pipeline(
-        owner='mehrad',
-        project='spl',
-        experiment='',
-        model='',
-        task_name='almond_multilingual',
-        s3_datadir='',
-        s3_model_dir='',
-        s3_database_dir='None',
-        image=default_image,
-        genienlp_version='',
-        genie_version='',
-        workdir_repo=GENIE_WORKDIR_REPO,
-        workdir_version=GENIE_WORKDIR_VERSION,
-        pred_languages='',
-        eval_set='eval',
-        annotated_set_name='annotated',
-        is_oracle='false',
-        eval_additional_args='--evaluate valid --overwrite'
+    owner='mehrad',
+    project='spl',
+    experiment='',
+    model='',
+    task_name='almond_multilingual',
+    s3_datadir='',
+    s3_model_dir='',
+    s3_database_dir='None',
+    image=default_image,
+    genienlp_version='',
+    genie_version='',
+    workdir_repo=GENIE_WORKDIR_REPO,
+    workdir_version=GENIE_WORKDIR_VERSION,
+    pred_languages='',
+    eval_set='eval',
+    annotated_set_name='annotated',
+    is_oracle='false',
+    eval_additional_args='--evaluate valid --overwrite',
 ):
     eval_op = eval_spl_step(
         owner=owner,
@@ -133,41 +129,38 @@ def eval_spl_pipeline(
         annotated_set_name=annotated_set_name,
         is_oracle=is_oracle,
         s3_model_dir=s3_model_dir,
-        additional_args=eval_additional_args
+        additional_args=eval_additional_args,
     )
 
 
-@dsl.pipeline(
-    name='Train and eval SPL',
-    description='Train and evaluate pipeline for SPL experiments'
-)
+@dsl.pipeline(name='Train and eval SPL', description='Train and evaluate pipeline for SPL experiments')
 def train_eval_spl_pipeline(
-        owner='mehrad',
-        project='spl',
-        experiment='',
-        model='',
-        task_name='almond_multilingual',
-        s3_datadir='',
-        s3_bucket='geniehai',
-        s3_database_dir='None',
-        image=default_image,
-        genienlp_version='',
-        genie_version='',
-        workdir_repo=GENIE_WORKDIR_REPO,
-        workdir_version=GENIE_WORKDIR_VERSION,
-        load_from='None',
-        train_languages='',
-        eval_languages='',
-        pred_languages='',
-        eval_set='',
-        dataset_subfolder='None',
-        annotated_set_name='annotated',
-        is_oracle='false',
-        skip_tensorboard='false',
-        train_iterations='',
-        s3_bootleg_prepped_data='None',
-        train_additional_args='',
-        eval_additional_args='--evaluate valid --overwrite'
+    owner='mehrad',
+    project='spl',
+    experiment='',
+    model='',
+    task_name='almond_multilingual',
+    s3_datadir='',
+    s3_bucket='geniehai',
+    s3_database_dir='None',
+    image=default_image,
+    genienlp_version='',
+    genie_version='',
+    workdir_repo=GENIE_WORKDIR_REPO,
+    workdir_version=GENIE_WORKDIR_VERSION,
+    load_from='None',
+    train_languages='',
+    eval_languages='',
+    pred_languages='',
+    eval_set='',
+    dataset_subfolder='None',
+    annotated_set_name='annotated',
+    is_oracle='false',
+    skip_tensorboard='false',
+    train_iterations='',
+    s3_bootleg_prepped_data='None',
+    train_additional_args='',
+    eval_additional_args='--evaluate valid --overwrite',
 ):
 
     train_op = train_step(
@@ -188,9 +181,9 @@ def train_eval_spl_pipeline(
         skip_tensorboard=skip_tensorboard,
         train_iterations=train_iterations,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
-        additional_args=train_additional_args
+        additional_args=train_additional_args,
     )
-    
+
     eval_op = eval_spl_step(
         owner=owner,
         project=project,
@@ -209,41 +202,38 @@ def train_eval_spl_pipeline(
         annotated_set_name=annotated_set_name,
         is_oracle=is_oracle,
         s3_model_dir=train_op.outputs['s3_model_dir'],
-        additional_args=eval_additional_args
+        additional_args=eval_additional_args,
     )
 
 
-@dsl.pipeline(
-    name='Train and eval SPL on 4 gpus',
-    description='Train and evaluate pipeline for SPL experiments'
-)
+@dsl.pipeline(name='Train and eval SPL on 4 gpus', description='Train and evaluate pipeline for SPL experiments')
 def train_eval_spl_4gpus_pipeline(
-        owner='mehrad',
-        project='spl',
-        experiment='',
-        model='',
-        task_name='almond_multilingual',
-        s3_datadir='',
-        s3_bucket='geniehai',
-        s3_database_dir='None',
-        image=default_image,
-        genienlp_version='',
-        genie_version='',
-        workdir_repo=GENIE_WORKDIR_REPO,
-        workdir_version=GENIE_WORKDIR_VERSION,
-        load_from='None',
-        train_languages='',
-        eval_languages='',
-        pred_languages='',
-        eval_set='',
-        dataset_subfolder='None',
-        annotated_set_name='annotated',
-        is_oracle='false',
-        skip_tensorboard='false',
-        train_iterations='',
-        s3_bootleg_prepped_data='None',
-        train_additional_args='',
-        eval_additional_args='--evaluate valid --overwrite'
+    owner='mehrad',
+    project='spl',
+    experiment='',
+    model='',
+    task_name='almond_multilingual',
+    s3_datadir='',
+    s3_bucket='geniehai',
+    s3_database_dir='None',
+    image=default_image,
+    genienlp_version='',
+    genie_version='',
+    workdir_repo=GENIE_WORKDIR_REPO,
+    workdir_version=GENIE_WORKDIR_VERSION,
+    load_from='None',
+    train_languages='',
+    eval_languages='',
+    pred_languages='',
+    eval_set='',
+    dataset_subfolder='None',
+    annotated_set_name='annotated',
+    is_oracle='false',
+    skip_tensorboard='false',
+    train_iterations='',
+    s3_bootleg_prepped_data='None',
+    train_additional_args='',
+    eval_additional_args='--evaluate valid --overwrite',
 ):
     train_op = train_step_4gpus(
         owner=owner,
@@ -263,9 +253,9 @@ def train_eval_spl_4gpus_pipeline(
         skip_tensorboard=skip_tensorboard,
         train_iterations=train_iterations,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
-        additional_args=train_additional_args
+        additional_args=train_additional_args,
     )
-    
+
     eval_op = eval_spl_step(
         owner=owner,
         project=project,
@@ -284,76 +274,73 @@ def train_eval_spl_4gpus_pipeline(
         annotated_set_name=annotated_set_name,
         is_oracle=is_oracle,
         s3_model_dir=train_op.outputs['s3_model_dir'],
-        additional_args=eval_additional_args
+        additional_args=eval_additional_args,
     )
 
 
-@dsl.pipeline(
-    name='Translate, train, and eval SPL',
-    description='Translate, train, and evaluate pipeline for SPL experiments'
-)
+@dsl.pipeline(name='Translate, train, and eval SPL', description='Translate, train, and evaluate pipeline for SPL experiments')
 def translate_train_eval_spl_pipeline(
-        owner='mehrad',
-        project='spl',
-        experiment='',
-        model='',
-        task_name='almond_multilingual',
-        s3_datadir='',
-        s3_bucket='geniehai',
-        s3_database_dir='None',
-        image=default_image,
-        genienlp_version='',
-        genie_version='',
-        workdir_repo=GENIE_WORKDIR_REPO,
-        workdir_version=GENIE_WORKDIR_VERSION,
-        load_from='None',
-        train_languages='',
-        eval_languages='',
-        pred_languages='',
-        eval_set='',
-        dataset_subfolder='None',
-        annotated_set_name='annotated',
-        is_oracle='false',
-        skip_tensorboard='false',
-        train_iterations='',
-        s3_bootleg_prepped_data='None',
-        model_name_or_path='',
-        input_splits='eval+train',
-        train_output_per_example='1',
-        nmt='pt',
-        do_alignment='true',
-        src_lang='en',
-        tgt_lang='',
-        translate_additional_args='',
-        train_additional_args='',
-        eval_additional_args='--evaluate valid --overwrite'
+    owner='mehrad',
+    project='spl',
+    experiment='',
+    model='',
+    task_name='almond_multilingual',
+    s3_datadir='',
+    s3_bucket='geniehai',
+    s3_database_dir='None',
+    image=default_image,
+    genienlp_version='',
+    genie_version='',
+    workdir_repo=GENIE_WORKDIR_REPO,
+    workdir_version=GENIE_WORKDIR_VERSION,
+    load_from='None',
+    train_languages='',
+    eval_languages='',
+    pred_languages='',
+    eval_set='',
+    dataset_subfolder='None',
+    annotated_set_name='annotated',
+    is_oracle='false',
+    skip_tensorboard='false',
+    train_iterations='',
+    s3_bootleg_prepped_data='None',
+    model_name_or_path='',
+    input_splits='eval+train',
+    train_output_per_example='1',
+    nmt='pt',
+    do_alignment='true',
+    src_lang='en',
+    tgt_lang='',
+    translate_additional_args='',
+    train_additional_args='',
+    eval_additional_args='--evaluate valid --overwrite',
 ):
     all_translation_ops = all_translation_steps(
-                            owner=owner,
-                            project=project,
-                            experiment=experiment,
-                            s3_bucket=s3_bucket,
-                            s3_datadir=s3_datadir,
-                            model_name_or_path=model_name_or_path,
-                            input_splits=input_splits,
-                            train_output_per_example=train_output_per_example,
-                            nmt=nmt,
-                            do_alignment=do_alignment,
-                            src_lang=src_lang,
-                            tgt_lang=tgt_lang,
-                            prepare_for_translation=False,
-                            do_translation=True,
-                            post_process_translation=True,
-                            image=image,
-                            genienlp_version=genienlp_version,
-                            genie_version=genie_version,
-                            workdir_repo=workdir_repo,
-                            workdir_version=workdir_version,
-                            additional_args=translate_additional_args
-                        )
-    
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        s3_bucket=s3_bucket,
+        s3_datadir=s3_datadir,
+        model_name_or_path=model_name_or_path,
+        input_splits=input_splits,
+        train_output_per_example=train_output_per_example,
+        nmt=nmt,
+        do_alignment=do_alignment,
+        src_lang=src_lang,
+        tgt_lang=tgt_lang,
+        prepare_for_translation=False,
+        do_translation=True,
+        post_process_translation=True,
+        image=image,
+        genienlp_version=genienlp_version,
+        genie_version=genie_version,
+        workdir_repo=workdir_repo,
+        workdir_version=workdir_version,
+        additional_args=translate_additional_args,
+    )
+
     post_process_translation_op = all_translation_ops[-1]
-    
+
     train_op = train_step(
         owner=owner,
         project=project,
@@ -372,9 +359,9 @@ def translate_train_eval_spl_pipeline(
         skip_tensorboard=skip_tensorboard,
         train_iterations=train_iterations,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
-        additional_args=train_additional_args
+        additional_args=train_additional_args,
     )
-    
+
     eval_op = eval_spl_step(
         owner=owner,
         project=project,
@@ -393,7 +380,7 @@ def translate_train_eval_spl_pipeline(
         annotated_set_name=annotated_set_name,
         is_oracle=is_oracle,
         s3_model_dir=train_op.outputs['s3_model_dir'],
-        additional_args=eval_additional_args
+        additional_args=eval_additional_args,
     )
 
 
@@ -401,32 +388,32 @@ def translate_train_eval_spl_pipeline(
 #####  Translation
 #############################
 
-def prepare_for_translation_step(
-        owner='mehrad',
-        project='spl',
-        experiment='',
-        s3_bucket='geniehai',
-        s3_datadir='',
-        model_name_or_path='',
-        input_splits='test+eval+train',
-        train_output_per_example='1',
-        nmt='',
-        do_alignment='true',
-        src_lang='en',
-        tgt_lang='',
-        image=default_image,
-        genie_version='',
-        workdir_repo=GENIE_WORKDIR_REPO,
-        workdir_version=GENIE_WORKDIR_VERSION,
-        additional_args=''
 
+def prepare_for_translation_step(
+    owner='mehrad',
+    project='spl',
+    experiment='',
+    s3_bucket='geniehai',
+    s3_datadir='',
+    model_name_or_path='',
+    input_splits='test+eval+train',
+    train_output_per_example='1',
+    nmt='',
+    do_alignment='true',
+    src_lang='en',
+    tgt_lang='',
+    image=default_image,
+    genie_version='',
+    workdir_repo=GENIE_WORKDIR_REPO,
+    workdir_version=GENIE_WORKDIR_VERSION,
+    additional_args='',
 ):
     prepare_for_translation_env = {
         'GENIE_VERSION': genie_version,
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
     }
-    
+
     prepare_for_translation_op = components.load_component_from_file('components/translate.yaml')(
         image=image,
         owner=owner,
@@ -444,39 +431,40 @@ def prepare_for_translation_step(
         do_translation='false',
         post_process_translation='false',
         s3_datadir=s3_datadir,
-        additional_args=additional_args)
-    (prepare_for_translation_op.container
-     .set_memory_limit('15Gi')
-     .set_memory_request('15Gi')
-     .set_cpu_limit('4')
-     .set_cpu_request('4'))
+        additional_args=additional_args,
+    )
+    (
+        prepare_for_translation_op.container.set_memory_limit('15Gi')
+        .set_memory_request('15Gi')
+        .set_cpu_limit('4')
+        .set_cpu_request('4')
+    )
     add_env(add_ssh_volume(prepare_for_translation_op), prepare_for_translation_env)
-    
+
     prepare_for_translation_op.human_name = 'prepare-for-translation'
-    
-    
+
     return prepare_for_translation_op
 
 
 def do_translation_step(
-        owner='mehrad',
-        project='spl',
-        experiment='',
-        s3_bucket='geniehai',
-        s3_datadir='',
-        model_name_or_path='',
-        input_splits='test+eval+train',
-        train_output_per_example='1',
-        nmt='',
-        do_alignment='true',
-        src_lang='en',
-        tgt_lang='',
-        image=default_image,
-        genienlp_version='',
-        genie_version='',
-        workdir_repo=GENIE_WORKDIR_REPO,
-        workdir_version=GENIE_WORKDIR_VERSION,
-        additional_args=''
+    owner='mehrad',
+    project='spl',
+    experiment='',
+    s3_bucket='geniehai',
+    s3_datadir='',
+    model_name_or_path='',
+    input_splits='test+eval+train',
+    train_output_per_example='1',
+    nmt='',
+    do_alignment='true',
+    src_lang='en',
+    tgt_lang='',
+    image=default_image,
+    genienlp_version='',
+    genie_version='',
+    workdir_repo=GENIE_WORKDIR_REPO,
+    workdir_version=GENIE_WORKDIR_VERSION,
+    additional_args='',
 ):
     do_translation_env = {
         'GENIENLP_VERSION': genienlp_version,
@@ -484,7 +472,7 @@ def do_translation_step(
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
     }
-    
+
     do_translation_op = components.load_component_from_file('components/translate.yaml')(
         image=image,
         owner=owner,
@@ -502,52 +490,57 @@ def do_translation_step(
         do_translation='true',
         post_process_translation='false',
         s3_datadir=s3_datadir,
-        additional_args=additional_args)
-    (do_translation_op.container
-     .set_memory_request('150G')
-     .set_memory_limit('150G')
-     .set_cpu_request('16')
-     .set_cpu_limit('16')
-     .set_gpu_limit(str(4))
-     .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
-     )
-    (add_env(add_ssh_volume(do_translation_op), do_translation_env)
-     .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-     .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'g4dn.12xlarge')
-     .add_volume(V1Volume(name='tensorboard', persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
-    
+        additional_args=additional_args,
+    )
+    (
+        do_translation_op.container.set_memory_request('150G')
+        .set_memory_limit('150G')
+        .set_cpu_request('16')
+        .set_cpu_limit('16')
+        .set_gpu_limit(str(4))
+        .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
+    )
+    (
+        add_env(add_ssh_volume(do_translation_op), do_translation_env)
+        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.12xlarge')
+        .add_volume(
+            V1Volume(
+                name='tensorboard', persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf')
+            )
+        )
+    )
+
     do_translation_op.human_name = 'translation'
-    
-    
+
     return do_translation_op
 
 
 def post_process_translation_step(
-        owner='mehrad',
-        project='spl',
-        experiment='',
-        s3_bucket='geniehai',
-        s3_datadir='',
-        model_name_or_path='',
-        input_splits='test+eval+train',
-        train_output_per_example='1',
-        nmt='',
-        do_alignment='true',
-        src_lang='en',
-        tgt_lang='',
-        image=default_image,
-        genie_version='',
-        workdir_repo=GENIE_WORKDIR_REPO,
-        workdir_version=GENIE_WORKDIR_VERSION,
-        additional_args=''
-
+    owner='mehrad',
+    project='spl',
+    experiment='',
+    s3_bucket='geniehai',
+    s3_datadir='',
+    model_name_or_path='',
+    input_splits='test+eval+train',
+    train_output_per_example='1',
+    nmt='',
+    do_alignment='true',
+    src_lang='en',
+    tgt_lang='',
+    image=default_image,
+    genie_version='',
+    workdir_repo=GENIE_WORKDIR_REPO,
+    workdir_version=GENIE_WORKDIR_VERSION,
+    additional_args='',
 ):
     post_process_translation_env = {
         'GENIE_VERSION': genie_version,
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
     }
-    
+
     post_process_translation_op = components.load_component_from_file('components/translate.yaml')(
         image=image,
         owner=owner,
@@ -565,46 +558,46 @@ def post_process_translation_step(
         do_translation='false',
         post_process_translation='true',
         s3_datadir=s3_datadir,
-        additional_args=additional_args)
-    (post_process_translation_op.container
-     .set_memory_limit('15Gi')
-     .set_memory_request('15Gi')
-     .set_cpu_limit('4')
-     .set_cpu_request('4'))
+        additional_args=additional_args,
+    )
+    (
+        post_process_translation_op.container.set_memory_limit('15Gi')
+        .set_memory_request('15Gi')
+        .set_cpu_limit('4')
+        .set_cpu_request('4')
+    )
     add_env(add_ssh_volume(post_process_translation_op), post_process_translation_env)
-    
+
     post_process_translation_op.human_name = 'post-process-translation'
-    
-    
+
     return post_process_translation_op
 
 
 def all_translation_steps(
-        owner='mehrad',
-        project='spl',
-        experiment='',
-        s3_bucket='geniehai',
-        s3_datadir='',
-        model_name_or_path='Helsinki-NLP/opus-mt-en-{}',
-        input_splits='test+eval+train',
-        train_output_per_example='1',
-        nmt='marian',
-        do_alignment='true',
-        src_lang='en',
-        tgt_lang='',
-        prepare_for_translation=True,
-        do_translation=True,
-        post_process_translation=True,
-        image=default_image,
-        genienlp_version='',
-        genie_version='',
-        workdir_repo=GENIE_WORKDIR_REPO,
-        workdir_version=GENIE_WORKDIR_VERSION,
-        additional_args=''
-
+    owner='mehrad',
+    project='spl',
+    experiment='',
+    s3_bucket='geniehai',
+    s3_datadir='',
+    model_name_or_path='Helsinki-NLP/opus-mt-en-{}',
+    input_splits='test+eval+train',
+    train_output_per_example='1',
+    nmt='marian',
+    do_alignment='true',
+    src_lang='en',
+    tgt_lang='',
+    prepare_for_translation=True,
+    do_translation=True,
+    post_process_translation=True,
+    image=default_image,
+    genienlp_version='',
+    genie_version='',
+    workdir_repo=GENIE_WORKDIR_REPO,
+    workdir_version=GENIE_WORKDIR_VERSION,
+    additional_args='',
 ):
     returned_ops = []
-    
+
     if prepare_for_translation:
         prepare_for_translation_op = prepare_for_translation_step(
             owner=owner,
@@ -623,10 +616,10 @@ def all_translation_steps(
             genie_version=genie_version,
             workdir_repo=workdir_repo,
             workdir_version=workdir_version,
-            additional_args=''
+            additional_args='',
         )
         returned_ops.append(prepare_for_translation_op)
-    
+
     if do_translation:
         do_translation_op = do_translation_step(
             owner=owner,
@@ -646,13 +639,13 @@ def all_translation_steps(
             genie_version=genie_version,
             workdir_repo=workdir_repo,
             workdir_version=workdir_version,
-            additional_args=additional_args
+            additional_args=additional_args,
         )
         returned_ops.append(do_translation_op)
-        
+
         if prepare_for_translation:
             do_translation_op.after(prepare_for_translation_op)
-    
+
     if post_process_translation:
         post_process_translation_op = post_process_translation_step(
             owner=owner,
@@ -671,40 +664,38 @@ def all_translation_steps(
             genie_version=genie_version,
             workdir_repo=workdir_repo,
             workdir_version=workdir_version,
-            additional_args=''
+            additional_args='',
         )
         returned_ops.append(post_process_translation_op)
-        
+
         if prepare_for_translation and do_translation:
             post_process_translation_op.after(do_translation_op, prepare_for_translation_op)
         elif do_translation:
             post_process_translation_op.after(do_translation_op)
-            
+
     return returned_ops
 
-@dsl.pipeline(
-    name='Prepare and translate a dataset',
-    description='Prepare, Translate, and Postprocess dataset'
-)
+
+@dsl.pipeline(name='Prepare and translate a dataset', description='Prepare, Translate, and Postprocess dataset')
 def prepare_translate_pipeline(
-        owner='mehrad',
-        project='spl',
-        experiment='',
-        s3_bucket='geniehai',
-        s3_datadir='',
-        model_name_or_path='Helsinki-NLP/opus-mt-en-{}',
-        input_splits='test+eval+train',
-        train_output_per_example='1',
-        nmt='marian',
-        do_alignment='true',
-        src_lang='en',
-        tgt_lang='',
-        image=default_image,
-        genienlp_version='',
-        genie_version='',
-        workdir_repo=GENIE_WORKDIR_REPO,
-        workdir_version=GENIE_WORKDIR_VERSION,
-        additional_args=''
+    owner='mehrad',
+    project='spl',
+    experiment='',
+    s3_bucket='geniehai',
+    s3_datadir='',
+    model_name_or_path='Helsinki-NLP/opus-mt-en-{}',
+    input_splits='test+eval+train',
+    train_output_per_example='1',
+    nmt='marian',
+    do_alignment='true',
+    src_lang='en',
+    tgt_lang='',
+    image=default_image,
+    genienlp_version='',
+    genie_version='',
+    workdir_repo=GENIE_WORKDIR_REPO,
+    workdir_version=GENIE_WORKDIR_VERSION,
+    additional_args='',
 ):
     all_translation_steps(
         owner=owner,
@@ -727,35 +718,30 @@ def prepare_translate_pipeline(
         genie_version=genie_version,
         workdir_repo=workdir_repo,
         workdir_version=workdir_version,
-        additional_args=additional_args
+        additional_args=additional_args,
     )
 
 
-
-
-@dsl.pipeline(
-    name='Translate and postprocess a dataset',
-    description='Translate, and Postprocess dataset'
-)
+@dsl.pipeline(name='Translate and postprocess a dataset', description='Translate, and Postprocess dataset')
 def translate_postprocess_pipeline(
-        owner='mehrad',
-        project='spl',
-        experiment='',
-        s3_bucket='geniehai',
-        s3_datadir='',
-        model_name_or_path='Helsinki-NLP/opus-mt-en-{}',
-        input_splits='test+eval+train',
-        train_output_per_example='1',
-        nmt='marian',
-        do_alignment='true',
-        src_lang='en',
-        tgt_lang='',
-        image=default_image,
-        genienlp_version='',
-        genie_version='',
-        workdir_repo=GENIE_WORKDIR_REPO,
-        workdir_version=GENIE_WORKDIR_VERSION,
-        additional_args=''
+    owner='mehrad',
+    project='spl',
+    experiment='',
+    s3_bucket='geniehai',
+    s3_datadir='',
+    model_name_or_path='Helsinki-NLP/opus-mt-en-{}',
+    input_splits='test+eval+train',
+    train_output_per_example='1',
+    nmt='marian',
+    do_alignment='true',
+    src_lang='en',
+    tgt_lang='',
+    image=default_image,
+    genienlp_version='',
+    genie_version='',
+    workdir_repo=GENIE_WORKDIR_REPO,
+    workdir_version=GENIE_WORKDIR_VERSION,
+    additional_args='',
 ):
     all_translation_steps(
         owner=owner,
@@ -778,33 +764,30 @@ def translate_postprocess_pipeline(
         genie_version=genie_version,
         workdir_repo=workdir_repo,
         workdir_version=workdir_version,
-        additional_args=additional_args
+        additional_args=additional_args,
     )
 
 
-@dsl.pipeline(
-    name='Postprocess a dataset (after being translated)',
-    description='Postprocess dataset'
-)
+@dsl.pipeline(name='Postprocess a dataset (after being translated)', description='Postprocess dataset')
 def postprocess_pipeline(
-        owner='mehrad',
-        project='spl',
-        experiment='',
-        s3_bucket='geniehai',
-        s3_datadir='',
-        model_name_or_path='Helsinki-NLP/opus-mt-en-{}',
-        input_splits='test+eval+train',
-        train_output_per_example='1',
-        nmt='marian',
-        do_alignment='true',
-        src_lang='en',
-        tgt_lang='',
-        image=default_image,
-        genienlp_version='',
-        genie_version='',
-        workdir_repo=GENIE_WORKDIR_REPO,
-        workdir_version=GENIE_WORKDIR_VERSION,
-        additional_args=''
+    owner='mehrad',
+    project='spl',
+    experiment='',
+    s3_bucket='geniehai',
+    s3_datadir='',
+    model_name_or_path='Helsinki-NLP/opus-mt-en-{}',
+    input_splits='test+eval+train',
+    train_output_per_example='1',
+    nmt='marian',
+    do_alignment='true',
+    src_lang='en',
+    tgt_lang='',
+    image=default_image,
+    genienlp_version='',
+    genie_version='',
+    workdir_repo=GENIE_WORKDIR_REPO,
+    workdir_version=GENIE_WORKDIR_VERSION,
+    additional_args='',
 ):
     all_translation_steps(
         owner=owner,
@@ -827,7 +810,7 @@ def postprocess_pipeline(
         genie_version=genie_version,
         workdir_repo=workdir_repo,
         workdir_version=workdir_version,
-        additional_args=additional_args
+        additional_args=additional_args,
     )
 
 
@@ -835,35 +818,36 @@ def postprocess_pipeline(
 #####  Paraphrasing
 #############################
 
+
 def paraphrase_step(
-        owner='mehrad',
-        project='spl',
-        experiment='',
-        s3_bucket='geniehai',
-        s3_datadir='',
-        model_name_or_path='None',
-        input_splits='train',
-        train_output_per_example='1',
-        nmt='marian',
-        pivot_langs='None',
-        marian_group_langs='None',
-        do_alignment='true',
-        tgt_lang='',
-        sts_batch_size='',
-        sts_model='',
-        filtering_metric='',
-        filtering_threshold='',
-        train_fewshot='false',
-        do_paraphrasing='true',
-        prepare_paraphrases='true',
-        filter_paraphrases='true',
-        paraphrasing_method='',
-        image=default_image,
-        genienlp_version='',
-        genie_version='',
-        workdir_repo=GENIE_WORKDIR_REPO,
-        workdir_version=GENIE_WORKDIR_VERSION,
-        additional_args=''
+    owner='mehrad',
+    project='spl',
+    experiment='',
+    s3_bucket='geniehai',
+    s3_datadir='',
+    model_name_or_path='None',
+    input_splits='train',
+    train_output_per_example='1',
+    nmt='marian',
+    pivot_langs='None',
+    marian_group_langs='None',
+    do_alignment='true',
+    tgt_lang='',
+    sts_batch_size='',
+    sts_model='',
+    filtering_metric='',
+    filtering_threshold='',
+    train_fewshot='false',
+    do_paraphrasing='true',
+    prepare_paraphrases='true',
+    filter_paraphrases='true',
+    paraphrasing_method='',
+    image=default_image,
+    genienlp_version='',
+    genie_version='',
+    workdir_repo=GENIE_WORKDIR_REPO,
+    workdir_version=GENIE_WORKDIR_VERSION,
+    additional_args='',
 ):
     paraphrase_env = {
         'GENIENLP_VERSION': genienlp_version,
@@ -871,7 +855,7 @@ def paraphrase_step(
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
     }
-    
+
     paraphrase_op = components.load_component_from_file('components/sts-paraphrase.yaml')(
         image=image,
         owner=owner,
@@ -896,53 +880,58 @@ def paraphrase_step(
         filter_paraphrases=filter_paraphrases,
         paraphrasing_method=paraphrasing_method,
         s3_datadir=s3_datadir,
-        additional_args=additional_args)
-    (paraphrase_op.container
-     .set_memory_request('31G')
-     .set_memory_limit('31G')
-     .set_cpu_request('7.5')
-     .set_cpu_limit('7.5')
-     .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
-     )
-    (add_env(add_ssh_volume(paraphrase_op), paraphrase_env)
-     .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-     .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'g4dn.2xlarge')
-     .add_volume(V1Volume(name='tensorboard',
-                          persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
-    
-    
+        additional_args=additional_args,
+    )
+    (
+        paraphrase_op.container.set_memory_request('31G')
+        .set_memory_limit('31G')
+        .set_cpu_request('7.5')
+        .set_cpu_limit('7.5')
+        .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
+    )
+    (
+        add_env(add_ssh_volume(paraphrase_op), paraphrase_env)
+        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.2xlarge')
+        .add_volume(
+            V1Volume(
+                name='tensorboard', persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf')
+            )
+        )
+    )
+
     return paraphrase_op
 
 
 def paraphrase_step_4gpus(
-        owner='mehrad',
-        project='spl',
-        experiment='',
-        s3_bucket='geniehai',
-        s3_datadir='',
-        model_name_or_path='None',
-        input_splits='train',
-        train_output_per_example='1',
-        nmt='marian',
-        pivot_langs='None',
-        marian_group_langs='None',
-        do_alignment='true',
-        tgt_lang='',
-        sts_batch_size='',
-        sts_model='',
-        filtering_metric='',
-        filtering_threshold='',
-        train_fewshot='false',
-        do_paraphrasing='true',
-        prepare_paraphrases='true',
-        filter_paraphrases='true',
-        paraphrasing_method='',
-        image=default_image,
-        genienlp_version='',
-        genie_version='',
-        workdir_repo=GENIE_WORKDIR_REPO,
-        workdir_version=GENIE_WORKDIR_VERSION,
-        additional_args=''
+    owner='mehrad',
+    project='spl',
+    experiment='',
+    s3_bucket='geniehai',
+    s3_datadir='',
+    model_name_or_path='None',
+    input_splits='train',
+    train_output_per_example='1',
+    nmt='marian',
+    pivot_langs='None',
+    marian_group_langs='None',
+    do_alignment='true',
+    tgt_lang='',
+    sts_batch_size='',
+    sts_model='',
+    filtering_metric='',
+    filtering_threshold='',
+    train_fewshot='false',
+    do_paraphrasing='true',
+    prepare_paraphrases='true',
+    filter_paraphrases='true',
+    paraphrasing_method='',
+    image=default_image,
+    genienlp_version='',
+    genie_version='',
+    workdir_repo=GENIE_WORKDIR_REPO,
+    workdir_version=GENIE_WORKDIR_VERSION,
+    additional_args='',
 ):
     paraphrase_env = {
         'GENIENLP_VERSION': genienlp_version,
@@ -950,7 +939,7 @@ def paraphrase_step_4gpus(
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
     }
-    
+
     paraphrase_op = components.load_component_from_file('components/sts-paraphrase.yaml')(
         image=image,
         owner=owner,
@@ -975,71 +964,73 @@ def paraphrase_step_4gpus(
         filter_paraphrases=filter_paraphrases,
         paraphrasing_method=paraphrasing_method,
         s3_datadir=s3_datadir,
-        additional_args=additional_args)
-    (paraphrase_op.container
-     .set_memory_request('64G')
-     .set_memory_limit('64G')
-     .set_cpu_request('16')
-     .set_cpu_limit('16')
-     .set_gpu_limit(str(4))
-     .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
-     )
-    (add_env(add_ssh_volume(paraphrase_op), paraphrase_env)
-     .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-     .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'g4dn.12xlarge')
-     .add_volume(V1Volume(name='tensorboard',
-                          persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf'))))
-    
-    
+        additional_args=additional_args,
+    )
+    (
+        paraphrase_op.container.set_memory_request('64G')
+        .set_memory_limit('64G')
+        .set_cpu_request('16')
+        .set_cpu_limit('16')
+        .set_gpu_limit(str(4))
+        .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
+    )
+    (
+        add_env(add_ssh_volume(paraphrase_op), paraphrase_env)
+        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.12xlarge')
+        .add_volume(
+            V1Volume(
+                name='tensorboard', persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf')
+            )
+        )
+    )
+
     return paraphrase_op
 
 
-@dsl.pipeline(
-    name='Paraphrase + STS filter + train + eval',
-    description='Full multilingual paraphrase pipeline'
-)
+@dsl.pipeline(name='Paraphrase + STS filter + train + eval', description='Full multilingual paraphrase pipeline')
 def multilingual_paraphrasing_pipeline(
-        owner='mehrad',
-        project='spl',
-        experiment='',
-        s3_bucket='geniehai',
-        task_name='almond',
-        s3_datadir='',
-        s3_database_dir='None',
-        model_name_or_path='None',
-        model='',
-        load_from='None',
-        dataset_subfolder='None',
-        input_splits='train',
-        train_output_per_example='1',
-        nmt='marian',
-        pivot_langs='None',
-        marian_group_langs='None',
-        do_alignment='true',
-        tgt_lang='',
-        sts_batch_size='250',
-        sts_model='xlm-r-distilroberta-base-paraphrase-v1',
-        filtering_metric='',
-        filtering_threshold='',
-        train_fewshot='',
-        do_paraphrasing='true',
-        prepare_paraphrases='true',
-        filter_paraphrases='true',
-        paraphrasing_method='',
-        image=default_image,
-        genienlp_version='',
-        genie_version='',
-        workdir_repo=GENIE_WORKDIR_REPO,
-        workdir_version=GENIE_WORKDIR_VERSION,
-        skip_tensorboard='false',
-        train_iterations='',
-        s3_bootleg_prepped_data='None',
-        annotated_set_name='annotated',
-        eval_set='',
-        is_oracle='false',
-        paraphrase_additional_args='',
-        train_additional_args='',
-        eval_additional_args=''
+    owner='mehrad',
+    project='spl',
+    experiment='',
+    s3_bucket='geniehai',
+    task_name='almond',
+    s3_datadir='',
+    s3_database_dir='None',
+    model_name_or_path='None',
+    model='',
+    load_from='None',
+    dataset_subfolder='None',
+    input_splits='train',
+    train_output_per_example='1',
+    nmt='marian',
+    pivot_langs='None',
+    marian_group_langs='None',
+    do_alignment='true',
+    tgt_lang='',
+    sts_batch_size='250',
+    sts_model='xlm-r-distilroberta-base-paraphrase-v1',
+    filtering_metric='',
+    filtering_threshold='',
+    train_fewshot='',
+    do_paraphrasing='true',
+    prepare_paraphrases='true',
+    filter_paraphrases='true',
+    paraphrasing_method='',
+    image=default_image,
+    genienlp_version='',
+    genie_version='',
+    workdir_repo=GENIE_WORKDIR_REPO,
+    workdir_version=GENIE_WORKDIR_VERSION,
+    skip_tensorboard='false',
+    train_iterations='',
+    s3_bootleg_prepped_data='None',
+    annotated_set_name='annotated',
+    eval_set='',
+    is_oracle='false',
+    paraphrase_additional_args='',
+    train_additional_args='',
+    eval_additional_args='',
 ):
     paraphrase_op = paraphrase_step(
         owner=owner,
@@ -1069,7 +1060,7 @@ def multilingual_paraphrasing_pipeline(
         genie_version=genie_version,
         workdir_repo=workdir_repo,
         workdir_version=workdir_version,
-        additional_args=paraphrase_additional_args
+        additional_args=paraphrase_additional_args,
     )
 
     train_op = train_step(
@@ -1090,7 +1081,7 @@ def multilingual_paraphrasing_pipeline(
         skip_tensorboard=skip_tensorboard,
         train_iterations=train_iterations,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
-        additional_args=train_additional_args
+        additional_args=train_additional_args,
     )
 
     eval_op = eval_spl_step(
@@ -1111,38 +1102,37 @@ def multilingual_paraphrasing_pipeline(
         annotated_set_name=annotated_set_name,
         is_oracle=is_oracle,
         s3_model_dir=train_op.outputs['s3_model_dir'],
-        additional_args=eval_additional_args
+        additional_args=eval_additional_args,
     )
-    
 
 
 @dsl.pipeline(
     name='Round-trip Paraphrasing + STS filtering',
-    description='Use round-trip translation to generate paraphrases and use STS to filter them'
+    description='Use round-trip translation to generate paraphrases and use STS to filter them',
 )
 def round_trip_paraphrasing_pipeline(
-        owner='mehrad',
-        project='spl',
-        experiment='',
-        s3_bucket='geniehai',
-        s3_datadir='',
-        input_splits='train',
-        train_output_per_example='1',
-        nmt='marian',
-        pivot_langs='',
-        marian_group_langs='',
-        do_alignment='true',
-        tgt_lang='',
-        sts_batch_size='250',
-        sts_model='xlm-r-distilroberta-base-paraphrase-v1',
-        filtering_metric='',
-        filtering_threshold='',
-        image=default_image,
-        genienlp_version='',
-        genie_version='',
-        workdir_repo=GENIE_WORKDIR_REPO,
-        workdir_version=GENIE_WORKDIR_VERSION,
-        additional_args=''
+    owner='mehrad',
+    project='spl',
+    experiment='',
+    s3_bucket='geniehai',
+    s3_datadir='',
+    input_splits='train',
+    train_output_per_example='1',
+    nmt='marian',
+    pivot_langs='',
+    marian_group_langs='',
+    do_alignment='true',
+    tgt_lang='',
+    sts_batch_size='250',
+    sts_model='xlm-r-distilroberta-base-paraphrase-v1',
+    filtering_metric='',
+    filtering_threshold='',
+    image=default_image,
+    genienlp_version='',
+    genie_version='',
+    workdir_repo=GENIE_WORKDIR_REPO,
+    workdir_version=GENIE_WORKDIR_VERSION,
+    additional_args='',
 ):
     paraphrase_step(
         owner=owner,
@@ -1170,36 +1160,36 @@ def round_trip_paraphrasing_pipeline(
         genie_version=genie_version,
         workdir_repo=workdir_repo,
         workdir_version=workdir_version,
-        additional_args=additional_args
+        additional_args=additional_args,
     )
 
 
 @dsl.pipeline(
     name='Masked Paraphrasing + STS filtering',
-    description='Use denoisng models (e.g. BART family) to generate paraphrases and use STS to filter them'
+    description='Use denoisng models (e.g. BART family) to generate paraphrases and use STS to filter them',
 )
 def masked_paraphrasing_pipeline(
-        owner='mehrad',
-        project='spl',
-        experiment='',
-        s3_bucket='geniehai',
-        s3_datadir='',
-        model_name_or_path='facebook/mbart-large-cc25',
-        input_splits='train',
-        train_output_per_example='1',
-        nmt='marian',
-        do_alignment='true',
-        tgt_lang='',
-        sts_batch_size='250',
-        sts_model='xlm-r-distilroberta-base-paraphrase-v1',
-        filtering_metric='',
-        filtering_threshold='',
-        image=default_image,
-        genienlp_version='',
-        genie_version='',
-        workdir_repo=GENIE_WORKDIR_REPO,
-        workdir_version=GENIE_WORKDIR_VERSION,
-        additional_args=''
+    owner='mehrad',
+    project='spl',
+    experiment='',
+    s3_bucket='geniehai',
+    s3_datadir='',
+    model_name_or_path='facebook/mbart-large-cc25',
+    input_splits='train',
+    train_output_per_example='1',
+    nmt='marian',
+    do_alignment='true',
+    tgt_lang='',
+    sts_batch_size='250',
+    sts_model='xlm-r-distilroberta-base-paraphrase-v1',
+    filtering_metric='',
+    filtering_threshold='',
+    image=default_image,
+    genienlp_version='',
+    genie_version='',
+    workdir_repo=GENIE_WORKDIR_REPO,
+    workdir_version=GENIE_WORKDIR_VERSION,
+    additional_args='',
 ):
     paraphrase_step(
         owner=owner,
@@ -1228,37 +1218,36 @@ def masked_paraphrasing_pipeline(
         genie_version=genie_version,
         workdir_repo=workdir_repo,
         workdir_version=workdir_version,
-        additional_args=additional_args
+        additional_args=additional_args,
     )
-
 
 
 @dsl.pipeline(
     name='Masked Paraphrasing + STS filtering on 4 gpus',
-    description='Use denoisng models (e.g. BART family) to generate paraphrases and use STS to filter them'
+    description='Use denoisng models (e.g. BART family) to generate paraphrases and use STS to filter them',
 )
 def masked_paraphrasing_4gpus_pipeline(
-        owner='mehrad',
-        project='spl',
-        experiment='',
-        s3_bucket='geniehai',
-        s3_datadir='',
-        model_name_or_path='facebook/mbart-large-cc25',
-        input_splits='train',
-        train_output_per_example='1',
-        nmt='marian',
-        do_alignment='true',
-        tgt_lang='',
-        sts_batch_size='250',
-        sts_model='xlm-r-distilroberta-base-paraphrase-v1',
-        filtering_metric='',
-        filtering_threshold='',
-        image=default_image,
-        genienlp_version='',
-        genie_version='',
-        workdir_repo=GENIE_WORKDIR_REPO,
-        workdir_version=GENIE_WORKDIR_VERSION,
-        additional_args=''
+    owner='mehrad',
+    project='spl',
+    experiment='',
+    s3_bucket='geniehai',
+    s3_datadir='',
+    model_name_or_path='facebook/mbart-large-cc25',
+    input_splits='train',
+    train_output_per_example='1',
+    nmt='marian',
+    do_alignment='true',
+    tgt_lang='',
+    sts_batch_size='250',
+    sts_model='xlm-r-distilroberta-base-paraphrase-v1',
+    filtering_metric='',
+    filtering_threshold='',
+    image=default_image,
+    genienlp_version='',
+    genie_version='',
+    workdir_repo=GENIE_WORKDIR_REPO,
+    workdir_version=GENIE_WORKDIR_VERSION,
+    additional_args='',
 ):
     paraphrase_step_4gpus(
         owner=owner,
@@ -1287,39 +1276,36 @@ def masked_paraphrasing_4gpus_pipeline(
         genie_version=genie_version,
         workdir_repo=workdir_repo,
         workdir_version=workdir_version,
-        additional_args=additional_args
+        additional_args=additional_args,
     )
 
 
-@dsl.pipeline(
-    name='STS Prepare',
-    description='Prepare paraphrases for STS filtering and then filter them'
-)
+@dsl.pipeline(name='STS Prepare', description='Prepare paraphrases for STS filtering and then filter them')
 def sts_prepare_paraphrases_pipeline(
-        owner='mehrad',
-        project='spl',
-        experiment='',
-        s3_bucket='geniehai',
-        s3_datadir='',
-        model_name_or_path='',
-        input_splits='train',
-        train_output_per_example='1',
-        nmt='marian',
-        pivot_langs='',
-        marian_group_langs='',
-        do_alignment='true',
-        paraphrasing_method='',
-        tgt_lang='',
-        sts_batch_size='250',
-        sts_model='xlm-r-distilroberta-base-paraphrase-v1',
-        filtering_metric='',
-        filtering_threshold='',
-        image=default_image,
-        genienlp_version='',
-        genie_version='',
-        workdir_repo=GENIE_WORKDIR_REPO,
-        workdir_version=GENIE_WORKDIR_VERSION,
-        additional_args=''
+    owner='mehrad',
+    project='spl',
+    experiment='',
+    s3_bucket='geniehai',
+    s3_datadir='',
+    model_name_or_path='',
+    input_splits='train',
+    train_output_per_example='1',
+    nmt='marian',
+    pivot_langs='',
+    marian_group_langs='',
+    do_alignment='true',
+    paraphrasing_method='',
+    tgt_lang='',
+    sts_batch_size='250',
+    sts_model='xlm-r-distilroberta-base-paraphrase-v1',
+    filtering_metric='',
+    filtering_threshold='',
+    image=default_image,
+    genienlp_version='',
+    genie_version='',
+    workdir_repo=GENIE_WORKDIR_REPO,
+    workdir_version=GENIE_WORKDIR_VERSION,
+    additional_args='',
 ):
     paraphrase_step(
         owner=owner,
@@ -1348,40 +1334,36 @@ def sts_prepare_paraphrases_pipeline(
         genie_version=genie_version,
         workdir_repo=workdir_repo,
         workdir_version=workdir_version,
-        additional_args=additional_args
+        additional_args=additional_args,
     )
 
 
-
-@dsl.pipeline(
-    name='STS Filtering',
-    description='Use STS score to filter paraphrases'
-)
+@dsl.pipeline(name='STS Filtering', description='Use STS score to filter paraphrases')
 def sts_filtering_pipeline(
-        owner='mehrad',
-        project='spl',
-        experiment='',
-        s3_bucket='geniehai',
-        s3_datadir='',
-        model_name_or_path='',
-        input_splits='train',
-        train_output_per_example='1',
-        nmt='marian',
-        pivot_langs='',
-        marian_group_langs='',
-        do_alignment='true',
-        paraphrasing_method='',
-        tgt_lang='',
-        sts_batch_size='250',
-        sts_model='xlm-r-distilroberta-base-paraphrase-v1',
-        filtering_metric='',
-        filtering_threshold='',
-        image=default_image,
-        genienlp_version='',
-        genie_version='',
-        workdir_repo=GENIE_WORKDIR_REPO,
-        workdir_version=GENIE_WORKDIR_VERSION,
-        additional_args=''
+    owner='mehrad',
+    project='spl',
+    experiment='',
+    s3_bucket='geniehai',
+    s3_datadir='',
+    model_name_or_path='',
+    input_splits='train',
+    train_output_per_example='1',
+    nmt='marian',
+    pivot_langs='',
+    marian_group_langs='',
+    do_alignment='true',
+    paraphrasing_method='',
+    tgt_lang='',
+    sts_batch_size='250',
+    sts_model='xlm-r-distilroberta-base-paraphrase-v1',
+    filtering_metric='',
+    filtering_threshold='',
+    image=default_image,
+    genienlp_version='',
+    genie_version='',
+    workdir_repo=GENIE_WORKDIR_REPO,
+    workdir_version=GENIE_WORKDIR_VERSION,
+    additional_args='',
 ):
     paraphrase_step(
         owner=owner,
@@ -1410,5 +1392,5 @@ def sts_filtering_pipeline(
         genie_version=genie_version,
         workdir_repo=workdir_repo,
         workdir_version=workdir_version,
-        additional_args=additional_args
+        additional_args=additional_args,
     )

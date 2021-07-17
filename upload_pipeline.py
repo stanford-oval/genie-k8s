@@ -19,8 +19,9 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 # OR OTHER DEALINGS IN THE SOFTWARE.
 
+import sys
+
 import pipelines
 from utils import upload_pipeline
-import sys
 
 resp = upload_pipeline(sys.argv[2], getattr(pipelines, sys.argv[1]))

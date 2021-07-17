@@ -19,13 +19,13 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 # OR OTHER DEALINGS IN THE SOFTWARE.
 
-import kfp
-import os
 import argparse
+import os
 
-from utils import list_pipelines, list_pipeline_versions, list_experiments, prepare_unknown_args
+import kfp
+
 from pipelines.common import default_image
-
+from utils import list_experiments, list_pipeline_versions, list_pipelines, prepare_unknown_args
 
 parser = argparse.ArgumentParser()
 
@@ -107,8 +107,10 @@ for k, v in args_vars.items():
 params.update(extra_param_args)
 
 
-client.run_pipeline(experiment_id=our_experiment.id,
-                    job_name=args.kf_job_name,
-                    params=params,
-                    pipeline_id=our_pipeline.id,
-                    version_id=our_pipeline_version.id)
+client.run_pipeline(
+    experiment_id=our_experiment.id,
+    job_name=args.kf_job_name,
+    params=params,
+    pipeline_id=our_pipeline.id,
+    version_id=our_pipeline_version.id,
+)

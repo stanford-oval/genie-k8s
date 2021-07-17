@@ -22,19 +22,19 @@ implementation:
     - -c
     - |
       . k8s/lib.sh
-      
+
       parse_args "$0" "image owner project experiment s3_datadir s3_model_dir metrics_output" "$@"
       shift $n
       set -x
-      
+
       aws s3 sync --no-progress ${s3_datadir} resources/
       aws s3 sync --no-progress ${s3_model_dir} output/
-      
+
       checkpoints=$(ls output/distilgpt2/ | grep -o '[0-9]*')
-      
+
       mkdir -p `dirname $metrics_output`
       touch $metrics_output
-      
+
       for f in output/distilgpt2/checkpoint-* ; do
           echo $f >> $metrics_output
           python3 generate_dialogue.py --checkpoint $f --split_set test

@@ -19,7 +19,7 @@ implementation:
     command:
     - /bin/bash
     - -ex
-    - -c 
+    - -c
     - |
       . /opt/genie-toolkit/lib.sh
       parse_args "$0" "image task_name s3_datadir num_chunks data_splits file_extension s3_output_datadir" "$@"

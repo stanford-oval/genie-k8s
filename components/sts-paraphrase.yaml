@@ -34,7 +34,7 @@ implementation:
     command:
     - /bin/bash
     - -ex
-    - -c 
+    - -c
     - |
       . /opt/genie-toolkit/lib.sh
 
@@ -166,5 +166,3 @@ implementation:
       --train_fewshot, {inputValue: train_fewshot},
       --, {inputValue: additional_args}
     ]
-
-

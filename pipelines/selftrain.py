@@ -19,14 +19,11 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 # OR OTHER DEALINGS IN THE SOFTWARE.
 
-from kfp import dsl
-from kfp import components
+from kfp import components, dsl
 from kubernetes.client import V1Toleration
 
 from .common import *
-
-from .training import generate_dataset_step, paraphrase_train_fewshot_step, \
-    train_step, eval_step
+from .training import eval_step, generate_dataset_step, paraphrase_train_fewshot_step, train_step
 
 
 def auto_annotate_step(
@@ -42,7 +39,7 @@ def auto_annotate_step(
     workdir_repo,
     workdir_version,
     thingpedia_developer_key,
-    additional_args
+    additional_args,
 ):
     auto_annotate_env = {
         'GENIENLP_VERSION': genienlp_version,
@@ -52,32 +49,35 @@ def auto_annotate_step(
         'THINGPEDIA_DEVELOPER_KEY': thingpedia_developer_key,
     }
     auto_annotate_op = components.load_component_from_file('components/auto-annotate-selftrain.yaml')(
-            image=image,
-            s3_bucket='geniehai',
-            owner=owner,
-            project=project,
-            experiment=experiment,
-            dataset=dataset,
-            user_model=user_model,
-            agent_model=agent_model,
-            additional_args=additional_args)
-    (auto_annotate_op.container
-        .set_memory_limit('12Gi')
+        image=image,
+        s3_bucket='geniehai',
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        dataset=dataset,
+        user_model=user_model,
+        agent_model=agent_model,
+        additional_args=additional_args,
+    )
+    (
+        auto_annotate_op.container.set_memory_limit('12Gi')
         .set_memory_request('12Gi')
         .set_cpu_limit('7.5')
         .set_cpu_request('7.5')
     )
 
-    (add_env(add_ssh_volume(auto_annotate_op), auto_annotate_env)
+    (
+        add_env(add_ssh_volume(auto_annotate_op), auto_annotate_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.2xlarge'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.2xlarge')
+    )
 
     return auto_annotate_op
 
 
 @dsl.pipeline(
     name='Selftrain',
-    description='Runs the whole training pipeline, including two parallel autoparaphrasing and finetuning (for user and agent), auto annotation, and selftrain finetuning'
+    description='Runs the whole training pipeline, including two parallel autoparaphrasing and finetuning (for user and agent), auto annotation, and selftrain finetuning',
 )
 def selftrain_pipeline(
     owner,
@@ -112,21 +112,23 @@ def selftrain_pipeline(
     valid_set='eval',
     eval_set='dev',
     eval_parallel_jobs='2',
-    eval_additional_args=''
+    eval_additional_args='',
 ):
     # first, generate the dataset
-    generate_dataset_op = generate_dataset_step(image=image,
-                                                    owner=owner,
-                                                    project=project,
-                                                    experiment=experiment,
-                                                    dataset=dataset,
-                                                    parallel=generate_dataset_parallel,
-                                                    valid_set=valid_set,
-                                                    genie_version=genie_version,
-                                                    workdir_repo=workdir_repo,
-                                                    workdir_version=workdir_version,
-                                                    thingpedia_developer_key=thingpedia_developer_key,
-                                                    additional_args=generate_dataset_additional_args)
+    generate_dataset_op = generate_dataset_step(
+        image=image,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        dataset=dataset,
+        parallel=generate_dataset_parallel,
+        valid_set=valid_set,
+        genie_version=genie_version,
+        workdir_repo=workdir_repo,
+        workdir_version=workdir_version,
+        thingpedia_developer_key=thingpedia_developer_key,
+        additional_args=generate_dataset_additional_args,
+    )
     initial_datadir = generate_dataset_op.outputs['s3_datadir']
 
     # autoparaphrase and few-shot finetune the user model
@@ -207,63 +209,67 @@ def selftrain_pipeline(
         filtering_additional_args=filtering_additional_args,
     )
 
-    auto_annotate_op = auto_annotate_step(image=image,
-                                          owner=owner,
-                                          project=project,
-                                          experiment=experiment,
-                                          dataset=dataset,
-                                          user_model=user_model,
-                                          agent_model=agent_model,
-                                          genienlp_version=genienlp_version,
-                                          genie_version=genie_version,
-                                          workdir_repo=workdir_repo,
-                                          workdir_version=workdir_version,
-                                          thingpedia_developer_key=thingpedia_developer_key,
-                                          additional_args=auto_annotate_additional_args)
+    auto_annotate_op = auto_annotate_step(
+        image=image,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        dataset=dataset,
+        user_model=user_model,
+        agent_model=agent_model,
+        genienlp_version=genienlp_version,
+        genie_version=genie_version,
+        workdir_repo=workdir_repo,
+        workdir_version=workdir_version,
+        thingpedia_developer_key=thingpedia_developer_key,
+        additional_args=auto_annotate_additional_args,
+    )
     selftrain_datadir = auto_annotate_op.outputs['s3_datadir']
 
     train_op = train_step(
-            owner=owner,
-            project=project,
-            experiment=experiment,
-            model='%s-selftrain' % (model,),
-            task_name='almond_dialogue_nlu',
-            s3_datadir=selftrain_datadir,
-            s3_bucket=s3_bucket,
-            s3_database_dir=s3_database_dir,
-            image=image,
-            genienlp_version=genienlp_version,
-            load_from=user_model,
-            train_languages=train_languages,
-            eval_languages=eval_languages,
-            valid_set=valid_set,
-            dataset_subfolder='None',
-            skip_tensorboard='false',
-            train_iterations=selftrain_train_iterations,
-            s3_bootleg_prepped_data=s3_bootleg_prepped_data,
-            additional_args=train_additional_args
-            )
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        model='%s-selftrain' % (model,),
+        task_name='almond_dialogue_nlu',
+        s3_datadir=selftrain_datadir,
+        s3_bucket=s3_bucket,
+        s3_database_dir=s3_database_dir,
+        image=image,
+        genienlp_version=genienlp_version,
+        load_from=user_model,
+        train_languages=train_languages,
+        eval_languages=eval_languages,
+        valid_set=valid_set,
+        dataset_subfolder='None',
+        skip_tensorboard='false',
+        train_iterations=selftrain_train_iterations,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+        additional_args=train_additional_args,
+    )
     eval_model = train_op.outputs['s3_model_dir']
 
-    eval_op = eval_step(image=image,
-                        owner=owner,
-                        project=project,
-                        experiment=experiment,
-                        model=model,
-                        s3_model_dir=eval_model,
-                        eval_set=eval_set,
-                        parallel_jobs=eval_parallel_jobs,
-                        genienlp_version=genienlp_version,
-                        genie_version=genie_version,
-                        workdir_repo=workdir_repo,
-                        workdir_version=workdir_version,
-                        thingpedia_developer_key=thingpedia_developer_key,
-                        additional_args=eval_additional_args)
+    eval_op = eval_step(
+        image=image,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        model=model,
+        s3_model_dir=eval_model,
+        eval_set=eval_set,
+        parallel_jobs=eval_parallel_jobs,
+        genienlp_version=genienlp_version,
+        genie_version=genie_version,
+        workdir_repo=workdir_repo,
+        workdir_version=workdir_version,
+        thingpedia_developer_key=thingpedia_developer_key,
+        additional_args=eval_additional_args,
+    )
 
 
 @dsl.pipeline(
     name='Selftrain without paraphrase',
-    description='Runs the whole training pipeline, including two parallel finetuning (for user and agent), auto annotation, and selftrain finetuning'
+    description='Runs the whole training pipeline, including two parallel finetuning (for user and agent), auto annotation, and selftrain finetuning',
 )
 def selftrain_nopara_pipeline(
     owner,
@@ -292,21 +298,23 @@ def selftrain_nopara_pipeline(
     valid_set='eval',
     eval_set='dev',
     eval_parallel_jobs='2',
-    eval_additional_args=''
+    eval_additional_args='',
 ):
     # first, generate the dataset
-    generate_dataset_op = generate_dataset_step(image=image,
-                                                    owner=owner,
-                                                    project=project,
-                                                    experiment=experiment,
-                                                    dataset=dataset,
-                                                    parallel=generate_dataset_parallel,
-                                                    valid_set=valid_set,
-                                                    genie_version=genie_version,
-                                                    workdir_repo=workdir_repo,
-                                                    workdir_version=workdir_version,
-                                                    thingpedia_developer_key=thingpedia_developer_key,
-                                                    additional_args=generate_dataset_additional_args)
+    generate_dataset_op = generate_dataset_step(
+        image=image,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        dataset=dataset,
+        parallel=generate_dataset_parallel,
+        valid_set=valid_set,
+        genie_version=genie_version,
+        workdir_repo=workdir_repo,
+        workdir_version=workdir_version,
+        thingpedia_developer_key=thingpedia_developer_key,
+        additional_args=generate_dataset_additional_args,
+    )
     initial_datadir = generate_dataset_op.outputs['s3_datadir']
 
     # autoparaphrase and few-shot finetune the user model
@@ -387,64 +395,65 @@ def selftrain_nopara_pipeline(
         filtering_additional_args='',
     )
 
-    auto_annotate_op = auto_annotate_step(image=image,
-                                          owner=owner,
-                                          project=project,
-                                          experiment=experiment,
-                                          dataset=dataset,
-                                          user_model=user_model,
-                                          agent_model=agent_model,
-                                          genienlp_version=genienlp_version,
-                                          genie_version=genie_version,
-                                          workdir_repo=workdir_repo,
-                                          workdir_version=workdir_version,
-                                          thingpedia_developer_key=thingpedia_developer_key,
-                                          additional_args=auto_annotate_additional_args)
+    auto_annotate_op = auto_annotate_step(
+        image=image,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        dataset=dataset,
+        user_model=user_model,
+        agent_model=agent_model,
+        genienlp_version=genienlp_version,
+        genie_version=genie_version,
+        workdir_repo=workdir_repo,
+        workdir_version=workdir_version,
+        thingpedia_developer_key=thingpedia_developer_key,
+        additional_args=auto_annotate_additional_args,
+    )
     selftrain_datadir = auto_annotate_op.outputs['s3_datadir']
 
     train_op = train_step(
-            owner=owner,
-            project=project,
-            experiment=experiment,
-            model='%s-selftrain' % (model,),
-            task_name='almond_dialogue_nlu',
-            s3_datadir=selftrain_datadir,
-            s3_bucket=s3_bucket,
-            s3_database_dir=s3_database_dir,
-            image=image,
-            genienlp_version=genienlp_version,
-            load_from=user_model,
-            train_languages=train_languages,
-            eval_languages=eval_languages,
-            valid_set=valid_set,
-            dataset_subfolder='None',
-            skip_tensorboard='false',
-            train_iterations=selftrain_train_iterations,
-            s3_bootleg_prepped_data=s3_bootleg_prepped_data,
-            additional_args=train_additional_args,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        model='%s-selftrain' % (model,),
+        task_name='almond_dialogue_nlu',
+        s3_datadir=selftrain_datadir,
+        s3_bucket=s3_bucket,
+        s3_database_dir=s3_database_dir,
+        image=image,
+        genienlp_version=genienlp_version,
+        load_from=user_model,
+        train_languages=train_languages,
+        eval_languages=eval_languages,
+        valid_set=valid_set,
+        dataset_subfolder='None',
+        skip_tensorboard='false',
+        train_iterations=selftrain_train_iterations,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+        additional_args=train_additional_args,
     )
     eval_model = train_op.outputs['s3_model_dir']
 
-    eval_op = eval_step(image=image,
-                        owner=owner,
-                        project=project,
-                        experiment=experiment,
-                        model=model,
-                        s3_model_dir=eval_model,
-                        eval_set=eval_set,
-                        parallel_jobs=eval_parallel_jobs,
-                        genienlp_version=genienlp_version,
-                        genie_version=genie_version,
-                        workdir_repo=workdir_repo,
-                        workdir_version=workdir_version,
-                        thingpedia_developer_key=thingpedia_developer_key,
-                        additional_args=eval_additional_args)
+    eval_op = eval_step(
+        image=image,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        model=model,
+        s3_model_dir=eval_model,
+        eval_set=eval_set,
+        parallel_jobs=eval_parallel_jobs,
+        genienlp_version=genienlp_version,
+        genie_version=genie_version,
+        workdir_repo=workdir_repo,
+        workdir_version=workdir_version,
+        thingpedia_developer_key=thingpedia_developer_key,
+        additional_args=eval_additional_args,
+    )
 
 
-@dsl.pipeline(
-    name='Selftrain Only',
-    description='Runs the self-training pipeline starting from auto annotation'
-)
+@dsl.pipeline(name='Selftrain Only', description='Runs the self-training pipeline starting from auto annotation')
 def selftrain_only_pipeline(
     owner,
     project,
@@ -470,57 +479,61 @@ def selftrain_only_pipeline(
     valid_set='eval',
     eval_set='dev',
     eval_parallel_jobs='2',
-    eval_additional_args=''
+    eval_additional_args='',
 ):
-    auto_annotate_op = auto_annotate_step(image=image,
-                                          owner=owner,
-                                          project=project,
-                                          experiment=experiment,
-                                          dataset=dataset,
-                                          user_model=user_model,
-                                          agent_model=agent_model,
-                                          genienlp_version=genienlp_version,
-                                          genie_version=genie_version,
-                                          workdir_repo=workdir_repo,
-                                          workdir_version=workdir_version,
-                                          thingpedia_developer_key=thingpedia_developer_key,
-                                          additional_args=auto_annotate_additional_args)
+    auto_annotate_op = auto_annotate_step(
+        image=image,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        dataset=dataset,
+        user_model=user_model,
+        agent_model=agent_model,
+        genienlp_version=genienlp_version,
+        genie_version=genie_version,
+        workdir_repo=workdir_repo,
+        workdir_version=workdir_version,
+        thingpedia_developer_key=thingpedia_developer_key,
+        additional_args=auto_annotate_additional_args,
+    )
     selftrain_datadir = auto_annotate_op.outputs['s3_datadir']
 
     train_op = train_step(
-            owner=owner,
-            project=project,
-            experiment=experiment,
-            model='%s-selftrain' % (model,),
-            task_name='almond_dialogue_nlu',
-            s3_datadir=selftrain_datadir,
-            s3_bucket=s3_bucket,
-            s3_database_dir=s3_database_dir,
-            image=image,
-            genienlp_version=genienlp_version,
-            load_from=user_model,
-            train_languages=train_languages,
-            eval_languages=eval_languages,
-            valid_set=valid_set,
-            dataset_subfolder='None',
-            skip_tensorboard='false',
-            train_iterations=selftrain_train_iterations,
-            s3_bootleg_prepped_data=s3_bootleg_prepped_data,
-            additional_args=train_additional_args,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        model='%s-selftrain' % (model,),
+        task_name='almond_dialogue_nlu',
+        s3_datadir=selftrain_datadir,
+        s3_bucket=s3_bucket,
+        s3_database_dir=s3_database_dir,
+        image=image,
+        genienlp_version=genienlp_version,
+        load_from=user_model,
+        train_languages=train_languages,
+        eval_languages=eval_languages,
+        valid_set=valid_set,
+        dataset_subfolder='None',
+        skip_tensorboard='false',
+        train_iterations=selftrain_train_iterations,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+        additional_args=train_additional_args,
     )
     eval_model = train_op.outputs['s3_model_dir']
 
-    eval_op = eval_step(image=image,
-                        owner=owner,
-                        project=project,
-                        experiment=experiment,
-                        model=model,
-                        s3_model_dir=eval_model,
-                        eval_set=eval_set,
-                        parallel_jobs=eval_parallel_jobs,
-                        genienlp_version=genienlp_version,
-                        genie_version=genie_version,
-                        workdir_repo=workdir_repo,
-                        workdir_version=workdir_version,
-                        thingpedia_developer_key=thingpedia_developer_key,
-                        additional_args=eval_additional_args)
+    eval_op = eval_step(
+        image=image,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        model=model,
+        s3_model_dir=eval_model,
+        eval_set=eval_set,
+        parallel_jobs=eval_parallel_jobs,
+        genienlp_version=genienlp_version,
+        genie_version=genie_version,
+        workdir_repo=workdir_repo,
+        workdir_version=workdir_version,
+        thingpedia_developer_key=thingpedia_developer_key,
+        additional_args=eval_additional_args,
+    )

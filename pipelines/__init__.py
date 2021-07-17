@@ -21,7 +21,7 @@
 
 from .bootleg import *
 from .other_models import *
+from .predicting import *
 from .selftrain import *
 from .spl import *
 from .training import *
-from .predicting import *
