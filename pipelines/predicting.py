@@ -253,6 +253,68 @@ def train_predict_small_pipeline(
     )
 
 
+@dsl.pipeline(name='Train and prediction pipeline', description='Train a model on 4 gpus and do prediction')
+def train_4gpu_predict_small_pipeline(
+    owner,
+    project,
+    experiment,
+    model,
+    task_name,
+    s3_datadir,
+    s3_bucket='geniehai',
+    s3_database_dir='None',
+    model_type='',
+    image=default_image,
+    genienlp_version='',
+    load_from='None',
+    valid_set='eval',
+    eval_sets='eval',
+    dataset_subfolder='None',
+    skip_tensorboard='false',
+    train_iterations='',
+    s3_bootleg_prepped_data='None',
+    train_additional_args='',
+    val_batch_size='4000',
+    pred_additional_args='',
+):
+    train_op = train_step(
+        image=image,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        genienlp_version=genienlp_version,
+        model=model,
+        task_name=task_name,
+        valid_set=valid_set,
+        s3_datadir=s3_datadir,
+        s3_bucket=s3_bucket,
+        s3_database_dir=s3_database_dir,
+        load_from=load_from,
+        dataset_subfolder=dataset_subfolder,
+        skip_tensorboard=skip_tensorboard,
+        num_gpus='4',
+        train_iterations=train_iterations,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+        additional_args=train_additional_args,
+    )
+
+    pred_op = prediction_step_small(
+        image=image,
+        owner=owner,
+        genienlp_version=genienlp_version,
+        task_name=task_name,
+        eval_sets=eval_sets,
+        model_name_or_path=train_op.outputs['s3_model_dir'],
+        s3_input_datadir=s3_datadir,
+        s3_database_dir=s3_database_dir,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+        model_type=model_type,
+        dataset_subfolder=dataset_subfolder,
+        val_batch_size=val_batch_size,
+        additional_args=pred_additional_args,
+    )
+
+
 @dsl.pipeline(name='Predict', description='Run genienlp predict on a previously trained model')
 def predict_pipeline(
     image=default_image,
