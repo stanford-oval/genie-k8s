@@ -41,9 +41,11 @@ implementation:
       cd workdir/${MAKEDIR}
 
       if test "${s3_datadir}" != None ; then
-          aws s3 sync --no-progress ${s3_datadir}/${experiment}/ ./${experiment}/
           mkdir -p ./${experiment}/${eval_set}
-          aws s3 cp --no-progress ${s3_datadir}/${eval_set}.tsv ./${experiment}/${eval_set}/annotated.tsv
+          aws s3 sync --no-progress ${s3_datadir} ./ --exclude "*" --include "${eval_set}.tsv" --include "${experiment}/manifest.tt"
+          if test -f ${eval_set}.tsv ; then
+            mv ${eval_set}.tsv ./${experiment}/${eval_set}/annotated.tsv
+          fi
       fi
 
       if test "${s3_database_dir}" != None ; then
