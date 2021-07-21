@@ -1007,12 +1007,12 @@ def generate_bootleg_train_eval_pipeline(
     valid_set='eval',
     eval_set='',
     eval_parallel_jobs='2',
-    file_extension='tsv',
     eval_additional_args='',
     s3_database_dir=S3_DATABASE_DIR,
     s3_bootleg_prepped_data='None',
     s3_bootleg_subfolder='None',
     bootleg_model='',
+    bootleg_data_splits='train eval',
     bootleg_additional_args='',
 ):
     everything(
@@ -1042,13 +1042,13 @@ def generate_bootleg_train_eval_pipeline(
         train_iterations=train_iterations,
         valid_set=valid_set,
         eval_set=eval_set,
-        file_extension=file_extension,
         eval_additional_args=eval_additional_args,
         eval_parallel_jobs=eval_parallel_jobs,
         s3_database_dir=s3_database_dir,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
         s3_bootleg_subfolder=s3_bootleg_subfolder,
         bootleg_model=bootleg_model,
+        bootleg_data_splits=bootleg_data_splits,
         bootleg_additional_args=bootleg_additional_args,
     )
 
@@ -1075,12 +1075,12 @@ def gpu_generate_bootleg_train_eval_pipeline(
     valid_set='eval',
     eval_set='',
     eval_parallel_jobs='2',
-    file_extension='tsv',
     eval_additional_args='',
     s3_database_dir=S3_DATABASE_DIR,
     s3_bootleg_prepped_data='None',
     s3_bootleg_subfolder='None',
     bootleg_model='',
+    bootleg_data_splits='train eval',
     bootleg_additional_args='',
 ):
     everything(
@@ -1108,13 +1108,13 @@ def gpu_generate_bootleg_train_eval_pipeline(
         train_iterations=train_iterations,
         valid_set=valid_set,
         eval_set=eval_set,
-        file_extension=file_extension,
         eval_additional_args=eval_additional_args,
         eval_parallel_jobs=eval_parallel_jobs,
         s3_database_dir=s3_database_dir,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
         s3_bootleg_subfolder=s3_bootleg_subfolder,
         bootleg_model=bootleg_model,
+        bootleg_data_splits=bootleg_data_splits,
         bootleg_additional_args=bootleg_additional_args,
         generate_w_gpu=True
     )
