@@ -1053,6 +1053,73 @@ def generate_bootleg_train_eval_pipeline(
     )
 
 
+@dsl.pipeline(name='Generate, bootleg, train and eval', description='The minimal training pipeline with bootleg, and using GPU machine for generate')
+def gpu_generate_bootleg_train_eval_pipeline(
+    owner,
+    project,
+    experiment,
+    model,
+    dataset,
+    image=default_image,
+    genienlp_version=GENIENLP_VERSION,
+    genie_version=GENIE_VERSION,
+    workdir_repo=WORKDIR_REPO,
+    workdir_version=WORKDIR_VERSION,
+    thingpedia_developer_key=default_developer_key,
+    generate_dataset_parallel='6',
+    generate_dataset_additional_args='',
+    train_task_name='',
+    train_load_from='None',
+    train_additional_args='',
+    train_iterations='80000',
+    valid_set='eval',
+    eval_set='',
+    eval_parallel_jobs='2',
+    file_extension='tsv',
+    eval_additional_args='',
+    s3_database_dir=S3_DATABASE_DIR,
+    s3_bootleg_prepped_data='None',
+    s3_bootleg_subfolder='None',
+    bootleg_model='',
+    bootleg_additional_args='',
+):
+    everything(
+        do_generate=True,
+        do_bootleg=True,
+        do_paraphrase=False,
+        do_fewshot=False,
+        do_calibrate=False,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        model=model,
+        dataset=dataset,
+        image=image,
+        genienlp_version=genienlp_version,
+        genie_version=genie_version,
+        workdir_repo=workdir_repo,
+        workdir_version=workdir_version,
+        thingpedia_developer_key=thingpedia_developer_key,
+        generate_dataset_parallel=generate_dataset_parallel,
+        generate_dataset_additional_args=generate_dataset_additional_args,
+        train_task_name=train_task_name,
+        train_load_from=train_load_from,
+        train_additional_args=train_additional_args,
+        train_iterations=train_iterations,
+        valid_set=valid_set,
+        eval_set=eval_set,
+        file_extension=file_extension,
+        eval_additional_args=eval_additional_args,
+        eval_parallel_jobs=eval_parallel_jobs,
+        s3_database_dir=s3_database_dir,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+        s3_bootleg_subfolder=s3_bootleg_subfolder,
+        bootleg_model=bootleg_model,
+        bootleg_additional_args=bootleg_additional_args,
+        generate_w_gpu=True
+    )
+
+
 @dsl.pipeline(name='Generate, train and eval', description='The minimal training pipeline')
 def generate_train_eval_pipeline(
     owner,
