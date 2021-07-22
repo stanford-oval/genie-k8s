@@ -50,7 +50,7 @@ implementation:
 
       S3_DATADIR=s3://${s3_bucket}/${owner}/dataset/${project}/${experiment}/${dataset}/`date +%s`/
       aws s3 sync --no-progress datadir/ ${S3_DATADIR}
-      aws s3 cp --no-progress ${experiment}/manifest.tt ${S3_DATADIR}/${experiment}/manifest.tt
+      aws s3 cp --no-progress ${experiment}/manifest.tt ${S3_DATADIR}${experiment}/manifest.tt
       mkdir -p `dirname $s3_datadir`
       echo ${S3_DATADIR}  > $s3_datadir
 
