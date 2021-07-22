@@ -22,6 +22,9 @@ python3 upload_pipeline.py selftrain_pipeline selftrain
 python3 upload_pipeline.py selftrain_nopara_pipeline selftrain-nopara
 python3 upload_pipeline.py paraphrase_train_eval_pipeline paraphrase-train-eval
 python3 upload_pipeline.py paraphrase_only_pipeline paraphrase-only
+python3 upload_pipeline.py paraphrase_filtering_pipeline paraphrase-filtering-only
+python3 upload_pipeline.py bootleg_paraphrase_train_eval_pipeline bootleg-paraphrase-train-eval
+python3 upload_pipeline.py generate_bootleg_train_fewshot_calibrate_eval_pipeline generate-bootleg-train-fewshot-calibrate-eval
 python3 upload_pipeline.py predict_pipeline predict
 python3 upload_pipeline.py predict_small_pipeline predict-small
 python3 upload_pipeline.py train_predict_small_pipeline train-predict-small
