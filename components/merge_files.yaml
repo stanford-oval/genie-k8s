@@ -3,13 +3,9 @@ description: |
   Merge files
 inputs:
   - {name: image, description: '', default: ''}
-  - {name: task_name, description: '', default: ''}
   - {name: s3_datadir, description: '', default: ''}
-  - {name: s3_bootleg_subfolder, description: ''}
-  - {name: bootleg_model, description: '', default: ''}
-  - {name: num_chunks, description: '', default: '', type: Integer}
+  - {name: s3_bootleg_prepped_data, description: ''}
   - {name: data_splits, description: '', default: ''}
-  - {name: remove_original, description: '', default: ''}
 
 outputs:
   - {name: s3_output_datadir}
@@ -23,50 +19,41 @@ implementation:
     - -c
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image task_name s3_datadir s3_bootleg_subfolder bootleg_model num_chunks data_splits remove_original s3_output_datadir" "$@"
+      parse_args "$0" "image s3_datadir s3_bootleg_prepped_data data_splits s3_output_datadir" "$@"
       shift $n
       cd $HOME
 
       /opt/genie-toolkit/sync-repos.sh
 
-      if test "${s3_bootleg_subfolder}" != "None" ; then
-        s3_bootleg_subfolder=${s3_bootleg_subfolder}/
-      else
-        s3_bootleg_subfolder=
-      fi
-
-      aws s3 sync --no-progress ${s3_datadir} dataset/
 
       mkdir -p dataset/merged
       cd dataset/
 
-      timestamp=`date +%s`
+      echo ${s3_bootleg_prepped_data}
 
-      ckpt_name=bootleg_wiki
 
-      for split in ${data_splits} ; do
-        for ((i=0;i<$num_chunks;i++)); do
-          cat $i/bootleg/${bootleg_model}/prepped_files/${s3_bootleg_subfolder}${split}_bootleg/${ckpt_name}/bootleg_labels.jsonl >> merged/${split}_bootleg_labels.jsonl
+      for s3_folder in ${s3_bootleg_prepped_data}; do
+        for split in ${data_splits} ; do
+          aws s3 sync --no-progress ${s3_folder} ./
+          cat ${split}_bootleg/bootleg_wiki/bootleg_labels.jsonl >> merged/${split}_bootleg_labels.jsonl
         done
-        aws s3 cp --no-progress merged/${split}_bootleg_labels.jsonl ${s3_datadir%/}/merged/bootleg/${bootleg_model}/prepped_files/${timestamp}/${s3_bootleg_subfolder}${split}_bootleg/${ckpt_name}/bootleg_labels.jsonl
       done
 
-      if [ "$remove_original" == "true" ] ; then
-        aws s3 rm --recursive ${s3_datadir} --exclude '*bootleg*'
-      fi
+      # uses timestamp from the last bootleg step
+      s3_bootleg_prepped_parsed=`echo ${s3_folder} | sed 's/^.*\/bootleg\//\/bootleg\//'`
+
+      for split in ${data_splits} ; do
+        aws s3 cp --no-progress merged/${split}_bootleg_labels.jsonl ${s3_datadir%/}/merged${s3_bootleg_prepped_parsed%/}/${split}_bootleg/bootleg_wiki/bootleg_labels.jsonl
+      done
 
       mkdir -p `dirname $s3_output_datadir`
-      echo ${s3_datadir%/}/merged/bootleg/${bootleg_model}/prepped_files/${timestamp}/ > $s3_output_datadir
+      echo ${s3_datadir%/}/merged${s3_bootleg_prepped_parsed%/}/ > $s3_output_datadir
 
     args: [
       'cmd',
       --image, {inputValue: image},
-      --task_name, {inputValue: task_name},
       --s3_datadir, {inputValue: s3_datadir},
-      --s3_bootleg_subfolder, {inputValue: s3_bootleg_subfolder},
-      --bootleg_model, {inputValue: bootleg_model},
-      --num_chunks, {inputValue: num_chunks},
+      --s3_bootleg_prepped_data, {inputValue: s3_bootleg_prepped_data},
       --data_splits, {inputValue: data_splits},
-      --remove_original, {inputValue: remove_original},
       --s3_output_datadir, {outputPath: s3_output_datadir},
     ]

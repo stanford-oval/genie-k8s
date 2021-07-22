@@ -43,7 +43,6 @@ def bootleg_only_pipeline(
     eval_languages='en',
     data_splits='train eval',
     file_extension='tsv',
-    remove_original='false',
     bootleg_additional_args='',
 ):
     split_bootleg_merge_step(
@@ -62,7 +61,6 @@ def bootleg_only_pipeline(
         eval_languages=eval_languages,
         data_splits=data_splits,
         file_extension=file_extension,
-        remove_original=remove_original,
         bootleg_additional_args=bootleg_additional_args,
     )
 
@@ -82,7 +80,6 @@ def split_bootleg_merge_step(
     train_languages='en',
     eval_languages='en',
     data_splits='train eval',
-    remove_original='false',
     bootleg_additional_args='',
     file_extension='tsv',
 ):
@@ -96,7 +93,7 @@ def split_bootleg_merge_step(
         file_extension=file_extension,
     )
 
-    bootleg_ops = []
+    s3_bootleg_outputs = []
     for i in range(num_chunks):
         bootleg_op = bootleg_step(
             owner=owner,
@@ -116,20 +113,14 @@ def split_bootleg_merge_step(
             dataset_subfolder=str(i),
             bootleg_additional_args=bootleg_additional_args,
         )
-        bootleg_ops.append(bootleg_op)
+        s3_bootleg_outputs.append(str(bootleg_op.outputs['s3_bootleg_prepped_data']))
 
     merge_op = merge_step(
         image=image,
-        task_name=task_name,
         s3_datadir=split_op.outputs['s3_output_datadir'],
-        s3_bootleg_subfolder=s3_bootleg_subfolder,
-        bootleg_model=bootleg_model,
-        num_chunks=num_chunks,
+        s3_bootleg_prepped_data=' '.join(s3_bootleg_outputs),
         data_splits=data_splits,
-        remove_original=remove_original,
     )
-
-    merge_op.after(*bootleg_ops)
 
     s3_bootleg_prepped_data = merge_op.outputs['s3_output_datadir']
 
@@ -153,20 +144,14 @@ def split_step(image, task_name, s3_datadir, num_chunks, data_splits, file_exten
     return split_op
 
 
-def merge_step(
-    image, task_name, s3_datadir, s3_bootleg_subfolder, bootleg_model, num_chunks, data_splits, remove_original='false'
-):
+def merge_step(image, s3_datadir, s3_bootleg_prepped_data, data_splits):
     merge_env = {}
 
     merge_op = components.load_component_from_file('components/merge_files.yaml')(
         image=image,
-        task_name=task_name,
         s3_datadir=s3_datadir,
-        s3_bootleg_subfolder=s3_bootleg_subfolder,
-        bootleg_model=bootleg_model,
-        num_chunks=num_chunks,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
         data_splits=data_splits,
-        remove_original=remove_original,
     )
     (merge_op.container.set_memory_limit('12Gi').set_memory_request('12Gi').set_cpu_limit('7.5').set_cpu_request('7.5'))
     (add_env(add_ssh_volume(merge_op), merge_env))
