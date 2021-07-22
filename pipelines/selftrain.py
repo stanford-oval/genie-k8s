@@ -173,7 +173,6 @@ def selftrain_pipeline(
         bootleg_data_splits='',
         bootleg_additional_args='',
         file_extension='tsv',
-        remove_original='false',
     )
 
     # autoparaphrase and few-shot finetune the agent model
@@ -218,7 +217,6 @@ def selftrain_pipeline(
         bootleg_data_splits='',
         bootleg_additional_args='',
         file_extension='tsv',
-        remove_original='false',
     )
 
     auto_annotate_op = auto_annotate_step(
@@ -371,7 +369,6 @@ def selftrain_nopara_pipeline(
         bootleg_data_splits='',
         bootleg_additional_args='',
         file_extension='tsv',
-        remove_original='false',
     )
 
     # autoparaphrase and few-shot finetune the agent model
@@ -416,7 +413,6 @@ def selftrain_nopara_pipeline(
         bootleg_data_splits='',
         bootleg_additional_args='',
         file_extension='tsv',
-        remove_original='false',
     )
 
     auto_annotate_op = auto_annotate_step(

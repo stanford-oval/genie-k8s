@@ -124,7 +124,6 @@ def bootleg_train_predict_small_pipeline(
     train_languages='en',
     eval_languages='en',
     file_extension='tsv',
-    remove_original='false',
     skip_tensorboard='false',
     train_iterations='',
     train_additional_args='',
@@ -151,7 +150,6 @@ def bootleg_train_predict_small_pipeline(
         eval_languages=eval_languages,
         data_splits=bootleg_data_splits,
         file_extension=file_extension,
-        remove_original=remove_original,
         bootleg_additional_args=bootleg_additional_args,
     )
 

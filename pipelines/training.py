@@ -444,7 +444,6 @@ def paraphrase_train_fewshot_step(
     filtering_additional_args,
     bootleg_additional_args,
     file_extension,
-    remove_original,
 ):
 
     if do_bootleg:
@@ -464,7 +463,6 @@ def paraphrase_train_fewshot_step(
             eval_languages=eval_languages,
             data_splits=bootleg_data_splits,
             file_extension=file_extension,
-            remove_original=remove_original,
             bootleg_additional_args=bootleg_additional_args,
         )
 
@@ -523,7 +521,6 @@ def paraphrase_train_fewshot_step(
                 eval_languages=eval_languages,
                 data_splits='unfiltered',
                 file_extension=file_extension,
-                remove_original=remove_original,
                 bootleg_additional_args=bootleg_additional_args,
             )
 
@@ -589,7 +586,6 @@ def paraphrase_train_fewshot_step(
                 eval_languages=eval_languages,
                 data_splits=bootleg_data_splits,
                 file_extension=file_extension,
-                remove_original=remove_original,
                 bootleg_additional_args=bootleg_additional_args,
             )
 
@@ -748,7 +744,6 @@ def everything(
     eval_parallel_jobs='2',
     eval_additional_args='',
     is_oracle='false',
-    remove_original='false',
     bootleg_additional_args='',
     generate_w_gpu=False,
 ):
@@ -826,7 +821,6 @@ def everything(
         filtering_additional_args=filtering_additional_args,
         bootleg_additional_args=bootleg_additional_args,
         file_extension=file_extension,
-        remove_original=remove_original,
     )
 
     eval_op = eval_step(
