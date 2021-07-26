@@ -70,7 +70,7 @@ implementation:
         s3_output=${model_name_or_path%/}
       fi
 
-      S3_METRIC_OUTPUT="$s3_output"/pred/
+      S3_METRIC_OUTPUT="$s3_output"/pred/`date +%s`/
 
       mkdir -p `dirname $s3_metrics_output`
       mkdir -p $metrics_output
