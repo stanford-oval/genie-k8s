@@ -131,6 +131,7 @@ def train_step(
     genienlp_version,
     train_iterations,
     skip_tensorboard,
+    num_gpus='1',
     valid_set='eval',
     s3_database_dir='None',
     train_languages='en',
@@ -142,45 +143,86 @@ def train_step(
     train_env = {
         'GENIENLP_VERSION': genienlp_version,
     }
-    train_num_gpus = 1
-    train_op = components.load_component_from_file('components/train.yaml')(
-        image=image,
-        s3_bucket=s3_bucket,
-        owner=owner,
-        task_name=task_name,
-        project=project,
-        experiment=experiment,
-        model=model,
-        load_from=load_from,
-        s3_datadir=s3_datadir,
-        s3_database_dir=s3_database_dir,
-        dataset_subfolder=dataset_subfolder,
-        train_iterations=train_iterations,
-        skip_tensorboard=skip_tensorboard,
-        valid_set=valid_set,
-        train_languages=train_languages,
-        eval_languages=eval_languages,
-        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
-        additional_args=additional_args,
-    )
-    (
-        train_op.container.set_memory_request('56Gi')
-        .set_memory_limit('56Gi')
-        .set_cpu_request('7.5')
-        .set_cpu_limit('7.5')
-        .set_gpu_limit(str(train_num_gpus))
-        .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
-    )
-    (
-        add_env(add_ssh_volume(train_op), train_env)
-        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*train_num_gpus}xlarge')
-        .add_volume(
-            V1Volume(
-                name='tensorboard', persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf')
+    if num_gpus == '1':
+        train_num_gpus = 1
+        train_op = components.load_component_from_file('components/train.yaml')(
+            image=image,
+            s3_bucket=s3_bucket,
+            owner=owner,
+            task_name=task_name,
+            project=project,
+            experiment=experiment,
+            model=model,
+            load_from=load_from,
+            s3_datadir=s3_datadir,
+            s3_database_dir=s3_database_dir,
+            dataset_subfolder=dataset_subfolder,
+            train_iterations=train_iterations,
+            skip_tensorboard=skip_tensorboard,
+            valid_set=valid_set,
+            train_languages=train_languages,
+            eval_languages=eval_languages,
+            s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+            additional_args=additional_args,
+        )
+        (
+            train_op.container.set_memory_request('56Gi')
+            .set_memory_limit('56Gi')
+            .set_cpu_request('7.5')
+            .set_cpu_limit('7.5')
+            .set_gpu_limit(str(train_num_gpus))
+            .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
+        )
+        (
+            add_env(add_ssh_volume(train_op), train_env)
+            .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+            .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*train_num_gpus}xlarge')
+            .add_volume(
+                V1Volume(
+                    name='tensorboard', persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf')
+                )
             )
         )
-    )
+    else:
+        train_num_gpus = 4
+        train_op = components.load_component_from_file('components/train.yaml')(
+            image=image,
+            s3_bucket=s3_bucket,
+            owner=owner,
+            task_name=task_name,
+            project=project,
+            experiment=experiment,
+            model=model,
+            load_from=load_from,
+            s3_datadir=s3_datadir,
+            s3_database_dir=s3_database_dir,
+            dataset_subfolder=dataset_subfolder,
+            train_iterations=train_iterations,
+            skip_tensorboard=skip_tensorboard,
+            valid_set=valid_set,
+            train_languages=train_languages,
+            eval_languages=eval_languages,
+            s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+            additional_args=additional_args,
+        )
+        (
+            train_op.container.set_memory_request('56Gi')
+            .set_memory_limit('200G')
+            .set_cpu_request('31')
+            .set_cpu_limit('31')
+            .set_gpu_limit(str(train_num_gpus))
+            .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
+        )
+        (
+            add_env(add_ssh_volume(train_op), train_env)
+            .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+            .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*train_num_gpus}xlarge')
+            .add_volume(
+                V1Volume(
+                    name='tensorboard', persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf')
+                )
+            )
+        )
 
     return train_op
 
@@ -402,7 +444,6 @@ def paraphrase_train_fewshot_step(
     filtering_additional_args,
     bootleg_additional_args,
     file_extension,
-    remove_original,
 ):
 
     if do_bootleg:
@@ -422,7 +463,6 @@ def paraphrase_train_fewshot_step(
             eval_languages=eval_languages,
             data_splits=bootleg_data_splits,
             file_extension=file_extension,
-            remove_original=remove_original,
             bootleg_additional_args=bootleg_additional_args,
         )
 
@@ -481,7 +521,6 @@ def paraphrase_train_fewshot_step(
                 eval_languages=eval_languages,
                 data_splits='unfiltered',
                 file_extension=file_extension,
-                remove_original=remove_original,
                 bootleg_additional_args=bootleg_additional_args,
             )
 
@@ -547,7 +586,6 @@ def paraphrase_train_fewshot_step(
                 eval_languages=eval_languages,
                 data_splits=bootleg_data_splits,
                 file_extension=file_extension,
-                remove_original=remove_original,
                 bootleg_additional_args=bootleg_additional_args,
             )
 
@@ -706,7 +744,6 @@ def everything(
     eval_parallel_jobs='2',
     eval_additional_args='',
     is_oracle='false',
-    remove_original='false',
     bootleg_additional_args='',
     generate_w_gpu=False,
 ):
@@ -784,7 +821,6 @@ def everything(
         filtering_additional_args=filtering_additional_args,
         bootleg_additional_args=bootleg_additional_args,
         file_extension=file_extension,
-        remove_original=remove_original,
     )
 
     eval_op = eval_step(

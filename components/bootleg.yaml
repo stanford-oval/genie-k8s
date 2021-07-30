@@ -94,7 +94,8 @@ implementation:
       rm -fr "$modeldir/cache"
       rm -fr "$modeldir/dataset"
 
-      S3_BOOTLEG_PREPPED_DATA=${s3_datadir%/}/${dataset_subfolder}/bootleg/${bootleg_model}/prepped_files/${s3_bootleg_subfolder}
+      timestamp=`date +%s`
+      S3_BOOTLEG_PREPPED_DATA=${s3_datadir%/}/${dataset_subfolder}/bootleg/${bootleg_model}/prepped_files/${timestamp}/${s3_bootleg_subfolder}
       aws s3 sync --no-progress results_temp ${S3_BOOTLEG_PREPPED_DATA}
 
       mkdir -p `dirname $s3_bootleg_prepped_data`
