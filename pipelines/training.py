@@ -1095,10 +1095,8 @@ def train_eval_pipeline(
     valid_set='eval',
     eval_set='',
     eval_parallel_jobs='2',
-    bootleg_model='None',
     s3_bootleg_prepped_data='None',
     eval_additional_args='',
-    bootleg_additional_args='',
 ):
     everything(
         do_generate=False,
@@ -1128,10 +1126,8 @@ def train_eval_pipeline(
         valid_set=valid_set,
         eval_set=eval_set,
         eval_parallel_jobs=eval_parallel_jobs,
-        bootleg_model=bootleg_model,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
         eval_additional_args=eval_additional_args,
-        bootleg_additional_args=bootleg_additional_args,
     )
 
 
