@@ -25,3 +25,4 @@ from .selftrain import *
 from .spl import *
 from .training import *
 from .predicting import *
+from .ood_classification import *

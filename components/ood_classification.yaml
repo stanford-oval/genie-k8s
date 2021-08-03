@@ -1,0 +1,86 @@
+name: OOD Classification
+description: |
+  OOD Classification
+inputs:
+  - {name: image, description: ''}
+  - {name: s3_bucket, description: ''}
+  - {name: owner, description: ''}
+  - {name: project, description: ''}
+  - {name: experiment, description: ''}
+  - {name: model, description: ''}
+  - {name: skip_tensorboard, description: ''}
+  - {name: s3_datadir, description: ''}
+  - {name: ood_data_train, description: ''}
+  - {name: ood_data_eval, description: ''}
+  - {name: additional_args, description: ''}
+outputs:
+  - {name: s3_model_dir}
+implementation:
+  container:
+    image: '{{inputs.parameters.image}}'
+    command:
+    - /bin/bash
+    - -ex
+    - -c
+    - |
+      . /opt/genie-toolkit/lib.sh
+
+      parse_args "$0" "image s3_bucket owner project experiment model skip_tensorboard s3_datadir ood_data_train ood_data_eval s3_model_dir" "$@"
+      shift $n
+      cd $HOME
+
+      /opt/genie-toolkit/sync-repos.sh
+
+      modeldir="$HOME/models/$model"
+      mkdir -p "$modeldir"
+
+      mkdir -p dataset
+
+      if test "${s3_datadir}" = None ; then
+        aws s3 cp ${ood_data_train} dataset/
+        aws s3 cp ${ood_data_eval} dataset/
+      else
+        aws s3 sync --no-progress ${s3_datadir}ood dataset
+      fi
+
+      genienlp train \
+          --data "dataset" \
+          --save "$modeldir" \
+          --train_tasks ood_task \
+          --exist_ok \
+          --skip_cache \
+          --model TransformerForSequenceClassification \
+          --num_print 0 \
+          $@
+
+      mkdir -p "/shared/tensorboard/${project}/${experiment}/${owner}/${model}"
+
+      tensorboard_args=
+      if test "$skip_tensorboard" != "true" ; then
+        tensorboard_args="--tensorboard_dir /shared/tensorboard/${project}/${experiment}/${owner}/${model}"
+      fi
+
+      rm -fr "$modeldir/dataset"
+
+      S3_MODEL_DIR=s3://${s3_bucket}/${owner}/models/${project}/${experiment}/${model}/`date +%s`/
+
+      mkdir -p `dirname $s3_model_dir`
+      echo ${S3_MODEL_DIR} > $s3_model_dir
+
+    args: [
+      'cmd',
+      --image, {inputValue: image},
+      --s3_bucket, {inputValue: s3_bucket},
+      --owner, {inputValue: owner},
+      --project, {inputValue: project},
+      --experiment, {inputValue: experiment},
+      --model, {inputValue: model},
+      --skip_tensorboard, {inputValue: skip_tensorboard},
+      --s3_datadir, {inputValue: s3_datadir},
+      --ood_data_train, {inputValue: ood_data_train},
+      --ood_data_eval, {inputValue: ood_data_eval},
+      --s3_model_dir, {outputPath: s3_model_dir},
+      --,
+      {inputValue: additional_args},
+    ]
+
