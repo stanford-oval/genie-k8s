@@ -26,6 +26,7 @@ from kubernetes.client.models import V1PersistentVolumeClaimVolumeSource
 from . import split_bootleg_merge_step
 from .common import *
 from .paraphrase import paraphrase_filtering_step, paraphrase_generation_step
+from .ood_classification import ood_classification_step
 
 
 def generate_dataset_step(
@@ -745,6 +746,7 @@ def everything(
     eval_additional_args='',
     is_oracle='false',
     bootleg_additional_args='',
+    ood_additional_args='',
     generate_w_gpu=False,
 ):
     if do_generate:
@@ -779,6 +781,21 @@ def everything(
                 additional_args=generate_dataset_additional_args,
             )
         train_s3_datadir = generate_dataset_op.outputs['s3_datadir']
+
+    ood_classification_op = ood_classification_step(
+        image=image,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        model=model,
+        genienlp_version=genienlp_version,
+        skip_tensorboard='false',
+        s3_datadir=train_s3_datadir,
+        ood_data_train='None',
+        ood_data_eval='None',
+        s3_bucket=s3_bucket,
+        additional_args=ood_additional_args,
+    )
 
     train_s3_datadir, eval_model = paraphrase_train_fewshot_step(
         do_paraphrase=do_paraphrase,
@@ -1475,6 +1492,7 @@ def generate_bootleg_train_fewshot_calibrate_eval_pipeline(
     s3_bootleg_subfolder='None',
     bootleg_model='',
     bootleg_additional_args='',
+    ood_additional_args='',
 ):
     everything(
         do_generate=True,
@@ -1513,6 +1531,7 @@ def generate_bootleg_train_fewshot_calibrate_eval_pipeline(
         s3_bootleg_subfolder=s3_bootleg_subfolder,
         bootleg_model=bootleg_model,
         bootleg_additional_args=bootleg_additional_args,
+        ood_additional_args=ood_additional_args,
     )
 
 
