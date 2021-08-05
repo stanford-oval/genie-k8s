@@ -82,6 +82,7 @@ def ood_classification_pipeline(
     experiment,
     model,
     s3_datadir,
+    eval_set,
     image=default_image,
     genienlp_version=GENIENLP_VERSION,
     genie_version=GENIE_VERSION,
@@ -100,4 +101,23 @@ def ood_classification_pipeline(
             skip_tensorboard='false',
             s3_datadir=s3_datadir,
             additional_args=additional_args
-            )
+    )
+
+    eval_model = ood_classification_op.outputs['s3_model_dir']
+
+    pred_op = prediction_step(
+            image=image,
+            owner=owner,
+            genienlp_version=genienlp_version,
+            task_name='ood_task',
+            eval_sets=eval_sets,
+            model_name_or_path=eval_model,
+            s3_input_datadir=s3_datadir,
+            s3_database_dir='None',
+            s3_bootleg_prepped_data='None',
+            model_type='',
+            dataset_subfolder='None',
+            val_batch_size=val_batch_size,
+            additional_args='',
+    )
+
