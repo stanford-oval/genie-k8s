@@ -43,6 +43,13 @@ implementation:
         aws s3 sync --no-progress ${s3_datadir}ood dataset
       fi
 
+      mkdir -p "/shared/tensorboard/${project}/${experiment}/${owner}/${model}_ood"
+
+      tensorboard_args=
+      if test "$skip_tensorboard" != "true" ; then
+        tensorboard_args="--tensorboard_dir /shared/tensorboard/${project}/${experiment}/${owner}/${model}_ood"
+      fi
+
       genienlp train \
           --data "dataset" \
           --save "$modeldir" \
@@ -51,14 +58,8 @@ implementation:
           --skip_cache \
           --model TransformerForSequenceClassification \
           --num_print 0 \
+          ${tensorboard_args} \
           $@
-
-      mkdir -p "/shared/tensorboard/${project}/${experiment}/${owner}/${model}"
-
-      tensorboard_args=
-      if test "$skip_tensorboard" != "true" ; then
-        tensorboard_args="--tensorboard_dir /shared/tensorboard/${project}/${experiment}/${owner}/${model}"
-      fi
 
       rm -fr "$modeldir/dataset"
 
