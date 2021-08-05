@@ -35,11 +35,11 @@ implementation:
       mkdir -p dataset
       aws s3 sync --no-progress ${s3_datadir}ood dataset
 
-      mkdir -p "/shared/tensorboard/${project}/${experiment}/${owner}/${model}_ood"
+      mkdir -p "/shared/tensorboard/${project}/${experiment}/${owner}/${model}"
 
       tensorboard_args=
       if test "$skip_tensorboard" != "true" ; then
-        tensorboard_args="--tensorboard_dir /shared/tensorboard/${project}/${experiment}/${owner}/${model}_ood"
+        tensorboard_args="--tensorboard_dir /shared/tensorboard/${project}/${experiment}/${owner}/${model}"
       fi
 
       genienlp train \
@@ -53,7 +53,7 @@ implementation:
           ${tensorboard_args} \
           $@
 
-      S3_MODEL_DIR=s3://${s3_bucket}/${owner}/models/${project}/${experiment}/${model}_ood/`date +%s`/
+      S3_MODEL_DIR=s3://${s3_bucket}/${owner}/models/${project}/${experiment}/${model}/`date +%s`/
       aws s3 sync --no-progress ${modeldir}/ ${S3_MODEL_DIR}
 
       mkdir -p `dirname $s3_model_dir`

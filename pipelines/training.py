@@ -789,7 +789,7 @@ def everything(
             owner=owner,
             project=project,
             experiment=experiment,
-            model=model,
+            model='%s-ood' % (model,),
             genienlp_version=genienlp_version,
             skip_tensorboard='false',
             s3_datadir=train_s3_datadir,
