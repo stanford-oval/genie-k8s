@@ -38,8 +38,6 @@ def ood_classification_step(
     genienlp_version,
     skip_tensorboard,
     s3_datadir,
-    ood_data_train,
-    ood_data_eval,
     s3_bucket='geniehai',
     additional_args=''
 ):
@@ -56,8 +54,6 @@ def ood_classification_step(
             model=model,
             skip_tensorboard=skip_tensorboard,
             s3_datadir=s3_datadir,
-            ood_data_train=ood_data_train,
-            ood_data_eval=ood_data_eval,
             additional_args=additional_args)
     (ood_classification_op.container
         .set_memory_request('56Gi')
@@ -85,14 +81,13 @@ def ood_classification_pipeline(
     project,
     experiment,
     model,
+    s3_datadir,
     image=default_image,
     genienlp_version=GENIENLP_VERSION,
     genie_version=GENIE_VERSION,
     workdir_repo=WORKDIR_REPO,
     workdir_version=WORKDIR_VERSION,
     thingpedia_developer_key=default_developer_key,
-    ood_data_train='',
-    ood_data_eval='',
     additional_args=''
 ):
     ood_classification_op = ood_classification_step(
@@ -103,8 +98,6 @@ def ood_classification_pipeline(
             image=image,
             genienlp_version=genienlp_version,
             skip_tensorboard='false',
-            s3_datadir='None',
-            ood_data_train=ood_data_train,
-            ood_data_eval=ood_data_eval,
+            s3_datadir=s3_datadir,
             additional_args=additional_args
             )

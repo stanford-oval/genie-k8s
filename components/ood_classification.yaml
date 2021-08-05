@@ -10,8 +10,6 @@ inputs:
   - {name: model, description: ''}
   - {name: skip_tensorboard, description: ''}
   - {name: s3_datadir, description: ''}
-  - {name: ood_data_train, description: ''}
-  - {name: ood_data_eval, description: ''}
   - {name: additional_args, description: ''}
 outputs:
   - {name: s3_model_dir}
@@ -25,7 +23,7 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image s3_bucket owner project experiment model skip_tensorboard s3_datadir ood_data_train ood_data_eval s3_model_dir" "$@"
+      parse_args "$0" "image s3_bucket owner project experiment model skip_tensorboard s3_datadir s3_model_dir" "$@"
       shift $n
       cd $HOME
 
@@ -35,13 +33,7 @@ implementation:
       mkdir -p "$modeldir"
 
       mkdir -p dataset
-
-      if test "${s3_datadir}" = None ; then
-        aws s3 cp ${ood_data_train} dataset/
-        aws s3 cp ${ood_data_eval} dataset/
-      else
-        aws s3 sync --no-progress ${s3_datadir}ood dataset
-      fi
+      aws s3 sync --no-progress ${s3_datadir}ood dataset
 
       mkdir -p "/shared/tensorboard/${project}/${experiment}/${owner}/${model}_ood"
 
@@ -77,8 +69,6 @@ implementation:
       --model, {inputValue: model},
       --skip_tensorboard, {inputValue: skip_tensorboard},
       --s3_datadir, {inputValue: s3_datadir},
-      --ood_data_train, {inputValue: ood_data_train},
-      --ood_data_eval, {inputValue: ood_data_eval},
       --s3_model_dir, {outputPath: s3_model_dir},
       --,
       {inputValue: additional_args},

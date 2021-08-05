@@ -793,8 +793,6 @@ def everything(
             genienlp_version=genienlp_version,
             skip_tensorboard='false',
             s3_datadir=train_s3_datadir,
-            ood_data_train='None',
-            ood_data_eval='None',
             s3_bucket=s3_bucket,
             additional_args=ood_additional_args,
         )
