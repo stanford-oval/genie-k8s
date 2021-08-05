@@ -61,9 +61,8 @@ implementation:
           ${tensorboard_args} \
           $@
 
-      rm -fr "$modeldir/dataset"
-
-      S3_MODEL_DIR=s3://${s3_bucket}/${owner}/models/${project}/${experiment}/${model}/`date +%s`/
+      S3_MODEL_DIR=s3://${s3_bucket}/${owner}/models/${project}/${experiment}/${model}_ood/`date +%s`/
+      aws s3 sync --no-progress ${modeldir}/ ${S3_MODEL_DIR}
 
       mkdir -p `dirname $s3_model_dir`
       echo ${S3_MODEL_DIR} > $s3_model_dir
