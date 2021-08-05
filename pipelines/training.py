@@ -909,6 +909,7 @@ def bootleg_train_eval_pipeline(
     eval_parallel_jobs='2',
     file_extension='tsv',
     eval_additional_args='',
+    is_oracle='false',
     s3_database_dir=S3_DATABASE_DIR,
     s3_bootleg_subfolder='None',
     s3_bootleg_prepped_data='None',
@@ -941,6 +942,7 @@ def bootleg_train_eval_pipeline(
         eval_set=eval_set,
         file_extension=file_extension,
         eval_additional_args=eval_additional_args,
+        is_oracle=is_oracle,
         eval_parallel_jobs=eval_parallel_jobs,
         s3_database_dir=s3_database_dir,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
@@ -1096,6 +1098,7 @@ def train_eval_pipeline(
     eval_set='',
     eval_parallel_jobs='2',
     s3_bootleg_prepped_data='None',
+    is_oracle='false',
     eval_additional_args='',
 ):
     everything(
@@ -1127,6 +1130,7 @@ def train_eval_pipeline(
         eval_set=eval_set,
         eval_parallel_jobs=eval_parallel_jobs,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+        is_oracle=is_oracle,
         eval_additional_args=eval_additional_args,
     )
 
