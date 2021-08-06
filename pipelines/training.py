@@ -26,7 +26,7 @@ from kubernetes.client.models import V1PersistentVolumeClaimVolumeSource
 from . import split_bootleg_merge_step
 from .common import *
 from .paraphrase import paraphrase_filtering_step, paraphrase_generation_step
-from .ood_classification import ood_classification_step
+import pipelines.predicting
 
 
 def generate_dataset_step(
@@ -808,7 +808,7 @@ def everything(
                 additional_args=ood_additional_args,
         )
 
-        pred_op = prediction_step_small(
+        pred_op = pipelines.predicting.prediction_step_small(
                 image=image,
                 owner=owner,
                 genienlp_version=genienlp_version,
@@ -818,7 +818,7 @@ def everything(
                 s3_input_datadir=train_s3_datadir,
                 s3_database_dir='None',
                 s3_bootleg_prepped_data='None',
-                model_type=None,
+                model_type='None',
                 dataset_subfolder='ood',
                 val_batch_size='4000',
                 additional_args='',
