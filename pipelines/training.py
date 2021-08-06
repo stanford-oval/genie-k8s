@@ -808,6 +808,22 @@ def everything(
                 additional_args=ood_additional_args,
         )
 
+        pred_op = prediction_step_small(
+                image=image,
+                owner=owner,
+                genienlp_version=genienlp_version,
+                task_name='ood_task',
+                eval_sets='eval',
+                model_name_or_path=train_op.outputs['s3_model_dir'],
+                s3_input_datadir=train_s3_datadir,
+                s3_database_dir='None',
+                s3_bootleg_prepped_data='None',
+                model_type=None,
+                dataset_subfolder='ood',
+                val_batch_size='4000',
+                additional_args='',
+        )
+
     train_s3_datadir, eval_model = paraphrase_train_fewshot_step(
         do_paraphrase=do_paraphrase,
         do_fewshot=do_fewshot,
