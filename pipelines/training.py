@@ -24,6 +24,7 @@ from kubernetes.client import V1Toleration
 from kubernetes.client.models import V1PersistentVolumeClaimVolumeSource
 
 from . import split_bootleg_merge_step
+from . import predicting
 from .common import *
 from .paraphrase import paraphrase_filtering_step, paraphrase_generation_step
 
@@ -699,6 +700,7 @@ def everything(
     do_paraphrase,
     do_fewshot,
     do_calibrate,
+    do_ood,
     owner,
     project,
     experiment,
@@ -724,6 +726,7 @@ def everything(
     train_load_from='None',
     train_additional_args='',
     train_iterations='80000',
+    ood_train_iterations='5000',
     valid_set='eval',
     file_extension='tsv',
     train_s3_datadir='',
@@ -745,6 +748,7 @@ def everything(
     eval_additional_args='',
     is_oracle='false',
     bootleg_additional_args='',
+    ood_additional_args='',
     generate_w_gpu=False,
 ):
     if do_generate:
@@ -779,6 +783,46 @@ def everything(
                 additional_args=generate_dataset_additional_args,
             )
         train_s3_datadir = generate_dataset_op.outputs['s3_datadir']
+
+    if do_ood:
+        train_op = train_step(
+                image=image,
+                owner=owner,
+                project=project,
+                experiment=experiment,
+                model='%s-ood' % (model,),
+                task_name='ood_task',
+                load_from='None',
+                s3_datadir=train_s3_datadir,
+                dataset_subfolder='ood',
+                genienlp_version=genienlp_version,
+                train_iterations=ood_train_iterations,
+                skip_tensorboard='false',
+                num_gpus='1',
+                valid_set='eval',
+                s3_database_dir='None',
+                train_languages=train_languages,
+                eval_languages=eval_languages,
+                s3_bucket=s3_bucket,
+                s3_bootleg_prepped_data='None',
+                additional_args=ood_additional_args,
+        )
+
+        pred_op = predicting.prediction_step_small(
+                image=image,
+                owner=owner,
+                genienlp_version=genienlp_version,
+                task_name='ood_task',
+                eval_sets='eval',
+                model_name_or_path=train_op.outputs['s3_model_dir'],
+                s3_input_datadir=train_s3_datadir,
+                s3_database_dir='None',
+                s3_bootleg_prepped_data='None',
+                model_type='None',
+                dataset_subfolder='ood',
+                val_batch_size='4000',
+                additional_args='',
+        )
 
     train_s3_datadir, eval_model = paraphrase_train_fewshot_step(
         do_paraphrase=do_paraphrase,
@@ -877,6 +921,7 @@ def bootleg_train_eval_pipeline(
         do_paraphrase=False,
         do_fewshot=False,
         do_calibrate=False,
+        do_ood=False,
         owner=owner,
         project=project,
         experiment=experiment,
@@ -941,6 +986,7 @@ def generate_bootleg_train_eval_pipeline(
         do_paraphrase=False,
         do_fewshot=False,
         do_calibrate=False,
+        do_ood=False,
         owner=owner,
         project=project,
         experiment=experiment,
@@ -1001,6 +1047,7 @@ def generate_train_eval_pipeline(
         do_paraphrase=False,
         do_fewshot=False,
         do_calibrate=False,
+        do_ood=False,
         owner=owner,
         project=project,
         experiment=experiment,
@@ -1059,6 +1106,7 @@ def train_eval_pipeline(
         do_paraphrase=False,
         do_fewshot=False,
         do_calibrate=False,
+        do_ood=False,
         owner=owner,
         project=project,
         experiment=experiment,
@@ -1126,6 +1174,7 @@ def generate_paraphrase_train_eval_pipeline(
         do_paraphrase=True,
         do_fewshot=False,
         do_calibrate=False,
+        do_ood=False,
         owner=owner,
         project=project,
         experiment=experiment,
@@ -1197,6 +1246,7 @@ def gpu_generate_paraphrase_train_eval_pipeline(
         do_paraphrase=True,
         do_fewshot=False,
         do_calibrate=False,
+        do_ood=False,
         owner=owner,
         project=project,
         experiment=experiment,
@@ -1275,6 +1325,7 @@ def gpu_generate_bootleg_paraphrase_train_eval_pipeline(
         do_paraphrase=True,
         do_fewshot=False,
         do_calibrate=False,
+        do_ood=False,
         owner=owner,
         project=project,
         experiment=experiment,
@@ -1346,6 +1397,7 @@ def generate_train_fewshot_eval_pipeline(
         do_paraphrase=False,
         do_fewshot=True,
         do_calibrate=False,
+        do_ood=False,
         owner=owner,
         project=project,
         experiment=experiment,
@@ -1409,6 +1461,7 @@ def generate_bootleg_train_fewshot_eval_pipeline(
         do_paraphrase=False,
         do_fewshot=True,
         do_calibrate=False,
+        do_ood=False,
         owner=owner,
         project=project,
         experiment=experiment,
@@ -1461,6 +1514,7 @@ def generate_bootleg_train_fewshot_calibrate_eval_pipeline(
     train_load_from='None',
     train_additional_args='',
     train_iterations='80000',
+    ood_train_iterations='5000',
     calibration_ood_file='None',
     is_correct_params='',
     is_ood_params='',
@@ -1475,6 +1529,7 @@ def generate_bootleg_train_fewshot_calibrate_eval_pipeline(
     s3_bootleg_subfolder='None',
     bootleg_model='',
     bootleg_additional_args='',
+    ood_additional_args='',
 ):
     everything(
         do_generate=True,
@@ -1482,6 +1537,7 @@ def generate_bootleg_train_fewshot_calibrate_eval_pipeline(
         do_paraphrase=False,
         do_fewshot=True,
         do_calibrate=True,
+        do_ood=True,
         owner=owner,
         project=project,
         experiment=experiment,
@@ -1499,6 +1555,7 @@ def generate_bootleg_train_fewshot_calibrate_eval_pipeline(
         train_load_from=train_load_from,
         train_additional_args=train_additional_args,
         train_iterations=train_iterations,
+        ood_train_iterations=ood_train_iterations,
         calibration_ood_file=calibration_ood_file,
         is_correct_params=is_correct_params,
         is_ood_params=is_ood_params,
@@ -1513,6 +1570,7 @@ def generate_bootleg_train_fewshot_calibrate_eval_pipeline(
         s3_bootleg_subfolder=s3_bootleg_subfolder,
         bootleg_model=bootleg_model,
         bootleg_additional_args=bootleg_additional_args,
+        ood_additional_args=ood_additional_args,
     )
 
 
@@ -1566,6 +1624,7 @@ def generate_paraphrase_bootleg_train_fewshot_calibrate_eval_pipeline(
         do_paraphrase=True,
         do_fewshot=True,
         do_calibrate=True,
+        do_ood=True,
         owner=owner,
         project=project,
         experiment=experiment,
@@ -1648,6 +1707,7 @@ def generate_paraphrase_train_fewshot_eval_pipeline(
         do_paraphrase=True,
         do_fewshot=True,
         do_calibrate=False,
+        do_ood=False,
         owner=owner,
         project=project,
         experiment=experiment,
@@ -1721,6 +1781,7 @@ def paraphrase_train_fewshot_eval_pipeline(
         do_paraphrase=True,
         do_fewshot=True,
         do_calibrate=False,
+        do_ood=False,
         owner=owner,
         project=project,
         experiment=experiment,
@@ -1797,6 +1858,7 @@ def bootleg_paraphrase_train_eval_pipeline(
         do_paraphrase=True,
         do_fewshot=False,
         do_calibrate=False,
+        do_ood=False,
         train_s3_datadir=s3_datadir,
         owner=owner,
         project=project,
@@ -1873,6 +1935,7 @@ def paraphrase_train_eval_pipeline(
         do_paraphrase=True,
         do_fewshot=False,
         do_calibrate=False,
+        do_ood=False,
         owner=owner,
         project=project,
         experiment=experiment,
