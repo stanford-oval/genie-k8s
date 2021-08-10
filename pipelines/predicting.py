@@ -2,8 +2,8 @@ from kfp import components, dsl
 from kubernetes.client import V1Toleration
 
 from . import split_bootleg_merge_step
+from . import training
 from .common import *
-import pipelines.training
 
 
 def prediction_step(

@@ -24,9 +24,9 @@ from kubernetes.client import V1Toleration
 from kubernetes.client.models import V1PersistentVolumeClaimVolumeSource
 
 from . import split_bootleg_merge_step
+from . import predicting
 from .common import *
 from .paraphrase import paraphrase_filtering_step, paraphrase_generation_step
-import pipelines.predicting
 
 
 def generate_dataset_step(
@@ -808,7 +808,7 @@ def everything(
                 additional_args=ood_additional_args,
         )
 
-        pred_op = pipelines.predicting.prediction_step_small(
+        pred_op = predicting.prediction_step_small(
                 image=image,
                 owner=owner,
                 genienlp_version=genienlp_version,
