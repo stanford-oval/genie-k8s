@@ -53,16 +53,17 @@ implementation:
       for dir in ${all_dirs[*]} ; do
         mkdir -p $dir/chunked/
         for split in ${data_splits} ; do
-          dataset_size=`wc -l < $dir/${split}.${file_extension}`
-
-          # round up split size
-          split_size=$(((dataset_size + num_chunks - 1) / num_chunks))
-
-          split -a 1 -d -l $split_size --additional-suffix=.${file_extension} $dir/${split}.${file_extension} $dir/chunked/${split}
+          if [ "$file_extension" == "txt" ] ; then
+            awk -vRS= -v "n=$(gawk -vRS= 'END {print NR}' $dir/${split}.txt)" '{printf "%s", $0 RT > "$dir/chunked/${split}" int((NR-1)*"$num_chunks"/n) .txt}' $dir/${split}.txt
+          else
+            dataset_size=`wc -l < $dir/${split}.${file_extension}`
+            # round up split size
+            split_size=$(((dataset_size + num_chunks - 1) / num_chunks))
+            split -a 1 -d -l $split_size --additional-suffix=.${file_extension} $dir/${split}.${file_extension} $dir/chunked/${split}
+          fi
 
           for ((i=0;i<$num_chunks;i++)); do
             aws s3 cp --no-progress $dir/chunked/${split}"$i".${file_extension} "$S3_OUTPUT_DATADIR"$i/$dir/${split}.${file_extension}
-
           done
         done
       done
