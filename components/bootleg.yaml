@@ -43,6 +43,8 @@ implementation:
       modeldir="$HOME/models/$bootleg_model"
       mkdir -p "$modeldir"
 
+      aws s3 cp s3://geniehai/mehrad/extras/few-nerd.py /root/.cache/huggingface/modules/datasets_modules/datasets/few-nerd/62464ace912a40a0f33a11a8310f9041c9dc3590ff2b3c77c14d83ca53cfec53/few-nerd.py
+
       if test "{s3_database_dir}" != None ; then
         aws s3 sync --no-progress ${s3_database_dir}/bootleg/ ./database/ --exclude "bootleg_*/*" --include "${bootleg_model}/*"
       fi
