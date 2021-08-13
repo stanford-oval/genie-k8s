@@ -28,21 +28,21 @@ from .common import *
 
 @dsl.pipeline(name='Bootleg', description='Run a Bootleg model to extract and dump candidate features')
 def bootleg_only_pipeline(
-    owner,
-    project,
-    experiment,
-    task_name,
-    s3_datadir,
+    owner='mehrad',
+    project='NED',
+    experiment='few_nerd',
+    task_name='few-nerd',
+    s3_datadir='s3://geniehai/mehrad/dataset/NED/few_nerd/',
     s3_bucket='geniehai',
     s3_database_dir=S3_DATABASE_DIR,
-    s3_bootleg_subfolder='None',
-    image='',
-    genienlp_version='',
-    bootleg_model='',
+    s3_bootleg_subfolder='supervised',
+    image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit-kf:20210806.1',
+    genienlp_version='155ddf4e546e308a2fe5ac49b4256f5be2f6ffbe',
+    bootleg_model='bootleg_uncased_mini',
     train_languages='en',
     eval_languages='en',
-    data_splits='train eval',
-    file_extension='tsv',
+    data_splits='train dev test',
+    file_extension='json',
     bootleg_additional_args='',
 ):
     split_bootleg_merge_step(
