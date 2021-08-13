@@ -41,6 +41,10 @@ implementation:
           for dir in * ; do all_dirs+=($dir) ; done
         ;;
 
+        "few-nerd")
+          all_dirs=(downloads/supervised downloads/inter downloads/intra)
+        ;;
+
         *"dialogue"*)
           if [ "$task_name" == *"agent"* ] ; then all_dirs+=(agent) ; else all_dirs+=(user) ; fi
         ;;
@@ -57,6 +61,7 @@ implementation:
             awk -vRS= -v "n=$(gawk -vRS= 'END {print NR}' $dir/${split}.txt)" '{printf "%s", $0 RT > "$dir/chunked/${split}" int((NR-1)*"$num_chunks"/n) .txt}' $dir/${split}.txt
           else
             dataset_size=`wc -l < $dir/${split}.${file_extension}`
+            if [ $dataset_size == 0 ] ; then continue ; fi
             # round up split size
             split_size=$(((dataset_size + num_chunks - 1) / num_chunks))
             split -a 1 -d -l $split_size --additional-suffix=.${file_extension} $dir/${split}.${file_extension} $dir/chunked/${split}
