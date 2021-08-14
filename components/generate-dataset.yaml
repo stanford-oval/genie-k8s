@@ -51,7 +51,8 @@ implementation:
           "valid_set=${valid_set}"\
           $@ \
           datadir
-      
+
+
       S3_DATADIR=${owner}/dataset/${project}/${experiment}/${dataset}/`date +%s`/
       azcopy sync --recursive datadir/ ${s3_bucket%/}/${S3_DATADIR}
       mkdir -p `dirname $s3_datadir`
