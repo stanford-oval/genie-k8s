@@ -211,3 +211,52 @@ def bootleg_step(
     )
 
     return bootleg_op
+
+
+def bootleg_filtering_step(
+    image,
+    owner,
+    project,
+    experiment,
+    task_name,
+    workdir_repo,
+    genie_version,
+    workdir_version,
+    thingpedia_developer_key,
+    dataset,
+    s3_datadir,
+    s3_bootleg_prepped_data,
+    s3_bucket='geniehai',
+    s3_bootleg_subfolder='None',
+    dataset_subfolder='',
+    bootleg_model='',
+    valid_set='eval',
+    additional_args=''
+):
+    bootleg_filtering_env = {
+        'GENIE_VERSION': genie_version,
+        'WORKDIR_REPO': workdir_repo,
+        'WORKDIR_VERSION': workdir_version,
+        'THINGPEDIA_DEVELOPER_KEY': thingpedia_developer_key,
+    }
+
+    bootleg_filtering_op = components.load_component_from_file('components/filter-bootleg.yaml')(
+        image=image,
+        s3_bucket=s3_bucket,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        task_name=task_name,
+        dataset=dataset,
+        s3_datadir=s3_datadir,
+        s3_bootleg_subfolder=s3_bootleg_subfolder,
+        dataset_subfolder=dataset_subfolder,
+        bootleg_model=bootleg_model,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+        valid_set=valid_set,
+        additional_args=additional_args
+    )
+    (bootleg_filtering_op.container.set_memory_limit('12Gi').set_memory_request('12Gi').set_cpu_limit('7.5').set_cpu_request('7.5'))
+    (add_env(add_ssh_volume(bootleg_filtering_op), bootleg_filtering_env))
+
+    return bootleg_filtering_op;
