@@ -26,6 +26,61 @@ from kubernetes.client.models import V1EmptyDirVolumeSource
 from .common import *
 
 
+@dsl.pipeline(name='Bootleg_train', description='Run a Bootleg model to extract and dump candidate features')
+def bootleg_train_pipeline(
+    owner='mehrad',
+    project='NED',
+    experiment='few_nerd',
+    task_name='few-nerd',
+    s3_datadir='s3://geniehai/mehrad/dataset/NED/few_nerd/',
+    dataset_subfolder='None',
+    s3_bucket='geniehai',
+    s3_database_dir=S3_DATABASE_DIR,
+    s3_bootleg_subfolder='supervised',
+    image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit-kf:20210806.1',
+    genienlp_version='155ddf4e546e308a2fe5ac49b4256f5be2f6ffbe',
+    bootleg_model='bootleg_uncased_mini',
+    train_languages='en',
+    eval_languages='en',
+    data_splits='train dev test',
+    bootleg_additional_args='',
+):
+    bootleg_env = {'GENIENLP_VERSION': genienlp_version}
+
+    bootleg_op = components.load_component_from_file('components/bootleg_train.yaml')(
+        image=image,
+        s3_bucket=s3_bucket,
+        owner=owner,
+        task_name=task_name,
+        project=project,
+        experiment=experiment,
+        data_splits=data_splits,
+        s3_datadir=s3_datadir,
+        dataset_subfolder=dataset_subfolder,
+        s3_database_dir=s3_database_dir,
+        s3_bootleg_subfolder=s3_bootleg_subfolder,
+        train_languages=train_languages,
+        eval_languages=eval_languages,
+        bootleg_model=bootleg_model,
+        additional_args=bootleg_additional_args,
+    )
+    (
+        bootleg_op.container.set_memory_request('120G')
+        .set_memory_limit('120G')
+        .set_cpu_request('30')
+        .set_cpu_limit('30')
+        .add_volume_mount(V1VolumeMount(name='shm', mount_path='/dev/shm'))
+    )
+    (
+        add_env(add_ssh_volume(bootleg_op), bootleg_env)
+        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.8xlarge')
+        .add_volume(V1Volume(name='shm', empty_dir=V1EmptyDirVolumeSource(medium='Memory')))
+    )
+
+    return bootleg_op
+
+
 @dsl.pipeline(name='Bootleg', description='Run a Bootleg model to extract and dump candidate features')
 def bootleg_only_pipeline(
     owner='mehrad',
