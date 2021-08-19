@@ -77,7 +77,7 @@ def bootleg_train_pipeline(
     #     .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'r5.4xlarge')
     #     .add_volume(V1Volume(name='shm', empty_dir=V1EmptyDirVolumeSource(medium='Memory')))
     # )
-    (bootleg_op.container.set_memory_limit('60G').set_memory_request('60G').set_cpu_limit('15.5').set_cpu_request('15.5'))
+    (bootleg_op.container.set_memory_limit('100G').set_memory_request('100G').set_cpu_limit('30.5').set_cpu_request('30.5'))
     (add_env(add_ssh_volume(bootleg_op), bootleg_env))
 
     return bootleg_op
