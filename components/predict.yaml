@@ -91,9 +91,18 @@ implementation:
             --val_batch_size ${val_batch_size} \
             $@
 
-        # rename val subfolder
-        mv ./eval/valid/ ./eval/$e_set/
+        # rename valid subfolder; if e_set is valid move it to a temp directory
+        if test "${e_set}" != "valid" ; then
+          mv ./eval/valid/ ./eval/$e_set/
+        else
+          mv ./eval/valid/ ./eval/temp/
+        fi
       done
+
+      # move temp directory back to valid
+      if [ -d ./eval/temp/ ] ; then
+        mv ./eval/temp/ ./eval/valid/
+      fi
 
       cp -r ./eval/* $metrics_output/
 
