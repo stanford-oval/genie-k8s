@@ -38,10 +38,11 @@ S3_DATABASE_DIR = 's3://geniehai/mehrad/extras/bootleg_files_v1.0.0'
 
 # name of a secret in Kubernetes containing the SSH credentials (GitHub deploy key)
 SSH_VOLUME = 'ssh-secrets-k425k8d8h8'
+SSH_VOLUME_BITOD = 'ssh-secrets-bitod-0'
 
 
-def add_ssh_volume(op):
-    op.add_volume(V1Volume(name='ssh-v', secret=V1SecretVolumeSource(secret_name=SSH_VOLUME, default_mode=0o600)))
+def add_ssh_volume(op, volume_name=SSH_VOLUME):
+    op.add_volume(V1Volume(name='ssh-v', secret=V1SecretVolumeSource(secret_name=volume_name, default_mode=0o600)))
     op.container.add_volume_mount(V1VolumeMount(name='ssh-v', mount_path='/root/.ssh'))
     return op
 

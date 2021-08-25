@@ -94,7 +94,7 @@ def prediction_step_small(
     )
     (predict_op.container.set_memory_limit('61G').set_memory_request('61G').set_cpu_limit('15').set_cpu_request('15'))
     (
-        add_env(add_ssh_volume(predict_op), predict_env)
+        add_env(add_ssh_volume(predict_op, volume_name=SSH_VOLUME_BITOD), predict_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
         .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.4xlarge')
     )

@@ -144,6 +144,7 @@ def train_step(
     train_env = {
         'GENIENLP_VERSION': genienlp_version,
     }
+
     if num_gpus == '1':
         train_num_gpus = 1
         train_op = components.load_component_from_file('components/train.yaml')(
@@ -175,7 +176,7 @@ def train_step(
             .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
         )
         (
-            add_env(add_ssh_volume(train_op), train_env)
+            add_env(add_ssh_volume(train_op, volume_name=SSH_VOLUME_BITOD), train_env)
             .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
             .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*train_num_gpus}xlarge')
             .add_volume(
@@ -215,7 +216,7 @@ def train_step(
             .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
         )
         (
-            add_env(add_ssh_volume(train_op), train_env)
+            add_env(add_ssh_volume(train_op, volume_name=SSH_VOLUME if 'bitod' in task_name else SSH_VOLUME_BITOD), train_env)
             .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
             .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*train_num_gpus}xlarge')
             .add_volume(
