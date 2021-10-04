@@ -23,6 +23,7 @@ def translate_dialogue_pipeline(
     genie_version='c3e124f7a38bf1419c2245cc0c5895a02288c787',
     workdir_repo=GENIE_WORKDIR_REPO,
     workdir_version='b8e728e01a866b73c2c8d9bd809f78bb7af3c67b',
+    thingpedia_developer_key=default_developer_key,
     additional_args='--val_batch_size 2000 --temperature 0.2 --translate_example_split',
 ):
     do_translation_env = {
@@ -30,6 +31,7 @@ def translate_dialogue_pipeline(
         'GENIE_VERSION': genie_version,
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
+        'THINGPEDIA_DEVELOPER_KEY': thingpedia_developer_key,
     }
 
     do_translation_op = components.load_component_from_file('components/translate-dialogues.yaml')(
