@@ -21,6 +21,7 @@ def translate_dialogue_pipeline(
     image=default_image,
     genienlp_version='',
     genie_version='',
+    thingpedia_developer_key=default_developer_key,
     workdir_repo=GENIE_WORKDIR_REPO,
     workdir_version=GENIE_WORKDIR_VERSION,
     additional_args='',
@@ -30,6 +31,7 @@ def translate_dialogue_pipeline(
         'GENIE_VERSION': genie_version,
         'WORKDIR_REPO': workdir_repo,
         'WORKDIR_VERSION': workdir_version,
+        'THINGPEDIA_DEVELOPER_KEY': thingpedia_developer_key,
     }
 
     do_translation_op = components.load_component_from_file('components/translate-dialogues.yaml')(

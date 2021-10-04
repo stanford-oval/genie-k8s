@@ -44,9 +44,12 @@ implementation:
         MAKEDIR=${project}
       fi
 
+      cat >> workdir/config.mk <<EOF
+      developer_key = ${THINGPEDIA_DEVELOPER_KEY}
+      EOF
       cd workdir/${MAKEDIR}
 
-      S3_OUTPUT_DATADIR=${s3_datadir}translated/${nmt}/${tgt_lang}
+      S3_OUTPUT_DATADIR=${s3_datadir}translated/${source}/${nmt}/${tgt_lang}
       mkdir -p `dirname $s3_output_datadir`
       echo ${S3_OUTPUT_DATADIR}/final/ > $s3_output_datadir
 
