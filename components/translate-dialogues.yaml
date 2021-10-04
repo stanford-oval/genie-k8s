@@ -85,7 +85,7 @@ implementation:
         make geniedir=/opt/genie-toolkit source=${source} all_names="${input_splits}" experiment=${experiment} \
           src_lang=${src_lang} tgt_lang=${tgt_lang} \
           nmt_model=${nmt} \
-          translate_data
+          postprocess_data
         aws s3 sync --no-progress ./${experiment}/${source}/${nmt}/${tgt_lang} ${S3_OUTPUT_DATADIR}
       fi
 
