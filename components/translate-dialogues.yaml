@@ -1,0 +1,111 @@
+name: Translate
+description: |
+  Translate dataset using NMT
+inputs:
+  - {name: image, description: ''}
+  - {name: project, description: ''}
+  - {name: owner, description: ''}
+  - {name: experiment, description: ''}
+  - {name: s3_bucket, description: ''}
+  - {name: model_name_or_path, description: ''}
+  - {name: input_splits, description: ''}
+  - {name: nmt, description: ''}
+  - {name: source, description: ''}
+  - {name: src_lang, description: ''}
+  - {name: tgt_lang, description: ''}
+  - {name: prepare_for_translation, description: ''}
+  - {name: do_translation, description: ''}
+  - {name: post_process_translation, description: ''}
+  - {name: s3_datadir, description: ''}
+  - {name: additional_args, description: ''}
+outputs:
+  - {name: s3_output_datadir}
+
+implementation:
+  container:
+    image: '{{inputs.parameters.image}}'
+    command:
+    - /bin/bash
+    - -ex
+    - -c
+    - |
+      . /opt/genie-toolkit/lib.sh
+
+      parse_args "$0" "image owner project experiment s3_bucket model_name_or_path input_splits nmt source src_lang tgt_lang prepare_for_translation do_translation post_process_translation s3_datadir s3_output_datadir" "$@"
+      shift $n
+
+      . /opt/genie-toolkit/sync-repos.sh
+
+      cd $HOME
+
+      if [ -f workdir/Makefile ] ; then
+        MAKEDIR='.'
+      else
+        MAKEDIR=${project}
+      fi
+
+      cd workdir/${MAKEDIR}
+
+      S3_OUTPUT_DATADIR=${s3_datadir}translated/${nmt}/${tgt_lang}
+      mkdir -p `dirname $s3_output_datadir`
+      echo ${S3_OUTPUT_DATADIR}/final/ > $s3_output_datadir
+
+      export translation_arguments="$@"
+
+      # override experiment with dataset path
+      # experiment=${s3_datadir#*dataset/}
+
+      aws s3 sync --no-progress ${s3_datadir} datadir/ --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*"
+
+      #if [ -d dataset/${experiment}/translated/ ] ; then
+      #  mv dataset/${experiment}/translated/* ${experiment}/
+      #  rm -rf dataset/${experiment}/translated/
+      #fi
+
+      # IFS='+'; read -ra input_splits_array <<<"$input_splits"; IFS=' '
+
+      # prepare for translation
+      if ${prepare_for_translation}; then
+        make geniedir=/opt/genie-toolkit source=${source} all_names="${input_splits}" experiment=${experiment} process_data
+        aws s3 sync --no-progress ./${experiment}/${source}/ ${s3_datadir}translated/${source}/
+      fi
+
+      # translate
+      if ${do_translation}; then
+        make geniedir=/opt/genie-toolkit genienlpdir=/opt/genienlp source=${source} all_names="${input_splits}" experiment=${experiment} \
+          src_lang=${src_lang} tgt_lang=${tgt_lang} \
+          nmt_model=${nmt} model_name_or_path=${model_name_or_path} \
+          custom_translation_hparams="${translation_arguments}" \
+          translate_data
+        aws s3 sync --no-progress ./${experiment}/${source}/${nmt}/${tgt_lang} ${S3_OUTPUT_DATADIR}
+      fi
+
+      # further process the translated files
+      if ${do_translation}; then
+        make geniedir=/opt/genie-toolkit source=${source} all_names="${input_splits}" experiment=${experiment} \
+          src_lang=${src_lang} tgt_lang=${tgt_lang} \
+          nmt_model=${nmt} \
+          translate_data
+        aws s3 sync --no-progress ./${experiment}/${source}/${nmt}/${tgt_lang} ${S3_OUTPUT_DATADIR}
+      fi
+
+    args: [
+      'cmd',
+      --image, {inputValue: image},
+      --owner, {inputValue: owner},
+      --project, {inputValue: project},
+      --experiment, {inputValue: experiment},
+      --s3_bucket, {inputValue: s3_bucket},
+      --model_name_or_path, {inputValue: model_name_or_path},
+      --input_splits, {inputValue: input_splits},
+      --nmt, {inputValue: nmt},
+      --source, {inputValue: source},
+      --src_lang, {inputValue: src_lang},
+      --tgt_lang, {inputValue: tgt_lang},
+      --prepare_for_translation, {inputValue: prepare_for_translation},
+      --do_translation, {inputValue: do_translation},
+      --post_process_translation, {inputValue: post_process_translation},
+      --s3_datadir, {inputValue: s3_datadir},
+      --s3_output_datadir, {outputPath: s3_output_datadir},
+      --, {inputValue: additional_args}
+    ]
