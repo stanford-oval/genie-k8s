@@ -49,11 +49,9 @@ implementation:
       EOF
       cd workdir/${MAKEDIR}
 
-      S3_OUTPUT_DATADIR=${s3_datadir}translated/${source}/${nmt}/${tgt_lang}
+      S3_OUTPUT_DATADIR=${s3_datadir}translated/
       mkdir -p `dirname $s3_output_datadir`
-      echo ${S3_OUTPUT_DATADIR}/final/ > $s3_output_datadir
-
-      export translation_arguments="$@"
+      echo ${S3_OUTPUT_DATADIR} > $s3_output_datadir
 
       # override experiment with dataset path
       # experiment=${s3_datadir#*dataset/}
@@ -69,8 +67,8 @@ implementation:
 
       # prepare for translation
       if ${prepare_for_translation}; then
-        make geniedir=/opt/genie-toolkit source=${source} all_names="${input_splits}" experiment=${experiment} process_data
-        aws s3 sync --no-progress ./${experiment}/${source}/ ${s3_datadir}translated/${source}/
+        make geniedir=/opt/genie-toolkit source=${source} all_names="${input_splits}" experiment=${experiment} $@ process_data
+        aws s3 sync --no-progress ./${experiment}/ ${s3_datadir}translated/
       fi
 
       # translate
@@ -78,9 +76,8 @@ implementation:
         make geniedir=/opt/genie-toolkit genienlpdir=/opt/genienlp source=${source} all_names="${input_splits}" experiment=${experiment} \
           src_lang=${src_lang} tgt_lang=${tgt_lang} \
           nmt_model=${nmt} model_name_or_path=${model_name_or_path} \
-          custom_translation_hparams="${translation_arguments}" \
-          translate_data
-        aws s3 sync --no-progress ./${experiment}/${source}/${nmt}/${tgt_lang} ${S3_OUTPUT_DATADIR}
+          $@ translate_data
+        aws s3 sync --no-progress ./${experiment}/ ${s3_datadir}translated/
       fi
 
       # further process the translated files
@@ -88,8 +85,11 @@ implementation:
         make geniedir=/opt/genie-toolkit source=${source} all_names="${input_splits}" experiment=${experiment} \
           src_lang=${src_lang} tgt_lang=${tgt_lang} \
           nmt_model=${nmt} \
-          postprocess_data
-        aws s3 sync --no-progress ./${experiment}/${source}/${nmt}/${tgt_lang} ${S3_OUTPUT_DATADIR}
+          $@ postprocess_data
+        aws s3 sync --no-progress ./${experiment}/ ${s3_datadir}translated/
+
+        # sync final data to main directory since almond_dialogue_* task expects the data there
+        aws s3 sync --no-progress ${s3_datadir}translated/${source}/${nmt}/${tgt_lang}/final/ ${s3_datadir}translated/${source}/
       fi
 
     args: [
