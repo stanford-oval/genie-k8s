@@ -53,17 +53,7 @@ implementation:
       mkdir -p `dirname $s3_output_datadir`
       echo ${S3_OUTPUT_DATADIR} > $s3_output_datadir
 
-      # override experiment with dataset path
-      # experiment=${s3_datadir#*dataset/}
-
       aws s3 sync --no-progress ${s3_datadir} datadir/ --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*"
-
-      #if [ -d dataset/${experiment}/translated/ ] ; then
-      #  mv dataset/${experiment}/translated/* ${experiment}/
-      #  rm -rf dataset/${experiment}/translated/
-      #fi
-
-      # IFS='+'; read -ra input_splits_array <<<"$input_splits"; IFS=' '
 
       # prepare for translation
       if ${prepare_for_translation}; then
