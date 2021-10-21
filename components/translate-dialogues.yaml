@@ -57,23 +57,41 @@ implementation:
 
       # prepare for translation
       if ${prepare_for_translation}; then
-        make geniedir=/opt/genie-toolkit source=${source} all_names="${input_splits}" experiment=${experiment} $@ process_data
+        make \
+          geniedir=/opt/genie-toolkit \
+          source=${source} \
+          all_names="${input_splits}" \
+          experiment=${experiment} \
+          $@ \
+          process_data
         aws s3 sync --no-progress ./eval/${experiment}/ ${s3_datadir}translated/
       fi
 
       # translate
       if ${do_translation}; then
-        make geniedir=/opt/genie-toolkit genienlpdir=/opt/genienlp source=${source} all_names="${input_splits}" experiment=${experiment} \
-          src_lang=${src_lang} tgt_lang=${tgt_lang} \
-          nmt_model=${nmt} model_name_or_path=${model_name_or_path} \
+        make \
+          geniedir=/opt/genie-toolkit \
+          genienlpdir=/opt/genienlp \
+          source=${source} \
+          all_names="${input_splits}" \
+          experiment=${experiment} \
+          src_lang=${src_lang} \
+          tgt_lang=${tgt_lang} \
+          nmt_model=${nmt} \
+          model_name_or_path=${model_name_or_path} \
           $@ translate_data
         aws s3 sync --no-progress ./eval/${experiment}/ ${s3_datadir}translated/
       fi
 
       # further process the translated files
       if ${do_translation}; then
-        make geniedir=/opt/genie-toolkit source=${source} all_names="${input_splits}" experiment=${experiment} \
-          src_lang=${src_lang} tgt_lang=${tgt_lang} \
+        make \
+          geniedir=/opt/genie-toolkit \
+          source=${source} \
+          all_names="${input_splits}" \
+          experiment=${experiment} \
+          src_lang=${src_lang} \
+          tgt_lang=${tgt_lang} \
           nmt_model=${nmt} \
           $@ postprocess_data
         aws s3 sync --no-progress ./eval/${experiment}/ ${s3_datadir}translated/
