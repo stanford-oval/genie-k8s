@@ -1,6 +1,6 @@
-name: Translate
+name: Translate Dialogues
 description: |
-  Translate dataset using NMT
+  Translate dialogues using open-source NMTs
 inputs:
   - {name: image, description: ''}
   - {name: project, description: ''}
