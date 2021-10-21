@@ -58,7 +58,7 @@ implementation:
       # prepare for translation
       if ${prepare_for_translation}; then
         make geniedir=/opt/genie-toolkit source=${source} all_names="${input_splits}" experiment=${experiment} $@ process_data
-        aws s3 sync --no-progress ./${experiment}/ ${s3_datadir}translated/
+        aws s3 sync --no-progress ./eval/${experiment}/ ${s3_datadir}translated/
       fi
 
       # translate
@@ -67,7 +67,7 @@ implementation:
           src_lang=${src_lang} tgt_lang=${tgt_lang} \
           nmt_model=${nmt} model_name_or_path=${model_name_or_path} \
           $@ translate_data
-        aws s3 sync --no-progress ./${experiment}/ ${s3_datadir}translated/
+        aws s3 sync --no-progress ./eval/${experiment}/ ${s3_datadir}translated/
       fi
 
       # further process the translated files
@@ -76,10 +76,10 @@ implementation:
           src_lang=${src_lang} tgt_lang=${tgt_lang} \
           nmt_model=${nmt} \
           $@ postprocess_data
-        aws s3 sync --no-progress ./${experiment}/ ${s3_datadir}translated/
+        aws s3 sync --no-progress ./eval/${experiment}/ ${s3_datadir}translated/
 
         # sync final data to main directory since almond_dialogue_* task expects the data there
-        aws s3 sync --no-progress ${s3_datadir}translated/${source}/${nmt}/${tgt_lang}/final/ ${s3_datadir}translated/${source}/
+        aws s3 sync --no-progress ${s3_datadir}translated/eval/${source}/${nmt}/${tgt_lang}/final/ ${s3_datadir}translated/${source}/
       fi
 
     args: [
