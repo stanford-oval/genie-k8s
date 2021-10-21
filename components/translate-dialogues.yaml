@@ -7,9 +7,9 @@ inputs:
   - {name: owner, description: ''}
   - {name: experiment, description: ''}
   - {name: s3_bucket, description: ''}
-  - {name: model_name_or_path, description: ''}
+  - {name: translation_model, description: ''}
   - {name: input_splits, description: ''}
-  - {name: nmt, description: ''}
+  - {name: nmt_id, description: ''}
   - {name: source, description: ''}
   - {name: src_lang, description: ''}
   - {name: tgt_lang, description: ''}
@@ -31,7 +31,7 @@ implementation:
     - |
       . /opt/genie-toolkit/lib.sh
 
-      parse_args "$0" "image owner project experiment s3_bucket model_name_or_path input_splits nmt source src_lang tgt_lang prepare_for_translation do_translation post_process_translation s3_datadir s3_output_datadir" "$@"
+      parse_args "$0" "image owner project experiment s3_bucket translation_model input_splits nmt_id source src_lang tgt_lang prepare_for_translation do_translation post_process_translation s3_datadir s3_output_datadir" "$@"
       shift $n
 
       . /opt/genie-toolkit/sync-repos.sh
@@ -77,8 +77,8 @@ implementation:
           experiment=${experiment} \
           src_lang=${src_lang} \
           tgt_lang=${tgt_lang} \
-          nmt_model=${nmt} \
-          model_name_or_path=${model_name_or_path} \
+          nmt_model=${nmt_id} \
+          translation_model=${translation_model} \
           $@ translate_data
         aws s3 sync --no-progress ./eval/${experiment}/ ${s3_datadir}translated/
       fi
@@ -92,12 +92,12 @@ implementation:
           experiment=${experiment} \
           src_lang=${src_lang} \
           tgt_lang=${tgt_lang} \
-          nmt_model=${nmt} \
+          nmt_model=${nmt_id} \
           $@ postprocess_data
         aws s3 sync --no-progress ./eval/${experiment}/ ${s3_datadir}translated/
 
         # sync final data to main directory since almond_dialogue_* task expects the data there
-        aws s3 sync --no-progress ${s3_datadir}translated/eval/${source}/${nmt}/${tgt_lang}/final/ ${s3_datadir}translated/${source}/
+        aws s3 sync --no-progress ${s3_datadir}translated/eval/${source}/${nmt_id}/${tgt_lang}/final/ ${s3_datadir}translated/${source}/
       fi
 
     args: [
@@ -107,9 +107,9 @@ implementation:
       --project, {inputValue: project},
       --experiment, {inputValue: experiment},
       --s3_bucket, {inputValue: s3_bucket},
-      --model_name_or_path, {inputValue: model_name_or_path},
+      --translation_model, {inputValue: translation_model},
       --input_splits, {inputValue: input_splits},
-      --nmt, {inputValue: nmt},
+      --nmt_id, {inputValue: nmt_id},
       --source, {inputValue: source},
       --src_lang, {inputValue: src_lang},
       --tgt_lang, {inputValue: tgt_lang},
