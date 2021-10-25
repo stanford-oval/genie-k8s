@@ -84,7 +84,7 @@ implementation:
       fi
 
       # further process the translated files
-      if ${do_translation}; then
+      if ${post_process_translation}; then
         make \
           geniedir=/opt/genie-toolkit \
           source=${source} \
