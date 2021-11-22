@@ -23,8 +23,7 @@ from kfp import components, dsl
 from kubernetes.client import V1Toleration
 from kubernetes.client.models import V1PersistentVolumeClaimVolumeSource
 
-from . import split_bootleg_merge_step
-from . import predicting
+from . import predicting, split_bootleg_merge_step, translation
 from .common import *
 from .paraphrase import paraphrase_filtering_step, paraphrase_generation_step
 
@@ -696,6 +695,7 @@ def paraphrase_only(
 
 def everything(
     do_generate,
+    do_translate,
     do_bootleg,
     do_paraphrase,
     do_fewshot,
@@ -750,6 +750,13 @@ def everything(
     bootleg_additional_args='',
     ood_additional_args='',
     generate_w_gpu=False,
+    source='',
+    translation_input_splits='train eval',
+    translation_model='',
+    nmt_id='',
+    src_lang='',
+    tgt_lang='',
+    translation_additional_args='',
 ):
     if do_generate:
         if generate_w_gpu:
@@ -786,43 +793,67 @@ def everything(
 
     if do_ood:
         train_op = train_step(
-                image=image,
-                owner=owner,
-                project=project,
-                experiment=experiment,
-                model='%s-ood' % (model,),
-                task_name='ood_task',
-                load_from='None',
-                s3_datadir=train_s3_datadir,
-                dataset_subfolder='ood',
-                genienlp_version=genienlp_version,
-                train_iterations=ood_train_iterations,
-                skip_tensorboard='false',
-                num_gpus='1',
-                valid_set='eval',
-                s3_database_dir='None',
-                train_languages=train_languages,
-                eval_languages=eval_languages,
-                s3_bucket=s3_bucket,
-                s3_bootleg_prepped_data='None',
-                additional_args=ood_additional_args,
+            image=image,
+            owner=owner,
+            project=project,
+            experiment=experiment,
+            model='%s-ood' % (model,),
+            task_name='ood_task',
+            load_from='None',
+            s3_datadir=train_s3_datadir,
+            dataset_subfolder='ood',
+            genienlp_version=genienlp_version,
+            train_iterations=ood_train_iterations,
+            skip_tensorboard='false',
+            num_gpus='1',
+            valid_set='eval',
+            s3_database_dir='None',
+            train_languages=train_languages,
+            eval_languages=eval_languages,
+            s3_bucket=s3_bucket,
+            s3_bootleg_prepped_data='None',
+            additional_args=ood_additional_args,
         )
 
         pred_op = predicting.prediction_step_small(
-                image=image,
-                owner=owner,
-                genienlp_version=genienlp_version,
-                task_name='ood_task',
-                eval_sets='eval',
-                model_name_or_path=train_op.outputs['s3_model_dir'],
-                s3_input_datadir=train_s3_datadir,
-                s3_database_dir='None',
-                s3_bootleg_prepped_data='None',
-                model_type='None',
-                dataset_subfolder='ood',
-                val_batch_size='4000',
-                additional_args='',
+            image=image,
+            owner=owner,
+            genienlp_version=genienlp_version,
+            task_name='ood_task',
+            eval_sets='eval',
+            model_name_or_path=train_op.outputs['s3_model_dir'],
+            s3_input_datadir=train_s3_datadir,
+            s3_database_dir='None',
+            s3_bootleg_prepped_data='None',
+            model_type='None',
+            dataset_subfolder='ood',
+            val_batch_size='4000',
+            additional_args='',
         )
+
+    if do_translate:
+        translation_op = translation.dialogue_translation_step(
+            owner=owner,
+            project=project,
+            experiment=experiment,
+            s3_bucket=s3_bucket,
+            s3_datadir=train_s3_datadir,
+            source=source,
+            input_splits=translation_input_splits,
+            translation_model=translation_model,
+            nmt_id=nmt_id,
+            src_lang=src_lang,
+            tgt_lang=tgt_lang,
+            image=image,
+            genienlp_version=genienlp_version,
+            genie_version=genie_version,
+            workdir_repo=workdir_repo,
+            workdir_version=workdir_version,
+            thingpedia_developer_key=thingpedia_developer_key,
+            additional_args=translation_additional_args,
+        )
+
+        train_s3_datadir = translation_op.outputs['s3_output_datadir']
 
     train_s3_datadir, eval_model = paraphrase_train_fewshot_step(
         do_paraphrase=do_paraphrase,
