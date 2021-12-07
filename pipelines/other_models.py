@@ -195,15 +195,17 @@ def eval_sumbt(
 
 
 @dsl.pipeline(name='Train BiToD', description='Train BiToD')
-def train_bitod(
+def train_evaluate_bitod(
     image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit-kf:20210923.1',
     owner='mehrad',
     project='e2e',
     experiment='bitod_orig',
     commit_hash='main',
     model='mt5_small_0',
-    s3_datadir='s3://geniehai/mehrad/dataset/e2e/bitod/en_v15.0/',
-    train_additional_args='--model_name_or_path google/mt5-small --do_train --do_eval --train_file data/train.json --validation_file data/valid.json --learning_rate 5e-4 --num_train_epochs 8 --source_lang en_XX --target_lang en_XX --logging_steps 100 --save_steps 2000 --output_dir save/en_mt5_5e-4 --per_device_train_batch_size=8 --per_device_eval_batch_size=8 --gradient_accumulation_steps=8 --overwrite_output_dir --predict_with_generate --do_predict --test_file data/test.json',
+    eval_split='test',
+    s3_datadir='s3://geniehai/mehrad/dataset/e2e/bitod/en_orig/',
+    train_additional_args='--model_name_or_path facebook/mbart-large-50 --do_train --do_eval --train_file data/train.json --validation_file data/valid.json --learning_rate 1e-4 --num_train_epochs 8 --source_lang en_XX --target_lang en_XX --logging_steps 100 --save_steps 2000 --output_dir save/en_mbart_1e-4 --per_device_train_batch_size=16 --per_device_eval_batch_size=16 --gradient_accumulation_steps=8 --overwrite_output_dir --predict_with_generate --do_predict --test_file data/test.json',
+    eval_additional_args='--setting en --save_prefix t5_',
 ):
     train_env = {}
 
@@ -235,4 +237,59 @@ def train_bitod(
                 name='tensorboard', persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf')
             )
         )
+    )
+
+    s3_model = train_op.outputs["s3_model_dir"]
+
+    eval_env = {}
+
+    eval_op = components.load_component_from_file('components/evaluate-bitod.yaml')(
+        image=image,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        commit_hash=commit_hash,
+        split=eval_split,
+        s3_model=s3_model,
+        s3_datadir=s3_datadir,
+        additional_args=eval_additional_args,
+    )
+    (eval_op.container.set_memory_limit('12Gi').set_memory_request('12Gi').set_cpu_limit('7.5').set_cpu_request('7.5'))
+    (
+        add_env(add_ssh_volume(eval_op), eval_env)
+        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.2xlarge')
+    )
+
+
+@dsl.pipeline(name='Evaluate BiToD', description='Evaluate BiToD')
+def evaluate_bitod(
+    image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit-kf:20210923.1',
+    owner='mehrad',
+    project='e2e',
+    experiment='bitod_orig',
+    commit_hash='main',
+    split='test',
+    s3_model='',
+    s3_datadir='s3://geniehai/mehrad/dataset/e2e/bitod/en_v15.0/',
+    eval_additional_args='--setting en --save_prefix t5_',
+):
+    eval_env = {}
+
+    eval_op = components.load_component_from_file('components/evaluate-bitod.yaml')(
+        image=image,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        commit_hash=commit_hash,
+        split=split,
+        s3_model=s3_model,
+        s3_datadir=s3_datadir,
+        additional_args=eval_additional_args,
+    )
+    (eval_op.container.set_memory_limit('12Gi').set_memory_request('12Gi').set_cpu_limit('7.5').set_cpu_request('7.5'))
+    (
+        add_env(add_ssh_volume(eval_op), eval_env)
+        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.2xlarge')
     )

@@ -1,17 +1,18 @@
-name: Train BiToD
+name: Evaluate BiToD
 description: |
-  Train a BiToD model
+  Evaluate a BiToD model
 inputs:
   - {name: owner, description: ''}
   - {name: project, description: ''}
   - {name: experiment, description: ''}
   - {name: commit_hash, description: ''}
-  - {name: model, description: ''}
+  - {name: s3_model, description: ''}
   - {name: s3_datadir, description: ''}
   - {name: image, description: ''}
+  - {name: split, description: ''}
   - {name: additional_args, description: ''}
 outputs:
-  - {name: s3_model_dir}
+  - {name: s3_output_dir}
 implementation:
   container:
     image: '{{inputs.parameters.image}}'
@@ -21,7 +22,7 @@ implementation:
     - -c
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image owner project experiment commit_hash model s3_datadir s3_model_dir" "$@"
+      parse_args "$0" "image split owner project experiment commit_hash s3_model s3_datadir s3_output_dir" "$@"
       shift $n
       set -x
       cd $HOME
@@ -31,26 +32,29 @@ implementation:
       git checkout ${commit_hash}
       rm -rf data
       aws s3 sync ${s3_datadir} data/
-      mkdir -p "/shared/tensorboard/${project}/${experiment}/${owner}/${model}"
-      python3 train.py \
-        --report_to tensorboard \
-        --logging_dir /shared/tensorboard/${project}/${experiment}/${owner}/${model}/ \
-        --output_dir save/ \
+      aws s3 sync ${s3_model} models/
+
+      python3 evaluate.py \
+        --model_path models/ \
+        --reference_file_path data/en_"${split}".json \
+        --result_path results/ \
         $@
-      S3_MODEL_DIR=s3://geniehai/${owner}/models/${project}/${experiment}/${model}/`date +%s`/
-      aws s3 sync --no-progress ./save/ ${S3_MODEL_DIR}
-      mkdir -p `dirname $s3_model_dir`
-      echo ${S3_MODEL_DIR} > $s3_model_dir
+
+      S3_OUTPUT_DIR=${s3_model}/results/
+      aws s3 sync --no-progress ./results/ ${S3_OUTPUT_DIR}
+      mkdir -p `dirname $s3_output_dir`
+      echo ${S3_OUTPUT_DIR} > $s3_output_dir
     args: [
       'cmd',
       --image, {inputValue: image},
+      --split, {inputValue: split},
       --owner, {inputValue: owner},
       --project, {inputValue: project},
       --experiment, {inputValue: experiment},
       --commit_hash, {inputValue: commit_hash},
-      --model, {inputValue: model},
+      --s3_model, {inputValue: s3_model},
       --s3_datadir, {inputValue: s3_datadir},
-      --s3_model_dir, {outputPath: s3_model_dir},
+      --s3_output_dir, {outputPath: s3_output_dir},
       --,
       {inputValue: additional_args},
     ]
