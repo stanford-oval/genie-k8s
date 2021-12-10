@@ -94,11 +94,21 @@ implementation:
             --bitod_e2e_evaluation \
             $@
 
-        # rename val subfolder
-        mv ./eval/valid/ ./eval/$e_set/
+        python3 genie-workdirs/spl_e2e/scripts/compute_e2e.py --reference_file_path genie-workdirs/spl_e2e/BiToD/data/en_test.json --prediction_file_path ./eval/valid/bitod_preds.json
 
-        python3 genie-workdirs/spl_e2e/scripts/compute_e2e.py --reference_file_path genie-workdirs/spl_e2e/BiToD/data/en_test.json --prediction_file_path ./eval/$e_set/bitod_preds.json
+        # rename valid subfolder; if e_set is valid move it to a temp directory
+        if test "${e_set}" != "valid" ; then
+          mv ./eval/valid/ ./eval/$e_set/
+        else
+          mv ./eval/valid/ ./eval/temp/
+        fi
+
       done
+
+      # move temp directory back to valid
+      if [ -d ./eval/temp/ ] ; then
+        mv ./eval/temp/ ./eval/valid/
+      fi
 
       cp -r ./eval/* $metrics_output/
 
