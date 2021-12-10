@@ -371,6 +371,57 @@ def train_predict_bitod_pipeline(
     )
 
 
+@dsl.pipeline(name='prediction pipeline for bitod', description='do prediction on bitod')
+def predict_bitod_pipeline(
+    owner,
+    model_name_or_path,
+    s3_datadir,
+    task_name='bitod',
+    s3_database_dir='None',
+    model_type='None',
+    image=default_image,
+    genienlp_version='',
+    eval_sets='valid test',
+    eval_e2e_sets='test',
+    dataset_subfolder='None',
+    s3_bootleg_prepped_data='None',
+    val_batch_size='4000',
+    pred_additional_args='',
+):
+
+    pred_op = prediction_step_small(
+        image=image,
+        owner=owner,
+        genienlp_version=genienlp_version,
+        task_name=task_name,
+        eval_sets=eval_sets,
+        model_name_or_path=model_name_or_path,
+        s3_input_datadir=s3_datadir,
+        s3_database_dir=s3_database_dir,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+        model_type=model_type,
+        dataset_subfolder=dataset_subfolder,
+        val_batch_size=val_batch_size,
+        additional_args=pred_additional_args,
+    )
+
+    pred_e2e_op = prediction_step_e2e_small(
+        image=image,
+        owner=owner,
+        genienlp_version=genienlp_version,
+        task_name=task_name,
+        eval_sets=eval_e2e_sets,
+        model_name_or_path=model_name_or_path,
+        s3_input_datadir=s3_datadir,
+        s3_database_dir=s3_database_dir,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+        model_type=model_type,
+        dataset_subfolder=dataset_subfolder,
+        val_batch_size=val_batch_size,
+        additional_args=pred_additional_args,
+    )
+
+
 @dsl.pipeline(name='Train and prediction pipeline', description='Train a model on 4 gpus and do prediction')
 def train_4gpu_predict_small_pipeline(
     owner,
