@@ -1,8 +1,7 @@
 from kfp import components, dsl
 from kubernetes.client import V1Toleration
 
-from . import split_bootleg_merge_step
-from . import training
+from . import split_bootleg_merge_step, training
 from .common import *
 
 
@@ -102,6 +101,48 @@ def prediction_step_small(
     return predict_op
 
 
+def prediction_step_e2e_small(
+    image,
+    owner,
+    genienlp_version,
+    task_name,
+    eval_sets,
+    model_name_or_path,
+    s3_input_datadir,
+    s3_database_dir,
+    s3_bootleg_prepped_data,
+    model_type,
+    dataset_subfolder,
+    val_batch_size,
+    additional_args,
+):
+
+    predict_env = {'GENIENLP_VERSION': genienlp_version}
+
+    predict_op = components.load_component_from_file('components/predict-e2e.yaml')(
+        image=image,
+        owner=owner,
+        eval_sets=eval_sets,
+        task_name=task_name,
+        model_name_or_path=model_name_or_path,
+        s3_input_datadir=s3_input_datadir,
+        s3_database_dir=s3_database_dir,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+        model_type=model_type,
+        dataset_subfolder=dataset_subfolder,
+        val_batch_size=val_batch_size,
+        additional_args=additional_args,
+    )
+    (predict_op.container.set_memory_limit('61G').set_memory_request('61G').set_cpu_limit('15').set_cpu_request('15'))
+    (
+        add_env(add_ssh_volume(predict_op), predict_env)
+        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.4xlarge')
+    )
+
+    return predict_op
+
+
 @dsl.pipeline(
     name='Bootleg, train, and prediction pipeline', description='Bootleg the dataset, train a model and do prediction'
 )
@@ -154,7 +195,7 @@ def bootleg_train_predict_small_pipeline(
         bootleg_additional_args=bootleg_additional_args,
     )
 
-    train_op = train_step(
+    train_op = training.train_step(
         image=image,
         owner=owner,
         project=project,
@@ -215,7 +256,7 @@ def train_predict_small_pipeline(
     val_batch_size='4000',
     pred_additional_args='',
 ):
-    train_op = train_step(
+    train_op = training.train_step(
         image=image,
         owner=owner,
         project=project,
@@ -252,6 +293,84 @@ def train_predict_small_pipeline(
     )
 
 
+@dsl.pipeline(name='Train and prediction pipeline for bitod', description='Train a model and do prediction on bitod')
+def train_predict_bitod_pipeline(
+    owner,
+    project,
+    experiment,
+    model,
+    s3_datadir,
+    task_name='bitod',
+    s3_bucket='geniehai',
+    s3_database_dir='None',
+    model_type='None',
+    image=default_image,
+    genienlp_version='',
+    load_from='None',
+    valid_set='valid',
+    eval_sets='valid test',
+    eval_e2e_sets='test',
+    dataset_subfolder='None',
+    skip_tensorboard='false',
+    train_iterations='',
+    s3_bootleg_prepped_data='None',
+    train_additional_args='',
+    val_batch_size='4000',
+    pred_additional_args='',
+):
+    train_op = training.train_step(
+        image=image,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        genienlp_version=genienlp_version,
+        model=model,
+        task_name=task_name,
+        valid_set=valid_set,
+        s3_datadir=s3_datadir,
+        s3_bucket=s3_bucket,
+        s3_database_dir=s3_database_dir,
+        load_from=load_from,
+        dataset_subfolder=dataset_subfolder,
+        skip_tensorboard=skip_tensorboard,
+        train_iterations=train_iterations,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+        additional_args=train_additional_args,
+    )
+
+    pred_op = prediction_step_small(
+        image=image,
+        owner=owner,
+        genienlp_version=genienlp_version,
+        task_name=task_name,
+        eval_sets=eval_sets,
+        model_name_or_path=train_op.outputs['s3_model_dir'],
+        s3_input_datadir=s3_datadir,
+        s3_database_dir=s3_database_dir,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+        model_type=model_type,
+        dataset_subfolder=dataset_subfolder,
+        val_batch_size=val_batch_size,
+        additional_args=pred_additional_args,
+    )
+
+    pred_e2e_op = prediction_step_e2e_small(
+        image=image,
+        owner=owner,
+        genienlp_version=genienlp_version,
+        task_name=task_name,
+        eval_sets=eval_e2e_sets,
+        model_name_or_path=train_op.outputs['s3_model_dir'],
+        s3_input_datadir=s3_datadir,
+        s3_database_dir=s3_database_dir,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+        model_type=model_type,
+        dataset_subfolder=dataset_subfolder,
+        val_batch_size=val_batch_size,
+        additional_args=pred_additional_args,
+    )
+
+
 @dsl.pipeline(name='Train and prediction pipeline', description='Train a model on 4 gpus and do prediction')
 def train_4gpu_predict_small_pipeline(
     owner,
@@ -276,7 +395,7 @@ def train_4gpu_predict_small_pipeline(
     val_batch_size='4000',
     pred_additional_args='',
 ):
-    train_op = train_step(
+    train_op = training.train_step(
         image=image,
         owner=owner,
         project=project,
