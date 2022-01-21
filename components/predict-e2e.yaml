@@ -56,7 +56,9 @@ implementation:
         ;;
       esac
 
-      aws s3 sync --no-progress ${s3_nlg_model} nlg_model/ --exclude "*iter*" --exclude "*optim*" --exclude "*pred*"
+      if test "${s3_nlg_model}" != None ; then
+        aws s3 sync --no-progress ${s3_nlg_model} nlg_model/ --exclude "*iter*" --exclude "*optim*" --exclude "*pred*"
+      fi
 
       aws s3 sync --no-progress ${s3_input_datadir}${dataset_subfolder} $dataset_dir --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*"
 
@@ -99,18 +101,23 @@ implementation:
             --bitod_e2e_evaluation \
             $@
 
-        python3 genie-workdirs/spl_e2e/scripts/compute_e2e.py --reference_file_path genie-workdirs/spl_e2e/BiToD/data/"$eval_lang"_"$e_set".json --prediction_file_path ./eval/valid/bitod_preds.json
 
-        (genienlp kfserver --path nlg_model/)&
-        SERVER_PID=$!
-        # wait enough for the server to start
-        sleep 60
-        python3 BiToD/BiToD/templates/generate_neural_response.py --acts_file ./eval/valid/bitod.tsv  --output_file ./eval/valid/bitod_response_neural.tsv --processed_data_file dataset/"$e_set".json
-        kill $SERVER_PID
+        if test "${s3_nlg_model}" != None ; then
+          python3 genie-workdirs/spl_e2e/scripts/compute_e2e.py --reference_file_path genie-workdirs/spl_e2e/BiToD/data/"$eval_lang"_"$e_set".json --prediction_file_path ./eval/valid/bitod_preds.json
+          (genienlp kfserver --path nlg_model/)&
+          SERVER_PID=$!
+          # wait enough for the server to start
+          sleep 60
+          python3 BiToD/BiToD/templates/generate_neural_response.py --acts_file ./eval/valid/bitod.tsv  --output_file ./eval/valid/bitod_response_neural.tsv --processed_data_file dataset/"$e_set".json
+          kill $SERVER_PID
 
-        python3  genie-workdirs/spl_e2e/scripts/compute_e2e_genienlp.py --pred_file ./eval/valid/bitod_response_neural.tsv
+          python3  genie-workdirs/spl_e2e/scripts/compute_e2e_genienlp.py --pred_file ./eval/valid/bitod_response_neural.tsv
 
-        python3  genie-workdirs/spl_e2e/scripts/merge_jsons.py --input_files ./eval/valid/bitod_preds_results.json ./eval/valid/bitod_response_neural_results.json --output_file ./eval/valid/final_results.json
+          python3  genie-workdirs/spl_e2e/scripts/merge_jsons.py --input_files ./eval/valid/bitod_preds_results.json ./eval/valid/bitod_response_neural_results.json --output_file ./eval/valid/final_results.json
+        else
+          python3 genie-workdirs/spl_e2e_nlg/scripts/compute_e2e.py --reference_file_path genie-workdirs/spl_e2e_nlg/BiToD/data/"$eval_lang"_"$e_set".json --prediction_file_path ./eval/valid/bitod_preds.json
+          cp ./eval/valid/bitod_preds_results.json ./eval/valid/final_results.json
+        fi
 
         # rename valid subfolder; if e_set is valid move it to a temp directory
         if test "${e_set}" != "valid" ; then
