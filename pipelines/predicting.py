@@ -137,11 +137,11 @@ def prediction_step_e2e_small(
         val_batch_size=val_batch_size,
         additional_args=additional_args,
     )
-    (predict_op.container.set_memory_limit('61G').set_memory_request('61G').set_cpu_limit('15').set_cpu_request('15'))
+    (predict_op.container.set_memory_limit('31G').set_memory_request('31G').set_cpu_limit('7.5').set_cpu_request('7.5'))
     (
         add_env(add_ssh_volume(predict_op), predict_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.4xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.2xlarge')
     )
 
     return predict_op
