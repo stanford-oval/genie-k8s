@@ -59,6 +59,9 @@ implementation:
       if ${prepare_for_translation}; then
         make \
           geniedir=/opt/genie-toolkit \
+          genie_k8s_owner=${owner} \
+          genie_k8s_project=${project} \
+          s3_bucket=${s3_bucket} \
           source=${source} \
           all_names="${input_splits}" \
           experiment=${experiment} \
@@ -72,6 +75,9 @@ implementation:
         make \
           geniedir=/opt/genie-toolkit \
           genienlpdir=/opt/genienlp \
+          genie_k8s_owner=${owner} \
+          genie_k8s_project=${project} \
+          s3_bucket=${s3_bucket} \
           source=${source} \
           all_names="${input_splits}" \
           experiment=${experiment} \
@@ -87,6 +93,9 @@ implementation:
       if ${post_process_translation}; then
         make \
           geniedir=/opt/genie-toolkit \
+          genie_k8s_owner=${owner} \
+          genie_k8s_project=${project} \
+          s3_bucket=${s3_bucket} \
           source=${source} \
           all_names="${input_splits}" \
           experiment=${experiment} \
