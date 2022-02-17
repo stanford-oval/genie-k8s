@@ -78,7 +78,7 @@ implementation:
           src_lang=${src_lang} \
           tgt_lang=${tgt_lang} \
           nmt_model=${nmt_id} \
-          translation_model=${translation_model} \
+          model_name_or_path=${translation_model} \
           $@ translate_data
         aws s3 sync --no-progress ./eval/${experiment}/ ${s3_datadir}translated/
       fi
