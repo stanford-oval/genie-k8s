@@ -60,7 +60,11 @@ implementation:
         genienlp train --train_tasks ${task_name} --train_iterations 0 --save "$modeldir" --model ${model_type} --pretrained_model ${model_name_or_path} --exist_ok
         s3_output=s3://geniehai/${owner}/workdir/prediction/${task_name}/${model_type}/${model_name_or_path}
       else
-        aws s3 sync --no-progress "${model_name_or_path}" "$modeldir"/ --exclude "iteration_*.pth" --exclude "*_optim.pth" --exclude "*eval/*" --exclude '*pred/*' --exclude "*.log"
+        if [[ "$@" == *"--checkpoint_name"* ]] ; then
+          aws s3 sync --no-progress "${model_name_or_path}" "$modeldir"/ --exclude "*_optim.pth" --exclude "*eval/*" --exclude '*pred/*' --exclude "*.log"
+        else
+          aws s3 sync --no-progress "${model_name_or_path}" "$modeldir"/ --exclude "iteration_*.pth" --exclude "*_optim.pth" --exclude "*eval/*" --exclude '*pred/*' --exclude "*.log"
+        fi
         s3_output=${model_name_or_path%/}
       fi
 
