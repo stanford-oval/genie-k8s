@@ -41,13 +41,15 @@ implementation:
         dataset_subfolder=
       fi
 
+      eval_task=end2end
+      dataset_dir=dataset
+
       case $task_name in
         "almond"*)
           dataset_dir=dataset/almond
         ;;
-
-        *)
-           dataset_dir=dataset
+        "bitod_dst")
+          eval_task=dst
         ;;
       esac
 
@@ -85,7 +87,7 @@ implementation:
 
         aws s3 sync --no-progress "./eval" $S3_METRIC_OUTPUT
 
-        python3 genie-workdirs/bitod/scripts/compute_e2e.py --reference_file_path genie-workdirs/bitod/BiToD/data/"$eval_lang"_"$e_set".json --prediction_file_path ./eval/valid/bitod_preds.json
+        python3 genie-workdirs/bitod/scripts/compute_e2e.py --reference_file_path genie-workdirs/bitod/BiToD/data/"$eval_lang"_"$e_set".json --prediction_file_path ./eval/valid/bitod_preds.json --eval_task ${eval_task}
         cp ./eval/valid/bitod_preds_results.json ./eval/valid/final_results.json
 
         # rename valid subfolder; if e_set is valid move it to a temp directory
