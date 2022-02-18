@@ -89,7 +89,7 @@ implementation:
             --bitod_e2e_evaluation \
             $@
 
-        python3 genie-workdirs/bitod/scripts/compute_e2e.py --reference_file_path genie-workdirs/bitod/BiToD/data/"$eval_lang"_"$e_set".json --prediction_file_path ./eval/valid/bitod_preds.json --eval_task ${eval_task}
+        python3 genie-workdirs/zeroshot/scripts/compute_e2e.py --reference_file_path genie-workdirs/zeroshot/BiToD/data/"$eval_lang"_"$e_set".json --prediction_file_path ./eval/valid/bitod_preds.json --eval_task ${eval_task}
         cp ./eval/valid/bitod_preds_results.json ./eval/valid/final_results.json
 
         # rename valid subfolder; if e_set is valid move it to a temp directory

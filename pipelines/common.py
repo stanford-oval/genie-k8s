@@ -26,7 +26,7 @@ from kubernetes.client.models import V1EnvVar, V1SecretVolumeSource, V1Volume, V
 # Get the Thingpedia key from environment variable
 default_developer_key = os.getenv('THINGPEDIA_DEVELOPER_KEY')
 
-default_image = '932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit-kf:20210716.1'
+default_image = '932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit-kf:20220218.mehrad'
 GENIENLP_VERSION = '137bff43514b301ca3f97a5fc3c58f7c823a78ed'
 GENIE_VERSION = 'ca6ae14177d0add1d004d9be73329193b57f148b'
 WORKDIR_REPO = 'git@github.com:stanford-oval/thingpedia-common-devices.git'
