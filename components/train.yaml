@@ -56,7 +56,7 @@ implementation:
 
       load_args=
       if test "${load_from}" != None ; then
-        aws s3 sync --no-progress "${load_from}" "$modeldir"/ --exclude "iteration_*.pth" --exclude "*eval/*"  --exclude "*.log"
+        aws s3 sync --no-progress "${load_from}" "$modeldir"/ --exclude "iteration_*.pth" --exclude "*eval/*"  --exclude "*.log" --exclude "*pred/*"
         load_args="--load best.pth"
       fi
 
