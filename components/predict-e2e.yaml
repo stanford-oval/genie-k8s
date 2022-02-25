@@ -1,6 +1,6 @@
-name: Predict
+name: Predict E2E
 description: |
-  Predict
+  End-to-End Prediction for Dialogues
 inputs:
   - {name: image, description: '', default: ''}
   - {name: owner, description: '', default: ''}
@@ -41,15 +41,14 @@ implementation:
         dataset_subfolder=
       fi
 
-      eval_task=end2end
       dataset_dir=dataset
 
       case $task_name in
-        "almond"*)
-          dataset_dir=dataset/almond
-        ;;
         "bitod_dst")
           eval_task=dst
+        ;;
+        *)
+          eval_task=end2end
         ;;
       esac
 
@@ -89,8 +88,8 @@ implementation:
             --bitod_e2e_evaluation \
             $@
 
-        python3 genie-workdirs/zeroshot/scripts/compute_e2e.py --reference_file_path genie-workdirs/zeroshot/BiToD/data/"$eval_lang"_"$e_set".json --prediction_file_path ./eval/valid/bitod_preds.json --eval_task ${eval_task}
-        cp ./eval/valid/bitod_preds_results.json ./eval/valid/final_results.json
+        python3 genie-workdirs/zeroshot/scripts/compute_e2e.py --reference_file_path genie-workdirs/zeroshot/BiToD/data/"$eval_lang"_"$e_set".json --prediction_file_path ./eval/valid/e2e_dialogue_preds.json --eval_task ${eval_task}
+        cp ./eval/valid/e2e_dialogue_results.json ./eval/valid/final_results.json
 
         # rename valid subfolder; if e_set is valid move it to a temp directory
         if test "${e_set}" != "valid" ; then
