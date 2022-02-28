@@ -85,7 +85,7 @@ implementation:
             --overwrite \
             --silent \
             --skip_cache \
-            --bitod_e2e_evaluation \
+            --e2e_dialogue_evaluation \
             $@
 
         python3 genie-workdirs/zeroshot/scripts/compute_e2e.py --reference_file_path genie-workdirs/zeroshot/BiToD/data/"$eval_lang"_"$e_set".json --prediction_file_path ./eval/valid/e2e_dialogue_preds.json --eval_task ${eval_task}

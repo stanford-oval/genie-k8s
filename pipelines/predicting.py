@@ -289,14 +289,16 @@ def train_predict_small_pipeline(
     )
 
 
-@dsl.pipeline(name='Train and prediction pipeline for bitod', description='Train a model and do prediction on bitod')
-def train_predict_bitod_pipeline(
+@dsl.pipeline(
+    name='Train and prediction pipeline for e2e dialogue', description='Train a model and do prediction on e2e dialogue'
+)
+def train_predict_e2e_dialogue_pipeline(
     owner,
     project,
     experiment,
     model,
     s3_datadir,
-    task_name='bitod',
+    task_name='',
     s3_bucket='geniehai',
     model_type='None',
     image=default_image,
@@ -362,19 +364,19 @@ def train_predict_bitod_pipeline(
     )
 
 
-@dsl.pipeline(name='prediction pipeline for bitod', description='do prediction on bitod')
-def predict_bitod_pipeline(
-    owner='mehrad',
-    model_name_or_path='s3://geniehai/mehrad/models/e2e/bitod/mbart_large_en_v16_2e-5_50K/1639160803/',
-    s3_datadir='s3://geniehai/mehrad/dataset/e2e/bitod/en_v16/',
-    task_name='bitod',
+@dsl.pipeline(name='prediction pipeline for e2e dialogue', description='do prediction on e2e dialogue')
+def predict_e2e_dialogue_pipeline(
+    owner='',
+    model_name_or_path='',
+    s3_datadir='',
+    task_name='',
     model_type='None',
     image=default_image,
-    genienlp_version='58f8ce82fe57bf3b3c8aae4bef98cb03d8ace930',
+    genienlp_version=GENIENLP_VERSION,
     eval_lang='en',
-    eval_e2e_sets='test',
+    eval_e2e_sets='',
     dataset_subfolder='None',
-    pred_additional_args='--extra_metrics bitod_score',
+    pred_additional_args='--extra_metrics e2e_dialogue_score',
 ):
 
     pred_e2e_op = prediction_step_e2e_small(
