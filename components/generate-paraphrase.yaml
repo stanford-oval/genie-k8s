@@ -90,7 +90,6 @@ implementation:
         --eval_dir eval_dir \
         --evaluate train \
         --overwrite \
-        --skip_cache \
         --silent \
         $paraphrasing_arguments
 
