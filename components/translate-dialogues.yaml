@@ -44,16 +44,25 @@ implementation:
         MAKEDIR=${project}
       fi
 
+      if [[ "${project}" == *"mario"*  ]] ; then
+        output_folder=eval/${experiment}/
+        source_folder=datadir/
+        S3_OUTPUT_DATADIR=${s3_datadir}translated/${source}/${nmt_id}/${tgt_lang}/final/
+      elif [[ "${project}" == *"zeroshot"*  ]] ; then
+        output_folder=${experiment}/${source}/
+        source_folder=dataset/${source}/${experiment}/
+        S3_OUTPUT_DATADIR=${s3_datadir}translated/${nmt_id}/${tgt_lang}/final/
+      fi
+
       cat >> workdir/config.mk <<EOF
       developer_key = ${THINGPEDIA_DEVELOPER_KEY}
       EOF
       cd workdir/${MAKEDIR}
 
-      S3_OUTPUT_DATADIR=${s3_datadir}translated/
       mkdir -p `dirname $s3_output_datadir`
       echo ${S3_OUTPUT_DATADIR} > $s3_output_datadir
 
-      aws s3 sync --no-progress ${s3_datadir} datadir/ --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*"
+      aws s3 sync --no-progress ${s3_datadir} ${source_folder} --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*"
 
       # prepare for translation
       if ${prepare_for_translation}; then
@@ -62,9 +71,11 @@ implementation:
           source=${source} \
           all_names="${input_splits}" \
           experiment=${experiment} \
+          src_lang=${src_lang} \
+          tgt_lang=${tgt_lang} \
           $@ \
           process_data
-        aws s3 sync --no-progress ./eval/${experiment}/ ${s3_datadir}translated/
+        aws s3 sync --no-progress ${output_folder} ${s3_datadir}translated/
       fi
 
       # translate
@@ -80,7 +91,7 @@ implementation:
           nmt_model=${nmt_id} \
           model_name_or_path=${translation_model} \
           $@ translate_data
-        aws s3 sync --no-progress ./eval/${experiment}/ ${s3_datadir}translated/
+        aws s3 sync --no-progress ${output_folder} ${s3_datadir}translated/
       fi
 
       # further process the translated files
@@ -94,11 +105,12 @@ implementation:
           tgt_lang=${tgt_lang} \
           nmt_model=${nmt_id} \
           $@ postprocess_data
-        aws s3 sync --no-progress ./eval/${experiment}/ ${s3_datadir}translated/
+        aws s3 sync --no-progress ${output_folder} ${s3_datadir}translated/
 
-        # sync final data to main directory since almond_dialogue_* task expects the data there
-        aws s3 sync --no-progress ${s3_datadir}translated/${source}/${nmt_id}/${tgt_lang}/final/ ${s3_datadir}translated/${source}/
+      # sync final data to main directory since almond_dialogue_* task expects the data there
+      aws s3 sync --no-progress ${s3_datadir}translated/${source}/${nmt_id}/${tgt_lang}/final/ ${s3_datadir}translated/${source}/${nmt_id}/${tgt_lang}/final/${source}/
       fi
+
 
     args: [
       'cmd',

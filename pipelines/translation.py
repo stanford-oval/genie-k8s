@@ -159,16 +159,19 @@ def translate_dialogue_pipeline(
     s3_datadir='',
     source='',
     input_splits='train eval',
-    translation_model='',
-    nmt_id='',
+    translation_model='Helsinki-NLP/opus-mt-$(src_lang)-$(tgt_lang)',
+    nmt_id='marian',
     src_lang='en',
     tgt_lang='',
     image=default_image,
-    genienlp_version='',
-    genie_version='',
+    genienlp_version=GENIENLP_VERSION,
+    genie_version=GENIE_VERSION,
     workdir_repo=WORKDIR_REPO,
     workdir_version=WORKDIR_VERSION,
     thingpedia_developer_key=default_developer_key,
+    prepare_for_translation='true',
+    do_translation='true',
+    post_process_translation='true',
     additional_args='',
 ):
     translation_op = dialogue_translation_step(
@@ -189,6 +192,9 @@ def translate_dialogue_pipeline(
         workdir_repo=workdir_repo,
         workdir_version=workdir_version,
         thingpedia_developer_key=thingpedia_developer_key,
+        prepare_for_translation=prepare_for_translation,
+        do_translation=do_translation,
+        post_process_translation=post_process_translation,
         additional_args=additional_args,
     )
 
@@ -211,6 +217,9 @@ def dialogue_translation_step(
     thingpedia_developer_key=default_developer_key,
     workdir_repo=GENIE_WORKDIR_REPO,
     workdir_version=GENIE_WORKDIR_VERSION,
+    prepare_for_translation='true',
+    do_translation='true',
+    post_process_translation='true',
     additional_args='',
 ):
     do_translation_env = {
@@ -234,9 +243,9 @@ def dialogue_translation_step(
         nmt_id=nmt_id,
         src_lang=src_lang,
         tgt_lang=tgt_lang,
-        prepare_for_translation='true',
-        do_translation='true',
-        post_process_translation='true',
+        prepare_for_translation=prepare_for_translation,
+        do_translation=do_translation,
+        post_process_translation=post_process_translation,
         additional_args=additional_args,
     )
     (
