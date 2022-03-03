@@ -28,7 +28,11 @@ python3 upload_pipeline.py generate_bootleg_train_fewshot_calibrate_eval_pipelin
 python3 upload_pipeline.py predict_pipeline predict
 python3 upload_pipeline.py predict_small_pipeline predict-small
 python3 upload_pipeline.py train_predict_small_pipeline train-predict-small
-
+python3 upload_pipeline.py train_predict_e2e_dialogue_pipeline train-predict-e2e-dialogue
+python3 upload_pipeline.py predict_e2e_dialogue_pipeline predict-e2e-dialogue
+python3 upload_pipeline.py translate_dialogue_pipeline translate-dialogue
+python3 upload_pipeline.py translate_train_eval_pipeline translate-train-eval
+python3 upload_pipeline.py generate_translate_train_eval_pipeline generate-translate-train-eval
 
 # export CONTAINER_IMAGE=932360549041.dkr.ecr.us-west-2.amazonaws.com/masp:0.1
 # python3 upload_pipeline.py masp_train_pipeline masp-train
