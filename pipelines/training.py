@@ -948,6 +948,7 @@ def bootleg_train_eval_pipeline(
 ):
     everything(
         do_generate=False,
+        do_translate=False,
         do_bootleg=True,
         do_paraphrase=False,
         do_fewshot=False,
@@ -1013,6 +1014,7 @@ def generate_bootleg_train_eval_pipeline(
 ):
     everything(
         do_generate=True,
+        do_translate=False,
         do_bootleg=True,
         do_paraphrase=False,
         do_fewshot=False,
@@ -1074,6 +1076,7 @@ def generate_train_eval_pipeline(
 ):
     everything(
         do_generate=True,
+        do_translate=False,
         do_bootleg=False,
         do_paraphrase=False,
         do_fewshot=False,
@@ -1133,6 +1136,7 @@ def train_eval_pipeline(
 ):
     everything(
         do_generate=False,
+        do_translate=False,
         do_bootleg=False,
         do_paraphrase=False,
         do_fewshot=False,
@@ -1201,6 +1205,7 @@ def generate_paraphrase_train_eval_pipeline(
 ):
     everything(
         do_generate=True,
+        do_translate=False,
         do_bootleg=False,
         do_paraphrase=True,
         do_fewshot=False,
@@ -1273,6 +1278,7 @@ def gpu_generate_paraphrase_train_eval_pipeline(
 ):
     everything(
         do_generate=True,
+        do_translate=False,
         do_bootleg=False,
         do_paraphrase=True,
         do_fewshot=False,
@@ -1352,6 +1358,7 @@ def gpu_generate_bootleg_paraphrase_train_eval_pipeline(
 ):
     everything(
         do_generate=True,
+        do_translate=False,
         do_bootleg=True,
         do_paraphrase=True,
         do_fewshot=False,
@@ -1424,6 +1431,7 @@ def generate_train_fewshot_eval_pipeline(
 ):
     everything(
         do_generate=True,
+        do_translate=False,
         do_bootleg=False,
         do_paraphrase=False,
         do_fewshot=True,
@@ -1564,6 +1572,7 @@ def generate_bootleg_train_fewshot_calibrate_eval_pipeline(
 ):
     everything(
         do_generate=True,
+        do_translate=False,
         do_bootleg=True,
         do_paraphrase=False,
         do_fewshot=True,
@@ -1734,6 +1743,7 @@ def generate_paraphrase_train_fewshot_eval_pipeline(
 ):
     everything(
         do_generate=True,
+        do_translate=False,
         do_bootleg=False,
         do_paraphrase=True,
         do_fewshot=True,
@@ -1885,6 +1895,7 @@ def bootleg_paraphrase_train_eval_pipeline(
 ):
     everything(
         do_generate=False,
+        do_translate=False,
         do_bootleg=True,
         do_paraphrase=True,
         do_fewshot=False,
@@ -1962,6 +1973,7 @@ def paraphrase_train_eval_pipeline(
 ):
     everything(
         do_generate=False,
+        do_translate=False,
         do_bootleg=False,
         do_paraphrase=True,
         do_fewshot=False,
