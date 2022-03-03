@@ -91,7 +91,6 @@ implementation:
             --task ${task_name} \
             --overwrite \
             --silent \
-            --skip_cache \
             --val_batch_size ${val_batch_size} \
             $@
 

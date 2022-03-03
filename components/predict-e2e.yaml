@@ -84,7 +84,6 @@ implementation:
             --task ${task_name} \
             --overwrite \
             --silent \
-            --skip_cache \
             --e2e_dialogue_evaluation \
             $@
 

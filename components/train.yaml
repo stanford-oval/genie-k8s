@@ -60,8 +60,6 @@ implementation:
         load_args="--load best.pth"
       fi
 
-      mkdir -p cache
-
       if test "${dataset_subfolder}" = "None" ; then
         dataset_subfolder=
       fi
@@ -97,11 +95,9 @@ implementation:
       genienlp train \
           --data "dataset" \
           --save "$modeldir" \
-          --cache "cache" \
           --train_tasks ${task_name} \
           --preserve_case \
           --exist_ok \
-          --skip_cache \
           --train_languages ${train_languages} \
           --eval_languages ${eval_languages} \
           --eval_set_name ${valid_set} \

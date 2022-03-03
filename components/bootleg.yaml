@@ -79,11 +79,9 @@ implementation:
       genienlp bootleg-dump-features \
           --data "dataset" \
           --save "$modeldir" \
-          --cache "$modeldir/cache" \
           --tasks ${task_name} \
           --preserve_case \
           --exist_ok \
-          --skip_cache \
           --train_languages $train_languages \
           --eval_languages $eval_languages \
           --database_dir ./database/ \

@@ -6,7 +6,7 @@ RUN pip3 install -U pip
 
 WORKDIR /opt/genienlp/
 ARG GENIENLP_VERSION=master
-RUN pip3 uninstall bootleg -y
+RUN pip3 uninstall bootleg dialogues -y
 RUN git fetch && git checkout ${GENIENLP_VERSION} && pip3 install -e .
 RUN python3 -m spacy download en_core_web_sm
 

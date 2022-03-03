@@ -95,7 +95,6 @@ implementation:
           --overwrite \
           --silent \
           --main_metric_only \
-          --skip_cache \
           --val_batch_size ${filtering_batch_size} \
           $filtering_arguments
         cp ./eval_dir/valid/${task_name}.results.json ${output_dir}/
