@@ -7,7 +7,7 @@ GENIENLP_HEAD=`git rev-parse HEAD`
 if [ -n "${GENIENLP_VERSION}" ] && [ "${GENIENLP_VERSION}" != "${GENIENLP_HEAD}" ]; then
   git fetch
   git checkout ${GENIENLP_VERSION}
-  pip3 uninstall bootleg -y
+  pip3 uninstall bootleg dialogues -y
   pip3 install -e .
   python3 -m spacy download en_core_web_sm
 fi
