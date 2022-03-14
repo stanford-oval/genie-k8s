@@ -27,9 +27,8 @@ implementation:
       shift $n
       cd $HOME
 
-      /opt/genie-toolkit/sync-repos.sh
-
-      git clone https://github.com/tunib-ai/parallelformers.git
+      pip uninstall parallelformers -y
+      git clone https://github.com/Mehrad0711/parallelformers.git
       cd parallelformers
       git checkout ${pf_version}
       pip3 install -e .

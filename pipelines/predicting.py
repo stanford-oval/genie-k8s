@@ -73,7 +73,7 @@ def test_pf_pipeline(
     model_type='TransformerSeq2Seq',
     dataset_subfolder='None',
     val_batch_size='1000',
-    additional_args='--subsample 100 --model_parallel_hf',
+    additional_args='--name=Helsinki-NLP/opus-mt-en-zh --gpu-from=0 --gpu-to=3 --use-pf',
 ):
 
     predict_env = {
