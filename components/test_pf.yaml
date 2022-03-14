@@ -34,68 +34,12 @@ implementation:
 
       /opt/genie-toolkit/sync-repos.sh
 
-      modeldir="$HOME/model/"
-      mkdir -p "$modeldir"
+      git clone https://github.com/tunib-ai/parallelformers.git
+      cd parallelformers
+      pip3 install -e .
 
-      if test "${dataset_subfolder}" = "None" ; then
-        dataset_subfolder=
-      fi
+      python3 tests/seq2seq_lm.py "--test-name=FP32 & Non-PF" --name=Helsinki-NLP/opus-mt-en-zh --gpu-from=0 --gpu-to=2 $@
 
-      case $task_name in
-        "almond"*)
-          dataset_dir=dataset/almond
-        ;;
-
-        *)
-           dataset_dir=dataset
-        ;;
-      esac
-
-      aws s3 sync --no-progress ${s3_input_datadir}${dataset_subfolder} $dataset_dir --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*"
-
-      if test "${s3_database_dir}" != None ; then
-        aws s3 sync --no-progress ${s3_database_dir}/bootleg/ ./database/
-      fi
-
-      if test "${s3_bootleg_prepped_data}" != None ; then
-        aws s3 sync --no-progress ${s3_bootleg_prepped_data} results_temp --exclude '*' --include '*bootleg_labels.jsonl'
-      fi
-
-      # if not an s3 path assume pretrained model name and save it in genienlp format
-      if [[ "${model_name_or_path}" != "s3://"* ]] ; then
-        genienlp train --train_tasks ${task_name} --train_iterations 0 --save "$modeldir" --model ${model_type} --pretrained_model ${model_name_or_path} --exist_ok
-        s3_output=s3://geniehai/${owner}/workdir/prediction/${task_name}/${model_type}/${model_name_or_path}
-      else
-        if [[ "$@" == *"--checkpoint_name"* ]] ; then
-          aws s3 sync --no-progress "${model_name_or_path}" "$modeldir"/ --exclude "*_optim.pth" --exclude "*eval/*" --exclude '*pred/*' --exclude "*.log"
-        else
-          aws s3 sync --no-progress "${model_name_or_path}" "$modeldir"/ --exclude "iteration_*.pth" --exclude "*_optim.pth" --exclude "*eval/*" --exclude '*pred/*' --exclude "*.log"
-        fi
-        s3_output=${model_name_or_path%/}
-      fi
-
-      S3_METRIC_OUTPUT="$s3_output"/pred/`date +%s`/
-
-      mkdir -p `dirname $s3_metrics_output`
-      mkdir -p $metrics_output
-
-      echo $S3_METRIC_OUTPUT >> $s3_metrics_output
-
-      for e_set in ${eval_sets} ; do
-        python3 /opt/genienlp/genienlp/test_pf.py \
-            --data "dataset" \
-            --path "$modeldir" \
-            --eval_dir "./eval" \
-            --evaluate valid \
-            --pred_set_name ${e_set} \
-            --task ${task_name} \
-            --overwrite \
-            --silent \
-            --val_batch_size ${val_batch_size} \
-            $@
-      done
-
-      aws s3 sync --no-progress "./eval" $S3_METRIC_OUTPUT
 
     args: [
       'cmd',

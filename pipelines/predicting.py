@@ -61,7 +61,7 @@ def prediction_step(
 
 @dsl.pipeline(name='Test PF', description='Test PF on 4 gpus')
 def test_pf_pipeline(
-    image=default_image,
+    image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit-kf:20220314.mehrad',
     owner='mehrad',
     genienlp_version='4210159c542001f2285cfb1ff37b988bf0a250ab',
     task_name='bitod',
