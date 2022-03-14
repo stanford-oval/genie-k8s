@@ -310,10 +310,10 @@ def dialogue_translation_4gpu_step(
         additional_args=additional_args,
     )
     (
-        do_translation_op.container.set_memory_request('150G')
-        .set_memory_limit('150G')
-        .set_cpu_request('16')
-        .set_cpu_limit('16')
+        do_translation_op.container.set_memory_request('190G')
+        .set_memory_limit('190G')
+        .set_cpu_request('40')
+        .set_cpu_limit('40')
         # not supported yet in the version of kfp we're using
         # .set_ephemeral_storage_request('75G')
         # .set_ephemeral_storage_limit('75G')
