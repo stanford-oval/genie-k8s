@@ -59,6 +59,49 @@ def prediction_step(
     return predict_op
 
 
+@dsl.pipeline(name='Predict using g5.4xlarge', description='Run genienlp predict on a previously trained model')
+def prediction_g5_pipeline(
+    image=default_image,
+    owner='mehrad',
+    genienlp_version='175f8197caadda46d32a6f49be85c3e602e4abc2',
+    task_name='bitod',
+    eval_sets='valid',
+    model_name_or_path='facebook/xglm-564M',
+    s3_input_datadir='s3://geniehai/mehrad/dataset/zeroshot/bitod/en_v10/',
+    s3_database_dir='None',
+    s3_bootleg_prepped_data='None',
+    model_type='TransformerForCausalLM',
+    dataset_subfolder='None',
+    val_batch_size='1000',
+    additional_args='',
+):
+
+    predict_env = {'GENIENLP_VERSION': genienlp_version}
+
+    predict_op = components.load_component_from_file('components/predict.yaml')(
+        image=image,
+        owner=owner,
+        eval_sets=eval_sets,
+        task_name=task_name,
+        model_name_or_path=model_name_or_path,
+        s3_input_datadir=s3_input_datadir,
+        s3_database_dir=s3_database_dir,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+        model_type=model_type,
+        dataset_subfolder=dataset_subfolder,
+        val_batch_size=val_batch_size,
+        additional_args=additional_args,
+    )
+    (predict_op.container.set_memory_limit('61G').set_memory_request('61G').set_cpu_limit('15').set_cpu_request('15'))
+    (
+        add_env(add_ssh_volume(predict_op), predict_env)
+        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g5.4xlarge')
+    )
+
+    return predict_op
+
+
 @dsl.pipeline(name='Test PF', description='Test PF on 4 gpus')
 def test_pf_pipeline(
     image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit-kf:20220314.mehrad',
