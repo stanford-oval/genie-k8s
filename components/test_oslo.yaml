@@ -33,7 +33,7 @@ implementation:
       git checkout ${oslo_version}
       pip3 install -e .
 
-      torchrun --nproc_per_node=4 tests/pytorch/testcases/inference.py --task=seq2seq-lm $@
+      torchrun --nproc_per_node=2 tests/pytorch/testcases/inference.py --task=seq2seq-lm $@
 
 
     args: [
