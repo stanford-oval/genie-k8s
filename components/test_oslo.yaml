@@ -1,0 +1,53 @@
+name: Test OSLO
+description: |
+  Test OSLO
+inputs:
+  - {name: image, description: '', default: ''}
+  - {name: owner, description: '', default: ''}
+  - {name: eval_sets, description: '', default: ''}
+  - {name: task_name, description: '', default: ''}
+  - {name: model_name_or_path, description: '', default: ''}
+  - {name: s3_input_datadir, description: '', default: ''}
+  - {name: s3_database_dir, description: '', default: ''}
+  - {name: oslo_version, description: '', default: ''}
+  - {name: model_type, description: '', default: ''}
+  - {name: dataset_subfolder, description: '', default: ''}
+  - {name: val_batch_size, description: '', default: ''}
+  - {name: additional_args, description: '', default: ''}
+implementation:
+  container:
+    image: '{{inputs.parameters.image}}'
+    command:
+    - /bin/bash
+    - -ex
+    - -c
+    - |
+      . /opt/genie-toolkit/lib.sh
+      parse_args "$0" "image owner eval_sets task_name model_name_or_path s3_input_datadir s3_database_dir oslo_version model_type dataset_subfolder val_batch_size" "$@"
+      shift $n
+      cd $HOME
+
+      pip uninstall parallelformers -y
+      git clone https://github.com/Mehrad0711/oslo.git
+      cd oslo
+      git checkout ${oslo_version}
+      pip3 install -e .
+
+      python3 -m torch.distributed.launch --nproc_per_node=4 tests/pytorch/testcases/inference.py --task=seq2seq-lm $@
+
+
+    args: [
+      'cmd',
+      --image, {inputValue: image},
+      --owner, {inputValue: owner},
+      --eval_sets, {inputValue: eval_sets},
+      --task_name, {inputValue: task_name},
+      --model_name_or_path, {inputValue: model_name_or_path},
+      --s3_input_datadir, {inputValue: s3_input_datadir},
+      --s3_database_dir, {inputValue: s3_database_dir},
+      --oslo_version, {inputValue: oslo_version},
+      --model_type, {inputValue: model_type},
+      --dataset_subfolder, {inputValue: dataset_subfolder},
+      --val_batch_size, {inputValue: val_batch_size},
+      --, {inputValue: additional_args}
+    ]

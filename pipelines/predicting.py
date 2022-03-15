@@ -100,9 +100,55 @@ def test_pf_pipeline(
         .set_memory_limit('150G')
         .set_cpu_request('16')
         .set_cpu_limit('16')
-        # not supported yet in the version of kfp we're using
-        # .set_ephemeral_storage_request('75G')
-        # .set_ephemeral_storage_limit('75G')
+        .set_gpu_limit(str(predict_num_gpus))
+    )
+    (
+        add_env(add_ssh_volume(predict_op), predict_env)
+        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.12xlarge')
+    )
+
+
+@dsl.pipeline(name='Test OSLO', description='Test OSLO on 4 gpus')
+def test_oslo_pipeline(
+    image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit-kf:20220314.mehrad',
+    owner='mehrad',
+    genienlp_version='4210159c542001f2285cfb1ff37b988bf0a250ab',
+    task_name='bitod',
+    eval_sets='valid',
+    model_name_or_path='facebook/bart-base',
+    s3_input_datadir='s3://geniehai/mehrad/dataset/zeroshot/bitod/en_v10/',
+    s3_database_dir='None',
+    oslo_version='873d771a68bc380903947010da0b66f58f60e496',
+    model_type='TransformerSeq2Seq',
+    dataset_subfolder='None',
+    val_batch_size='1000',
+    additional_args='--model=facebook/bart-base --tensor_parallel_size=1 --config=tests/pytorch/config/model_parallelism.json',
+):
+    predict_env = {
+        'GENIENLP_VERSION': genienlp_version,
+    }
+
+    predict_num_gpus = 4
+    predict_op = components.load_component_from_file('components/test_oslo.yaml')(
+        image=image,
+        owner=owner,
+        eval_sets=eval_sets,
+        task_name=task_name,
+        model_name_or_path=model_name_or_path,
+        s3_input_datadir=s3_input_datadir,
+        s3_database_dir=s3_database_dir,
+        oslo_version=oslo_version,
+        model_type=model_type,
+        dataset_subfolder=dataset_subfolder,
+        val_batch_size=val_batch_size,
+        additional_args=additional_args,
+    )
+    (
+        predict_op.container.set_memory_request('150G')
+        .set_memory_limit('150G')
+        .set_cpu_request('16')
+        .set_cpu_limit('16')
         .set_gpu_limit(str(predict_num_gpus))
     )
     (
