@@ -248,11 +248,11 @@ def dialogue_translation_step(
         post_process_translation=post_process_translation,
         additional_args=additional_args,
     )
-    (do_translation_op.container.set_memory_request('31G').set_memory_limit('31G').set_cpu_request('7.5').set_cpu_limit('7.5'))
+    (do_translation_op.container.set_memory_request('110G').set_memory_limit('110G').set_cpu_request('28').set_cpu_limit('28'))
     (
         add_env(add_ssh_volume(do_translation_op), do_translation_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.2xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.8xlarge')
     )
 
     # do_translation_op.human_name = 'translation'
