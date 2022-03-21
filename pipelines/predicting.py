@@ -49,11 +49,13 @@ def prediction_step(
         # .set_ephemeral_storage_request('75G')
         # .set_ephemeral_storage_limit('75G')
         .set_gpu_limit(str(predict_num_gpus))
+        .add_volume_mount(V1VolumeMount(name='shm', mount_path='/dev/shm'))
     )
     (
         add_env(add_ssh_volume(predict_op), predict_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
         .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.12xlarge')
+        .add_volume(V1Volume(name='shm', empty_dir=V1EmptyDirVolumeSource(medium='Memory')))
     )
 
     return predict_op
@@ -602,19 +604,19 @@ def train_4gpu_predict_small_pipeline(
 
 @dsl.pipeline(name='Predict', description='Run genienlp predict on a previously trained model')
 def predict_pipeline(
-    image=default_image,
-    owner='',
-    eval_sets='',
-    task_name='',
-    genienlp_version=GENIENLP_VERSION,
-    model_name_or_path='',
-    s3_input_datadir='',
+    image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit-kf:20220314.mehrad',
+    owner='mehrad',
+    eval_sets='valid',
+    task_name='bitod',
+    genienlp_version='e62940da4dc8291461f54fe9a9509246cf29e0d7',
+    model_name_or_path='Helsinki-NLP/opus-mt-en-de',
+    s3_input_datadir='s3://geniehai/mehrad/dataset/zeroshot/bitod/en_v10/',
     s3_database_dir='None',
     s3_bootleg_prepped_data='None',
-    model_type='None',
+    model_type='TransformerSeq2Seq',
     dataset_subfolder='None',
     val_batch_size='4000',
-    additional_args='',
+    additional_args='--model_parallel_hf',
 ):
     prediction_step(
         image=image,
