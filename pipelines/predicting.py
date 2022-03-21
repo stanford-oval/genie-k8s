@@ -608,7 +608,7 @@ def predict_pipeline(
     owner='mehrad',
     eval_sets='valid',
     task_name='bitod',
-    genienlp_version='e62940da4dc8291461f54fe9a9509246cf29e0d7',
+    genienlp_version='50d8b2288cf2693c0121258675b0d938549e0149',
     model_name_or_path='Helsinki-NLP/opus-mt-en-de',
     s3_input_datadir='s3://geniehai/mehrad/dataset/zeroshot/bitod/en_v10/',
     s3_database_dir='None',
@@ -616,7 +616,7 @@ def predict_pipeline(
     model_type='TransformerSeq2Seq',
     dataset_subfolder='None',
     val_batch_size='4000',
-    additional_args='--model_parallel_hf',
+    additional_args='--model_parallel_hf --min_output_length 2 --max_output_length 180 --subsample 10',
 ):
     prediction_step(
         image=image,
