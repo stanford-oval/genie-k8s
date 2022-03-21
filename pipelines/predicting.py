@@ -106,7 +106,7 @@ def prediction_g5_pipeline(
 def test_pf_pipeline(
     image='932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit-kf:20220314.mehrad',
     owner='mehrad',
-    genienlp_version='4210159c542001f2285cfb1ff37b988bf0a250ab',
+    genienlp_version='e62940da4dc8291461f54fe9a9509246cf29e0d7',
     task_name='bitod',
     eval_sets='valid',
     model_name_or_path='Helsinki-NLP/opus-mt-en-de',
