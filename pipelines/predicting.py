@@ -1,5 +1,5 @@
 from kfp import components, dsl
-from kubernetes.client import V1Toleration
+from kubernetes.client import V1EmptyDirVolumeSource, V1Toleration
 
 from . import split_bootleg_merge_step, training
 from .common import *
@@ -49,11 +49,13 @@ def prediction_step(
         # .set_ephemeral_storage_request('75G')
         # .set_ephemeral_storage_limit('75G')
         .set_gpu_limit(str(predict_num_gpus))
+        .add_volume_mount(V1VolumeMount(name='shm', mount_path='/dev/shm'))
     )
     (
         add_env(add_ssh_volume(predict_op), predict_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
         .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.12xlarge')
+        .add_volume(V1Volume(name='shm', empty_dir=V1EmptyDirVolumeSource(medium='Memory')))
     )
 
     return predict_op
@@ -467,7 +469,7 @@ def predict_pipeline(
     s3_input_datadir='',
     s3_database_dir='None',
     s3_bootleg_prepped_data='None',
-    model_type='None',
+    model_type='',
     dataset_subfolder='None',
     val_batch_size='4000',
     additional_args='',
