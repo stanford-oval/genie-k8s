@@ -1,6 +1,5 @@
 from kfp import components, dsl
-from kubernetes.client import V1Toleration
-from kubernetes.client.models import V1PersistentVolumeClaimVolumeSource
+from kubernetes.client import V1EmptyDirVolumeSource, V1Toleration
 
 from . import training
 from .common import *
@@ -248,11 +247,18 @@ def dialogue_translation_step(
         post_process_translation=post_process_translation,
         additional_args=additional_args,
     )
-    (do_translation_op.container.set_memory_request('110G').set_memory_limit('110G').set_cpu_request('28').set_cpu_limit('28'))
+    (
+        do_translation_op.container.set_memory_request('110G')
+        .set_memory_limit('110G')
+        .set_cpu_request('28')
+        .set_cpu_limit('28')
+        .add_volume_mount(V1VolumeMount(name='shm', mount_path='/dev/shm'))
+    )
     (
         add_env(add_ssh_volume(do_translation_op), do_translation_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
         .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.8xlarge')
+        .add_volume(V1Volume(name='shm', empty_dir=V1EmptyDirVolumeSource(medium='Memory')))
     )
 
     # do_translation_op.human_name = 'translation'

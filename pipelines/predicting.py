@@ -1,5 +1,5 @@
 from kfp import components, dsl
-from kubernetes.client import V1Toleration
+from kubernetes.client import V1EmptyDirVolumeSource, V1Toleration
 
 from . import split_bootleg_merge_step, training
 from .common import *
@@ -144,11 +144,13 @@ def test_pf_pipeline(
         .set_cpu_request('16')
         .set_cpu_limit('16')
         .set_gpu_limit(str(predict_num_gpus))
+        .add_volume_mount(V1VolumeMount(name='shm', mount_path='/dev/shm'))
     )
     (
         add_env(add_ssh_volume(predict_op), predict_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
         .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.12xlarge')
+        .add_volume(V1Volume(name='shm', empty_dir=V1EmptyDirVolumeSource(medium='Memory')))
     )
 
 
