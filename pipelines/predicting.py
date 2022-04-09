@@ -510,6 +510,83 @@ def train_predict_e2e_dialogue_pipeline(
     )
 
 
+@dsl.pipeline(
+    name='Train on 4 gpus and prediction pipeline for e2e dialogue',
+    description='Train a model and do prediction on e2e dialogue',
+)
+def train_4gpu_predict_e2e_dialogue_pipeline(
+    owner,
+    project,
+    experiment,
+    model,
+    s3_datadir,
+    task_name='',
+    s3_bucket='geniehai',
+    model_type='None',
+    image=default_image,
+    genienlp_version='',
+    load_from='None',
+    valid_set='valid',
+    eval_sets='valid test',
+    eval_e2e_sets='test',
+    eval_lang='',
+    dataset_subfolder='None',
+    skip_tensorboard='false',
+    train_iterations='',
+    train_additional_args='',
+    val_batch_size='4000',
+    pred_additional_args='',
+):
+    train_op = training.train_step(
+        image=image,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        genienlp_version=genienlp_version,
+        model=model,
+        num_gpus='4',
+        task_name=task_name,
+        valid_set=valid_set,
+        s3_datadir=s3_datadir,
+        s3_bucket=s3_bucket,
+        load_from=load_from,
+        dataset_subfolder=dataset_subfolder,
+        skip_tensorboard=skip_tensorboard,
+        train_iterations=train_iterations,
+        additional_args=train_additional_args,
+    )
+
+    pred_op = prediction_step_small(
+        image=image,
+        owner=owner,
+        genienlp_version=genienlp_version,
+        task_name=task_name,
+        eval_sets=eval_sets,
+        model_name_or_path=train_op.outputs['s3_model_dir'],
+        s3_input_datadir=s3_datadir,
+        s3_database_dir='None',
+        s3_bootleg_prepped_data='None',
+        model_type=model_type,
+        dataset_subfolder=dataset_subfolder,
+        val_batch_size=val_batch_size,
+        additional_args=pred_additional_args,
+    )
+
+    pred_e2e_op = prediction_step_e2e_small(
+        image=image,
+        owner=owner,
+        genienlp_version=genienlp_version,
+        task_name=task_name,
+        eval_sets=eval_e2e_sets,
+        eval_lang=eval_lang,
+        model_name_or_path=train_op.outputs['s3_model_dir'],
+        s3_input_datadir=s3_datadir,
+        model_type=model_type,
+        dataset_subfolder=dataset_subfolder,
+        additional_args=pred_additional_args,
+    )
+
+
 @dsl.pipeline(name='prediction pipeline for e2e dialogue', description='do prediction on e2e dialogue')
 def predict_e2e_dialogue_pipeline(
     owner='',
