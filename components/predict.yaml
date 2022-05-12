@@ -74,9 +74,6 @@ implementation:
         s3_output=${model_name_or_path%/}
       fi
 
-      aws s3 sync .embeddings/ s3://geniehai/mehrad/extras/models/${model_name_or_path}/
-      aws s3 sync $modeldir s3://geniehai/mehrad/extras/models/${model_name_or_path}/mdoeldir/
-
       S3_METRIC_OUTPUT="$s3_output"/pred/`date +%s`/
 
       mkdir -p `dirname $s3_metrics_output`
