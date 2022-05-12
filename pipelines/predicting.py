@@ -376,10 +376,28 @@ def predict_e2e_dialogue_pipeline(
     image=default_image,
     genienlp_version=GENIENLP_VERSION,
     eval_lang='en',
+    eval_sets='',
     eval_e2e_sets='',
     dataset_subfolder='None',
+    val_batch_size='4000',
     pred_additional_args='--extra_metrics e2e_dialogue_score',
 ):
+
+    pred_op = prediction_step_small(
+        image=image,
+        owner=owner,
+        genienlp_version=genienlp_version,
+        task_name=task_name,
+        eval_sets=eval_sets,
+        model_name_or_path=model_name_or_path,
+        s3_input_datadir=s3_datadir,
+        s3_database_dir='None',
+        s3_bootleg_prepped_data='None',
+        model_type=model_type,
+        dataset_subfolder=dataset_subfolder,
+        val_batch_size=val_batch_size,
+        additional_args=pred_additional_args,
+    )
 
     pred_e2e_op = prediction_step_e2e_small(
         image=image,
