@@ -43,15 +43,6 @@ implementation:
 
       dataset_dir=dataset
 
-      case $task_name in
-        "bitod_dst")
-          eval_task=dst
-        ;;
-        *)
-          eval_task=end2end
-        ;;
-      esac
-
       aws s3 sync --no-progress ${s3_input_datadir}${dataset_subfolder} $dataset_dir --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*"
 
       # if not an s3 path assume pretrained model name and save it in genienlp format
@@ -87,7 +78,7 @@ implementation:
             --e2e_dialogue_evaluation \
             $@
 
-        python3 genie-workdirs/zeroshot/scripts/compute_e2e.py --reference_file_path genie-workdirs/zeroshot/BiToD/data/"$eval_lang"_"$e_set".json --prediction_file_path ./eval/valid/e2e_dialogue_preds.json --eval_task ${eval_task}
+        python3 genie-workdirs/zeroshot/scripts/compute_e2e.py --reference_file_path genie-workdirs/zeroshot/BiToD/data/"$eval_lang"_"$e_set".json --prediction_file_path ./eval/valid/e2e_dialogue_preds.json
 
         # rename valid subfolder; if e_set is valid move it to a temp directory
         if test "${e_set}" != "valid" ; then
