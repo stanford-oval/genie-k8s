@@ -73,7 +73,7 @@ implementation:
           experiment=${experiment} \
           src_lang=${src_lang} \
           tgt_lang=${tgt_lang} \
-          $* \
+          $@ \
           process_data
         aws s3 sync --no-progress ${output_folder} ${s3_datadir}translated/
       fi
@@ -90,7 +90,7 @@ implementation:
           tgt_lang=${tgt_lang} \
           nmt_model=${nmt_id} \
           model_name_or_path=${translation_model} \
-          `echo $@ | tr -d "'"` \
+          $@ \
           translate_data
         aws s3 sync --no-progress ${output_folder} ${s3_datadir}translated/
       fi
@@ -105,7 +105,7 @@ implementation:
           src_lang=${src_lang} \
           tgt_lang=${tgt_lang} \
           nmt_model=${nmt_id} \
-          `echo $@ | tr -d "'"` \
+          $@ \
           postprocess_data
         aws s3 sync --no-progress ${output_folder} ${s3_datadir}translated/
 
