@@ -171,7 +171,7 @@ def translate_dialogue_pipeline(
     prepare_for_translation='true',
     do_translation='true',
     post_process_translation='true',
-    additional_args='',
+    additional_args='skip_ent_translation=true do_align_help=false',
 ):
     translation_op = dialogue_translation_step(
         owner=owner,
