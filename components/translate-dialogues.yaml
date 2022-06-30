@@ -105,6 +105,7 @@ implementation:
           src_lang=${src_lang} \
           tgt_lang=${tgt_lang} \
           nmt_model=${nmt_id} \
+          skip_translation=true \
           $@ \
           postprocess_data
         aws s3 sync --no-progress ${output_folder} ${s3_datadir}translated/
