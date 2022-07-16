@@ -90,7 +90,8 @@ implementation:
           tgt_lang=${tgt_lang} \
           nmt_model=${nmt_id} \
           model_name_or_path=${translation_model} \
-          $@ translate_data
+          $@ \
+          translate_data
         aws s3 sync --no-progress ${output_folder} ${s3_datadir}translated/
       fi
 
@@ -104,7 +105,9 @@ implementation:
           src_lang=${src_lang} \
           tgt_lang=${tgt_lang} \
           nmt_model=${nmt_id} \
-          $@ postprocess_data
+          skip_translation=true \
+          $@ \
+          postprocess_data
         aws s3 sync --no-progress ${output_folder} ${s3_datadir}translated/
 
       # sync final data to main directory since almond_dialogue_* task expects the data there

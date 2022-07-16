@@ -30,8 +30,10 @@ parse_args() {
   shift
   argnames=
   for argspec in $argspecs ; do
+    # append argspecs to argnames
     case "$argspec" in
     *=*)
+      # if argspec has a default value, strip the value
       argnames="$argnames "$(sed -E -e 's/^([^=]*)=(.*)$/\1/g' <<<"$argspec")
       ;;
     *)
@@ -45,6 +47,8 @@ parse_args() {
     arg=$1
     shift
     n=$((n+1))
+
+    # -- is used to separate additional_args provided by user; we do not touch them in this function
     if test "$arg" = "--" ; then
       break
     fi
@@ -57,6 +61,7 @@ parse_args() {
       echo
       exit 0
     fi
+    # loop through all argnames until a match
     for argname in $argnames ; do
       if test "$arg" = "--$argname" ; then
         argvalue=$1
@@ -72,6 +77,8 @@ parse_args() {
       exit 1
     fi
   done
+
+  # ensure all argspecs have a value - either assigned or default
   for argspec in $argspecs ; do
   is_empty=0 # if this argument is explicitly set to be empty, e.g. `argument=`
     case "$argspec" in
