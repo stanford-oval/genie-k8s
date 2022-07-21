@@ -36,8 +36,8 @@ GENIE_WORKDIR_VERSION = 'master'
 PARAPHRASING_MODEL = 's3://geniehai/sinaj/models/schemaorg/paraphrase/bart-large-speedup-megabatch-5m/'
 S3_DATABASE_DIR = 's3://geniehai/mehrad/extras/bootleg_files_v1.0.0'
 
-# name of a secret in Kubernetes containing the SSH credentials (GitHub deploy key)
-SSH_VOLUME = 'ssh-secrets-k425k8d8h8'
+# name of a secret in Kubernetes containing the SSH credentials (GitHub deploy key for genie-workdirs)
+SSH_VOLUME = 'ssh-secrets-7fdcbg96c4'
 
 
 def add_ssh_volume(op):
