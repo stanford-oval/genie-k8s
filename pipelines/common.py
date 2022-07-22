@@ -26,6 +26,9 @@ from kubernetes.client.models import V1EnvVar, V1SecretVolumeSource, V1Volume, V
 # Get the Thingpedia key from environment variable
 default_developer_key = os.getenv('THINGPEDIA_DEVELOPER_KEY')
 
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+
 default_image = '932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit-kf:20220302'
 GENIENLP_VERSION = '7eef040f0ca995e374ff2c24e1cff3f3f80909ab'
 GENIE_VERSION = '0846db3e01add425856b41db07b9a567e9e6fc31'
@@ -59,4 +62,8 @@ def add_env(op, envs):
     """Add a dict of environments to container"""
     for k, v in envs.items():
         op.container.add_env_variable(V1EnvVar(name=k, value=v))
+
+    op.container.add_env_variable(V1EnvVar(name='AWS_ACCESS_KEY_ID', value=AWS_ACCESS_KEY_ID))
+    op.container.add_env_variable(V1EnvVar(name='AWS_SECRET_ACCESS_KEY', value=AWS_SECRET_ACCESS_KEY))
+
     return op
