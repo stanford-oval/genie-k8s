@@ -51,6 +51,11 @@ implementation:
         ;;
       esac
 
+      echo "User Name,Access key ID,Secret access key" >> credentials.csv
+      echo "${owner},${AWS_ACCESS_KEY_ID},${AWS_SECRET_ACCESS_KEY}" >> credentials.csv
+
+      aws configure import --csv file://credentials.csv
+
       aws s3 sync --no-progress ${s3_input_datadir}${dataset_subfolder} $dataset_dir --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*"
 
       if test "${s3_database_dir}" != None ; then
