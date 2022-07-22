@@ -51,10 +51,16 @@ implementation:
         ;;
       esac
 
-      echo "User Name,Access key ID,Secret access key" >> credentials.csv
-      echo "${owner},${AWS_ACCESS_KEY_ID},${AWS_SECRET_ACCESS_KEY}" >> credentials.csv
+      #echo "User Name,Access key ID,Secret access key" >> credentials.csv
+      #echo "${owner},${AWS_ACCESS_KEY_ID},${AWS_SECRET_ACCESS_KEY}" >> credentials.csv
 
-      aws configure import --csv file://credentials.csv
+      #pip install --user --upgrade awscli
+      #aws configure import --csv file://credentials.csv
+
+      set +x
+      aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
+      aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
+      set -x
 
       aws s3 sync --no-progress ${s3_input_datadir}${dataset_subfolder} $dataset_dir --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*"
 
