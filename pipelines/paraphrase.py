@@ -60,10 +60,10 @@ def paraphrase_generation_step(
         additional_args=additional_args,
     )
     (
-        paraphrase_op.container.set_memory_request('150G')
-        .set_memory_limit('150G')
-        .set_cpu_request('16')
-        .set_cpu_limit('16')
+        paraphrase_op.container.set_memory_request('400G')
+        .set_memory_limit('400G')
+        .set_cpu_request('60')
+        .set_cpu_limit('60')
         # not supported yet in the version of kfp we're using
         # .set_ephemeral_storage_request('75G')
         # .set_ephemeral_storage_limit('75G')
@@ -72,7 +72,7 @@ def paraphrase_generation_step(
     (
         add_env(add_ssh_volume(paraphrase_op), paraphrase_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.12xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC64as_T4_v3')
     )
 
     return paraphrase_op
@@ -118,10 +118,10 @@ def paraphrase_filtering_step(
         additional_args=additional_args,
     )
     (
-        paraphrase_op.container.set_memory_request('150G')
-        .set_memory_limit('150G')
-        .set_cpu_request('16')
-        .set_cpu_limit('16')
+        paraphrase_op.container.set_memory_request('400G')
+        .set_memory_limit('400G')
+        .set_cpu_request('60')
+        .set_cpu_limit('60')
         # not supported yet in the version of kfp we're using
         # .set_ephemeral_storage_request('75G')
         # .set_ephemeral_storage_limit('75G')
@@ -130,7 +130,7 @@ def paraphrase_filtering_step(
     (
         add_env(add_ssh_volume(paraphrase_op), paraphrase_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.12xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC64as_T4_v3')
     )
 
     return paraphrase_op

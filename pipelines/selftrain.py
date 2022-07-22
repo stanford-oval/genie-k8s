@@ -59,17 +59,12 @@ def auto_annotate_step(
         agent_model=agent_model,
         additional_args=additional_args,
     )
-    (
-        auto_annotate_op.container.set_memory_limit('12Gi')
-        .set_memory_request('12Gi')
-        .set_cpu_limit('7.5')
-        .set_cpu_request('7.5')
-    )
+    (auto_annotate_op.container.set_memory_limit('12Gi').set_memory_request('12Gi').set_cpu_limit('3').set_cpu_request('3'))
 
     (
         add_env(add_ssh_volume(auto_annotate_op), auto_annotate_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.2xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC4as_T4_v3')
     )
 
     return auto_annotate_op

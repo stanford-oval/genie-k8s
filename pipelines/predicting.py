@@ -5,7 +5,7 @@ from . import split_bootleg_merge_step, training
 from .common import *
 
 
-def prediction_step(
+def prediction_4gpu_step(
     image,
     owner,
     genienlp_version,
@@ -41,10 +41,10 @@ def prediction_step(
         additional_args=additional_args,
     )
     (
-        predict_op.container.set_memory_request('150G')
-        .set_memory_limit('150G')
-        .set_cpu_request('16')
-        .set_cpu_limit('16')
+        predict_op.container.set_memory_request('400G')
+        .set_memory_limit('400G')
+        .set_cpu_request('60')
+        .set_cpu_limit('60')
         # not supported yet in the version of kfp we're using
         # .set_ephemeral_storage_request('75G')
         # .set_ephemeral_storage_limit('75G')
@@ -54,14 +54,14 @@ def prediction_step(
     (
         add_env(add_ssh_volume(predict_op), predict_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.12xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC64as_T4_v3')
         .add_volume(V1Volume(name='shm', empty_dir=V1EmptyDirVolumeSource(medium='Memory')))
     )
 
     return predict_op
 
 
-def prediction_step_small(
+def prediction_step(
     image,
     owner,
     genienlp_version,
@@ -103,7 +103,7 @@ def prediction_step_small(
     return predict_op
 
 
-def prediction_step_e2e_small(
+def prediction_step_e2e(
     image,
     owner,
     genienlp_version,
@@ -135,7 +135,7 @@ def prediction_step_e2e_small(
     (
         add_env(add_ssh_volume(predict_op), predict_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.2xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC8as_T4_v3')
     )
 
     return predict_op
@@ -144,7 +144,7 @@ def prediction_step_e2e_small(
 @dsl.pipeline(
     name='Bootleg, train, and prediction pipeline', description='Bootleg the dataset, train a model and do prediction'
 )
-def bootleg_train_predict_small_pipeline(
+def bootleg_train_predict_pipeline(
     owner,
     project,
     experiment,
@@ -213,7 +213,7 @@ def bootleg_train_predict_small_pipeline(
         additional_args=train_additional_args,
     )
 
-    pred_op = prediction_step_small(
+    pred_op = prediction_step(
         image=image,
         owner=owner,
         genienlp_version=genienlp_version,
@@ -231,7 +231,7 @@ def bootleg_train_predict_small_pipeline(
 
 
 @dsl.pipeline(name='Train and prediction pipeline', description='Train a model and do prediction')
-def train_predict_small_pipeline(
+def train_predict_pipeline(
     owner,
     project,
     experiment,
@@ -274,7 +274,7 @@ def train_predict_small_pipeline(
         additional_args=train_additional_args,
     )
 
-    pred_op = prediction_step_small(
+    pred_op = prediction_step(
         image=image,
         owner=owner,
         genienlp_version=genienlp_version,
@@ -335,7 +335,7 @@ def train_predict_e2e_dialogue_pipeline(
         additional_args=train_additional_args,
     )
 
-    pred_op = prediction_step_small(
+    pred_op = prediction_step(
         image=image,
         owner=owner,
         genienlp_version=genienlp_version,
@@ -351,7 +351,7 @@ def train_predict_e2e_dialogue_pipeline(
         additional_args=pred_additional_args,
     )
 
-    pred_e2e_op = prediction_step_e2e_small(
+    pred_e2e_op = prediction_step_e2e(
         image=image,
         owner=owner,
         genienlp_version=genienlp_version,
@@ -383,7 +383,7 @@ def predict_e2e_dialogue_pipeline(
     pred_additional_args='--extra_metrics e2e_dialogue_score',
 ):
 
-    pred_op = prediction_step_small(
+    pred_op = prediction_step(
         image=image,
         owner=owner,
         genienlp_version=genienlp_version,
@@ -399,7 +399,7 @@ def predict_e2e_dialogue_pipeline(
         additional_args=pred_additional_args,
     )
 
-    pred_e2e_op = prediction_step_e2e_small(
+    pred_e2e_op = prediction_step_e2e(
         image=image,
         owner=owner,
         genienlp_version=genienlp_version,
@@ -415,7 +415,7 @@ def predict_e2e_dialogue_pipeline(
 
 
 @dsl.pipeline(name='Train and prediction pipeline', description='Train a model on 4 gpus and do prediction')
-def train_4gpu_predict_small_pipeline(
+def train_4gpu_predict_pipeline(
     owner,
     project,
     experiment,
@@ -459,7 +459,7 @@ def train_4gpu_predict_small_pipeline(
         additional_args=train_additional_args,
     )
 
-    pred_op = prediction_step_small(
+    pred_op = prediction_step(
         image=image,
         owner=owner,
         genienlp_version=genienlp_version,
@@ -477,7 +477,7 @@ def train_4gpu_predict_small_pipeline(
 
 
 @dsl.pipeline(name='Predict', description='Run genienlp predict on a previously trained model')
-def predict_pipeline(
+def predict_4gpu_pipeline(
     image=default_image,
     owner='',
     eval_sets='',
@@ -492,7 +492,7 @@ def predict_pipeline(
     val_batch_size='4000',
     additional_args='',
 ):
-    prediction_step(
+    prediction_4gpu_step(
         image=image,
         owner=owner,
         eval_sets=eval_sets,
@@ -509,8 +509,8 @@ def predict_pipeline(
     )
 
 
-@dsl.pipeline(name='Predict using g4dn.4xlarge', description='Run genienlp predict on a previously trained model')
-def predict_small_pipeline(
+@dsl.pipeline(name='Predict using Standard_NC16as_T4_v3', description='Run genienlp predict on a previously trained model')
+def predict_pipeline(
     image=default_image,
     owner='',
     task_name='',
@@ -525,7 +525,7 @@ def predict_small_pipeline(
     val_batch_size='4000',
     additional_args='',
 ):
-    prediction_step_small(
+    prediction_step(
         image=image,
         owner=owner,
         eval_sets=eval_sets,

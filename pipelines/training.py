@@ -106,13 +106,13 @@ def generate_dataset_step_w_gpu(
         generate_dataset_op.container.set_memory_limit('55Gi')
         .set_memory_request('55Gi')
         .set_cpu_request('7.5')
-        .set_cpu_limit('7.5')
+        .set_cpu_limit('7')
         .set_gpu_limit(str(num_gpus))
     )
     (
         add_env(add_ssh_volume(generate_dataset_op), gen_dataset_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.12xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC8as_T4_v3')
     )
 
     return generate_dataset_op
@@ -166,17 +166,17 @@ def train_step(
             additional_args=additional_args,
         )
         (
-            train_op.container.set_memory_request('56Gi')
-            .set_memory_limit('56Gi')
-            .set_cpu_request('7.5')
-            .set_cpu_limit('7.5')
+            train_op.container.set_memory_request('110G')
+            .set_memory_limit('110G')
+            .set_cpu_request('5')
+            .set_cpu_limit('5')
             .set_gpu_limit(str(train_num_gpus))
             .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
         )
         (
             add_env(add_ssh_volume(train_op), train_env)
             .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-            .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*train_num_gpus}xlarge')
+            .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'Standard_NC{6 * train_num_gpus}s_v3')
             .add_volume(
                 V1Volume(
                     name='tensorboard', persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf')
@@ -206,17 +206,17 @@ def train_step(
             additional_args=additional_args,
         )
         (
-            train_op.container.set_memory_request('56Gi')
-            .set_memory_limit('200G')
-            .set_cpu_request('31')
-            .set_cpu_limit('31')
+            train_op.container.set_memory_request('440G')
+            .set_memory_limit('440G')
+            .set_cpu_request('22')
+            .set_cpu_limit('22')
             .set_gpu_limit(str(train_num_gpus))
             .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
         )
         (
             add_env(add_ssh_volume(train_op), train_env)
             .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-            .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*train_num_gpus}xlarge')
+            .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'Standard_NC{6 * train_num_gpus}s_v3')
             .add_volume(
                 V1Volume(
                     name='tensorboard', persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf')
@@ -271,16 +271,16 @@ def calibrate_step(
         additional_args=additional_args,
     )
     (
-        calibrate_op.container.set_memory_request('56Gi')
-        .set_memory_limit('56Gi')
-        .set_cpu_request('7.5')
-        .set_cpu_limit('7.5')
+        calibrate_op.container.set_memory_request('110G')
+        .set_memory_limit('110G')
+        .set_cpu_request('5')
+        .set_cpu_limit('5')
         .set_gpu_limit(str(calibrate_num_gpus))
     )
     (
         add_env(add_ssh_volume(calibrate_op), calibrate_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*calibrate_num_gpus}xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'Standard_NC{6 * calibrate_num_gpus}s_v3')
     )
 
     return calibrate_op
@@ -332,17 +332,17 @@ def train_step_4gpus(
         additional_args=additional_args,
     )
     (
-        train_op.container.set_memory_request('241G')
-        .set_memory_limit('241G')
-        .set_cpu_request('31')
-        .set_cpu_limit('31')
+        train_op.container.set_memory_request('440G')
+        .set_memory_limit('440G')
+        .set_cpu_request('22')
+        .set_cpu_limit('22')
         .set_gpu_limit(str(train_num_gpus))
         .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
     )
     (
         add_env(add_ssh_volume(train_op), train_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2 * train_num_gpus}xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'Standard_NC{6 * train_num_gpus}s_v3')
         .add_volume(
             V1Volume(
                 name='tensorboard', persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf')
@@ -393,11 +393,11 @@ def eval_step(
         is_oracle=is_oracle,
         additional_args=additional_args,
     )
-    (eval_op.container.set_memory_limit('61G').set_memory_request('61G').set_cpu_limit('15').set_cpu_request('15'))
+    (eval_op.container.set_memory_limit('100G').set_memory_request('100G').set_cpu_limit('15').set_cpu_request('15'))
     (
         add_env(add_ssh_volume(eval_op), eval_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.4xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC16as_T4_v3')
     )
 
     return eval_op

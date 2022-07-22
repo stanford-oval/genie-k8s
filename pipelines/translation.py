@@ -247,11 +247,17 @@ def dialogue_translation_step(
         post_process_translation=post_process_translation,
         additional_args=additional_args,
     )
-    (do_translation_op.container.set_memory_request('31G').set_memory_limit('31G').set_cpu_request('7.5').set_cpu_limit('7.5').add_volume_mount(V1VolumeMount(name='shm', mount_path='/dev/shm')))
+    (
+        do_translation_op.container.set_memory_request('31G')
+        .set_memory_limit('31G')
+        .set_cpu_request('7')
+        .set_cpu_limit('7')
+        .add_volume_mount(V1VolumeMount(name='shm', mount_path='/dev/shm'))
+    )
     (
         add_env(add_ssh_volume(do_translation_op), do_translation_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.2xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC8as_T4_v3')
         .add_volume(V1Volume(name='shm', empty_dir=V1EmptyDirVolumeSource(medium='Memory')))
     )
 
@@ -310,10 +316,10 @@ def dialogue_translation_4gpu_step(
         additional_args=additional_args,
     )
     (
-        do_translation_op.container.set_memory_request('150G')
-        .set_memory_limit('150G')
-        .set_cpu_request('16')
-        .set_cpu_limit('16')
+        do_translation_op.container.set_memory_request('400G')
+        .set_memory_limit('400G')
+        .set_cpu_request('60')
+        .set_cpu_limit('60')
         # not supported yet in the version of kfp we're using
         # .set_ephemeral_storage_request('75G')
         # .set_ephemeral_storage_limit('75G')
@@ -322,7 +328,7 @@ def dialogue_translation_4gpu_step(
     (
         add_env(add_ssh_volume(do_translation_op), do_translation_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.12xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC64as_T4_v3')
     )
 
     # do_translation_op.human_name = 'translation'

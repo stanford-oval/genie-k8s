@@ -84,7 +84,7 @@ def eval_spl_step(
     (
         add_env(add_ssh_volume(eval_op), eval_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'p3.2xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC6s_v3')
     )
 
     return eval_op
@@ -493,17 +493,17 @@ def do_translation_step(
         additional_args=additional_args,
     )
     (
-        do_translation_op.container.set_memory_request('150G')
-        .set_memory_limit('150G')
-        .set_cpu_request('16')
-        .set_cpu_limit('16')
+        do_translation_op.container.set_memory_request('400G')
+        .set_memory_limit('400G')
+        .set_cpu_request('60')
+        .set_cpu_limit('60')
         .set_gpu_limit(str(4))
         .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
     )
     (
         add_env(add_ssh_volume(do_translation_op), do_translation_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.12xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC64as_T4_v3')
         .add_volume(
             V1Volume(
                 name='tensorboard', persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf')
@@ -885,14 +885,14 @@ def paraphrase_step(
     (
         paraphrase_op.container.set_memory_request('31G')
         .set_memory_limit('31G')
-        .set_cpu_request('7.5')
-        .set_cpu_limit('7.5')
+        .set_cpu_request('7')
+        .set_cpu_limit('7')
         .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
     )
     (
         add_env(add_ssh_volume(paraphrase_op), paraphrase_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.2xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC8as_T4_v3')
         .add_volume(
             V1Volume(
                 name='tensorboard', persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf')
@@ -967,17 +967,17 @@ def paraphrase_step_4gpus(
         additional_args=additional_args,
     )
     (
-        paraphrase_op.container.set_memory_request('64G')
-        .set_memory_limit('64G')
-        .set_cpu_request('16')
-        .set_cpu_limit('16')
+        paraphrase_op.container.set_memory_request('400G')
+        .set_memory_limit('400G')
+        .set_cpu_request('60')
+        .set_cpu_limit('60')
         .set_gpu_limit(str(4))
         .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
     )
     (
         add_env(add_ssh_volume(paraphrase_op), paraphrase_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.12xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC64as_T4_v3')
         .add_volume(
             V1Volume(
                 name='tensorboard', persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf')
