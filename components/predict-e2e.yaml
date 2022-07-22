@@ -90,6 +90,8 @@ implementation:
             --e2e_dialogue_evaluation \
             $@
 
+        aws s3 cp ./eval/valid/e2e_dialogue_preds.json  $S3_METRIC_OUTPUT
+
         python3 genie-workdirs/zeroshot/scripts/compute_e2e.py \
           --reference_file_path genie-workdirs/zeroshot/${test_folder}/data/"$eval_lang"_"$e_set".json \
           --prediction_file_path ./eval/valid/e2e_dialogue_preds.json \
