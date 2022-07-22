@@ -27,7 +27,7 @@ from .common import *
 
 
 @dsl.pipeline(name='Bootleg', description='Run a Bootleg model to extract and dump candidate features')
-def bootleg_only_pipeline(
+def bootleg_pipeline(
     owner,
     project,
     experiment,

@@ -30,6 +30,11 @@ implementation:
       MAKEDIR=`get_make_dir ${project}`
       GENIE=/opt/genie-toolkit/dist/tool/genie.js
 
+      set +x
+      aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
+      aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
+      set -x
+
       cat >> workdir/config.mk <<EOF
       developer_key = ${THINGPEDIA_DEVELOPER_KEY}
       EOF

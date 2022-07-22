@@ -74,7 +74,7 @@ def auto_annotate_step(
     name='Selftrain',
     description='Runs the whole training pipeline, including two parallel autoparaphrasing and finetuning (for user and agent), auto annotation, and selftrain finetuning',
 )
-def selftrain_pipeline(
+def selftrain_full_pipeline(
     owner,
     project,
     experiment,
@@ -469,7 +469,7 @@ def selftrain_nopara_pipeline(
 
 
 @dsl.pipeline(name='Selftrain Only', description='Runs the self-training pipeline starting from auto annotation')
-def selftrain_only_pipeline(
+def selftrain_pipeline(
     owner,
     project,
     experiment,

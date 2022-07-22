@@ -638,7 +638,7 @@ def paraphrase_train_fewshot_step(
     return train_s3_datadir, eval_model
 
 
-def paraphrase_only(
+def paraphrase_step(
     owner,
     project,
     experiment,
@@ -2010,7 +2010,7 @@ def paraphrase_train_eval_pipeline(
 
 
 @dsl.pipeline(name='Evaluate', description='Evaluate a previously trained model')
-def eval_only_pipeline(
+def eval_pipeline(
     owner,
     project,
     experiment,
@@ -2051,7 +2051,7 @@ def eval_only_pipeline(
 @dsl.pipeline(
     name='Paraphrase (and filter) a dataset', description='Runs auto-paraphrasing pipeline on an existing dataset folder'
 )
-def paraphrase_only_pipeline(
+def paraphrase_pipeline(
     owner,
     project,
     experiment,
@@ -2068,7 +2068,7 @@ def paraphrase_only_pipeline(
     paraphrase_additional_args='',
     filtering_additional_args='',
 ):
-    paraphrase_only(
+    paraphrase_step(
         owner,
         project,
         experiment,

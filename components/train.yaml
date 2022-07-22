@@ -46,6 +46,11 @@ implementation:
       modeldir="$HOME/models/$model"
       mkdir -p "$modeldir"
 
+      set +x
+      aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
+      aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
+      set -x
+
       if test "${s3_database_dir}" != None ; then
         aws s3 sync --no-progress ${s3_database_dir}/train/ ./database/
       fi
