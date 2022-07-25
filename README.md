@@ -1,7 +1,7 @@
 # Kubeflow pipelines for Genie
 
 These scripts are useful to generate datasets and train models with Genie
-on a [Kubeflow](https://kubeflow.org) cluster. They are taylored towards our
+on a [Kubeflow](https://kubeflow.org) cluster. They are tailored towards our
 internal use, but maybe you'll find them useful too!
 
 This is not officially released software. Please **do not file** issues, sorry.
@@ -22,7 +22,7 @@ run `./rebuild-common-image.sh`.
 To build the regular image, use `./rebuild-image.sh`. See `./rebuild-image.sh --help`
 for options.
 
-The scripts will build the images and upload to AWS ECR.
+The scripts will build the images and upload to ACR (Azure Container Registry).
 
 ## Uploading pipelines
 
@@ -35,9 +35,9 @@ python3 upload_pipeline.py ${pipeline_function} ${pipeline_name}
 to upload a pipeline to your Kubeflow cluster. `${pipeline_function}` should be
 the name of a Python function in `pipelines.py`.
 
-You can also upload all pipelines at the same time by setting `THINGPEDIA_DEVELOPER_KEY`in `upload_all_pipelines.sh`and running it.
+You can also upload all pipelines at the same time via `upload_all_pipelines.sh`.
+You need to set the following keys before running the script: `THINGPEDIA_DEVELOPER_KEY`, `AWS_ACCESS_KEY_ID`, and `AWS_SECRET_ACCESS_KEY`.
 
 ## Running jobs
 
-Refer to the Kubeflow documentation to learn how to run jobs after uploading
-the pipeline.
+Refer to the Kubeflow documentation to learn how to run jobs after uploading the pipeline.
