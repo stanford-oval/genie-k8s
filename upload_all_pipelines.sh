@@ -1,13 +1,15 @@
 # Upload all pipelines to kubeflow
 
 # The following cell will upload all pipelines to kubeflow.
-# You should see your newly uploaded pipelines or their updated versions at https://kubeflow.research.almond.stanford.edu/_/pipeline.
+# You should see your newly uploaded pipelines or their updated versions at https://kubeflow.genie.stanford.edu/_/pipeline/
 # To run the pipeline, make sure you switch the namespace to `research-kf`.
 
 
 export THINGPEDIA_DEVELOPER_KEY= # paste your developer key here
-export AWS_ACCESS_KEY_ID=
-export AWS_SECRET_ACCESS_KEY=
+
+# Make sure you set the following before uploading any pipeline. Otherwise aws commands would not be authenticated.
+export AWS_ACCESS_KEY_ID= # paste access key for kubeflow account
+export AWS_SECRET_ACCESS_KEY= # paste secret key for kubeflow account
 
 python3 upload_pipeline.py generate_train_eval_pipeline generate-train-eval
 python3 upload_pipeline.py train_eval_pipeline train-eval
