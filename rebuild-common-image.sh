@@ -3,9 +3,8 @@
 . lib.sh
 . config
 check_config "COMMON_IMAGE"
-export AWS_PROFILE
 
-aws ecr get-login --no-include-email | bash
+az acr login --name stanfordoval.azurecr.io
 
 set -e
 set -x

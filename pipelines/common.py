@@ -26,12 +26,13 @@ from kubernetes.client.models import V1EnvVar, V1SecretVolumeSource, V1Volume, V
 # Get the Thingpedia key from environment variable
 default_developer_key = os.getenv('THINGPEDIA_DEVELOPER_KEY')
 
+# For AWS access on Azure machines
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
 
-default_image = '932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit-kf:20220302'
-GENIENLP_VERSION = '7eef040f0ca995e374ff2c24e1cff3f3f80909ab'
-GENIE_VERSION = '0846db3e01add425856b41db07b9a567e9e6fc31'
+default_image = 'stanfordoval.azurecr.io/genie/kubeflow:20220725'
+GENIENLP_VERSION = '861aac1fec9fb7246d0a5f7dcb79e57921bf3ada'
+GENIE_VERSION = '681b21d161e35a65f2dec29fde6967c012fa024b'
 WORKDIR_REPO = 'git@github.com:stanford-oval/thingpedia-common-devices.git'
 WORKDIR_VERSION = '35592e1f22f9318d1f26ca79f0ab86e50e55ae87'
 GENIE_WORKDIR_REPO = 'git@github.com:stanford-oval/genie-workdirs.git'
