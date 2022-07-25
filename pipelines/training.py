@@ -62,8 +62,8 @@ def generate_dataset_step(
     (
         generate_dataset_op.container.set_memory_limit('55Gi')
         .set_memory_request('55Gi')
-        .set_cpu_limit('15.5')
-        .set_cpu_request('15.5')
+        .set_cpu_limit('5')
+        .set_cpu_request('5')
     )
     (add_env(add_ssh_volume(generate_dataset_op), gen_dataset_env))
 
@@ -105,8 +105,8 @@ def generate_dataset_step_w_gpu(
     (
         generate_dataset_op.container.set_memory_limit('55Gi')
         .set_memory_request('55Gi')
-        .set_cpu_request('7.5')
-        .set_cpu_limit('7')
+        .set_cpu_request('5')
+        .set_cpu_limit('5')
         .set_gpu_limit(str(num_gpus))
     )
     (
