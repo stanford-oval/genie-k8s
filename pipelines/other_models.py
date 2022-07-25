@@ -40,8 +40,8 @@ def train_eval_trade(owner, project, experiment, model, s3_datadir, train_additi
         additional_args=train_additional_args,
     )
     (
-        train_op.container.set_memory_request('110G')
-        .set_memory_limit('110G')
+        train_op.container.set_memory_request('100G')
+        .set_memory_limit('100G')
         .set_cpu_request('5')
         .set_cpu_limit('5')
         .set_gpu_limit(str(train_num_gpus))
@@ -86,8 +86,8 @@ def train_eval_simpletod(owner, project, experiment, model, s3_datadir, train_ad
         additional_args=train_additional_args,
     )
     (
-        train_op.container.set_memory_request('110G')
-        .set_memory_limit('110G')
+        train_op.container.set_memory_request('100G')
+        .set_memory_limit('100G')
         .set_cpu_request('5')
         .set_cpu_limit('5')
         .set_gpu_limit(str(train_num_gpus))
@@ -132,8 +132,8 @@ def train_eval_sumbt(owner, project, experiment, model, s3_datadir, train_additi
         additional_args=train_additional_args,
     )
     (
-        train_op.container.set_memory_request('110G')
-        .set_memory_limit('110G')
+        train_op.container.set_memory_request('100G')
+        .set_memory_limit('100G')
         .set_cpu_request('5')
         .set_cpu_limit('5')
         .set_gpu_limit(str(train_num_gpus))
