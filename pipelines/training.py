@@ -60,8 +60,8 @@ def generate_dataset_step(
         additional_args=additional_args,
     )
     (
-        generate_dataset_op.container.set_memory_limit('55Gi')
-        .set_memory_request('55Gi')
+        generate_dataset_op.container.set_memory_limit('28Gi')
+        .set_memory_request('28Gi')
         .set_cpu_limit('5')
         .set_cpu_request('5')
     )
@@ -103,8 +103,8 @@ def generate_dataset_step_w_gpu(
         additional_args=additional_args,
     )
     (
-        generate_dataset_op.container.set_memory_limit('55Gi')
-        .set_memory_request('55Gi')
+        generate_dataset_op.container.set_memory_limit('28Gi')
+        .set_memory_request('28Gi')
         .set_cpu_request('5')
         .set_cpu_limit('5')
         .set_gpu_limit(str(num_gpus))
