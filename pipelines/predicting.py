@@ -103,7 +103,7 @@ def prediction_step(
     return predict_op
 
 
-def prediction_step_e2e(
+def prediction_e2e_step(
     image,
     owner,
     genienlp_version,
@@ -131,11 +131,11 @@ def prediction_step_e2e(
         dataset_subfolder=dataset_subfolder,
         additional_args=additional_args,
     )
-    (predict_op.container.set_memory_limit('31G').set_memory_request('31G').set_cpu_limit('7.5').set_cpu_request('7.5'))
+    (predict_op.container.set_memory_limit('100G').set_memory_request('100G').set_cpu_limit('5').set_cpu_request('5'))
     (
         add_env(add_ssh_volume(predict_op), predict_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC8as_T4_v3')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC6s_v3')
     )
 
     return predict_op
@@ -351,7 +351,7 @@ def train_predict_e2e_dialogue_pipeline(
         additional_args=pred_additional_args,
     )
 
-    pred_e2e_op = prediction_step_e2e(
+    pred_e2e_op = prediction_e2e_step(
         image=image,
         owner=owner,
         genienlp_version=genienlp_version,
@@ -399,7 +399,7 @@ def predict_e2e_dialogue_pipeline(
         additional_args=pred_additional_args,
     )
 
-    pred_e2e_op = prediction_step_e2e(
+    pred_e2e_op = prediction_e2e_step(
         image=image,
         owner=owner,
         genienlp_version=genienlp_version,
