@@ -199,14 +199,14 @@ def bootleg_step(
     (
         bootleg_op.container.set_memory_request('100G')
         .set_memory_limit('100G')
-        .set_cpu_request('15')
-        .set_cpu_limit('15')
+        .set_cpu_request('5')
+        .set_cpu_limit('5')
         .add_volume_mount(V1VolumeMount(name='shm', mount_path='/dev/shm'))
     )
     (
         add_env(add_ssh_volume(bootleg_op), bootleg_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC16as_T4_v3')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC6s_v3')
         .add_volume(V1Volume(name='shm', empty_dir=V1EmptyDirVolumeSource(medium='Memory')))
     )
 
