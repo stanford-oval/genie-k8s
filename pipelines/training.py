@@ -393,11 +393,11 @@ def eval_step(
         is_oracle=is_oracle,
         additional_args=additional_args,
     )
-    (eval_op.container.set_memory_limit('100G').set_memory_request('100G').set_cpu_limit('15').set_cpu_request('15'))
+    (eval_op.container.set_memory_limit('100G').set_memory_request('100G').set_cpu_limit('5').set_cpu_request('5'))
     (
         add_env(add_ssh_volume(eval_op), eval_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC16as_T4_v3')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC6s_v3')
     )
 
     return eval_op
