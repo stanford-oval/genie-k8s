@@ -21,6 +21,7 @@
 
 import os
 
+from kubernetes.client import V1PersistentVolumeClaimVolumeSource
 from kubernetes.client.models import V1EnvVar, V1SecretVolumeSource, V1Volume, V1VolumeMount
 
 # Get the Thingpedia key from environment variable
@@ -42,11 +43,16 @@ S3_DATABASE_DIR = 's3://geniehai/mehrad/extras/bootleg_files_v1.0.0'
 
 # name of a secret in Kubernetes containing the SSH credentials (GitHub deploy key for genie-workdirs)
 SSH_VOLUME = 'ssh-secrets-7fdcbg96c4'
+DATA_VOLUME = 'shared-data'
 
 
 def add_ssh_volume(op):
     op.add_volume(V1Volume(name='ssh-v', secret=V1SecretVolumeSource(secret_name=SSH_VOLUME, default_mode=0o600)))
     op.container.add_volume_mount(V1VolumeMount(name='ssh-v', mount_path='/root/.ssh'))
+
+    op.add_volume(V1Volume(name='shared-data', persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('shared-data')))
+    op.container.add_volume_mount(V1VolumeMount(name='shared-data', mount_path='/shared/data'))
+
     return op
 
 

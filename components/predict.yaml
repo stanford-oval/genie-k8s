@@ -43,27 +43,16 @@ implementation:
 
       case $task_name in
         "almond"*)
-          dataset_dir=dataset/almond
+          dataset_dir=dataset/almond/
         ;;
 
         *)
-           dataset_dir=dataset
+           dataset_dir=dataset/
         ;;
       esac
 
-      # Use for aws cli version 2
-      #pip install --user --upgrade awscli
-      #echo "User Name,Access key ID,Secret access key" >> credentials.csv
-      #echo "${owner},${AWS_ACCESS_KEY_ID},${AWS_SECRET_ACCESS_KEY}" >> credentials.csv
-      #aws configure import --csv credentials.csv
-
-      # do not print the variables
-      set +x
-      aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
-      aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
-      set -x
-
-      aws s3 sync --no-progress ${s3_input_datadir}${dataset_subfolder} $dataset_dir --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*"
+      mkdir -p $dataset_dir
+      ln -s ${s3_input_datadir}${dataset_subfolder}* $dataset_dir
 
       if test "${s3_database_dir}" != None ; then
         aws s3 sync --no-progress ${s3_database_dir}/bootleg/ ./database/
@@ -74,15 +63,11 @@ implementation:
       fi
 
       # if not an s3 path assume pretrained model name and save it in genienlp format
-      if [[ "${model_name_or_path}" != "s3://"* ]] ; then
+      if [[ "${model_name_or_path}" != "/shared/data/"* ]] ; then
         genienlp train --train_tasks ${task_name} --train_iterations 0 --save "$modeldir" --model ${model_type} --pretrained_model ${model_name_or_path} --exist_ok
-        s3_output=s3://geniehai/${owner}/workdir/prediction/${task_name}/${model_type}/${model_name_or_path}
+        s3_output=/shared/data/${owner}/models/prediction/${task_name}/${model_type}/${model_name_or_path}
       else
-        if [[ "$@" == *"--checkpoint_name"* ]] ; then
-          aws s3 sync --no-progress "${model_name_or_path}" "$modeldir"/ --exclude "*_optim.pth" --exclude "*eval/*" --exclude '*pred/*' --exclude "*.log"
-        else
-          aws s3 sync --no-progress "${model_name_or_path}" "$modeldir"/ --exclude "iteration_*.pth" --exclude "*_optim.pth" --exclude "*eval/*" --exclude '*pred/*' --exclude "*.log"
-        fi
+        ln -s ${model_name_or_path}* $modeldir
         s3_output=${model_name_or_path%/}
       fi
 
@@ -90,7 +75,6 @@ implementation:
 
       mkdir -p `dirname $s3_metrics_output`
       mkdir -p $metrics_output
-
       echo $S3_METRIC_OUTPUT >> $s3_metrics_output
 
       for e_set in ${eval_sets} ; do
@@ -123,7 +107,8 @@ implementation:
 
       genienlp write-kf-metrics --eval_results `for e_set in ${eval_sets} ; do echo ./eval/${e_set}/${task_name}.results.json ; done`
 
-      aws s3 sync --no-progress "./eval" $S3_METRIC_OUTPUT
+      mkdir -p $S3_METRIC_OUTPUT
+      rsync -rv "./eval" $S3_METRIC_OUTPUT
 
     args: [
       'cmd',

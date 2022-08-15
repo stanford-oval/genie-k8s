@@ -55,6 +55,8 @@ RUN rm -f /usr/local/bin/genie && \
    ln -s /opt/genie-toolkit/dist/tool/genie.js /usr/local/bin/genie && \
    chmod +x /usr/local/bin/genie
 
+RUN dnf -y install rsync
+
 USER genie-toolkit
 COPY lib.sh sync-repos.sh ./
 
