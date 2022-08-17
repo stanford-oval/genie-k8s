@@ -1073,6 +1073,11 @@ def generate_train_eval_pipeline(
     eval_set='',
     eval_parallel_jobs='2',
     eval_additional_args='',
+    s3_database_dir=S3_DATABASE_DIR,
+    s3_bootleg_prepped_data='None',
+    s3_bootleg_subfolder='None',
+    bootleg_model='',
+    bootleg_additional_args='',
 ):
     everything(
         do_generate=True,
@@ -1103,6 +1108,11 @@ def generate_train_eval_pipeline(
         eval_set=eval_set,
         eval_parallel_jobs=eval_parallel_jobs,
         eval_additional_args=eval_additional_args,
+        s3_database_dir=s3_database_dir,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+        s3_bootleg_subfolder=s3_bootleg_subfolder,
+        bootleg_model=bootleg_model,
+        bootleg_additional_args=bootleg_additional_args,
     )
 
 
