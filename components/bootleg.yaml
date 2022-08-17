@@ -35,23 +35,8 @@ implementation:
 
       /opt/genie-toolkit/sync-repos.sh
 
-      set +x
-      aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
-      aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
-      set -x
-
-      IFS='+' ; read -ra TLS <<<"$train_languages"; IFS=' '
-      echo "${TLS[@]}"
-      IFS='+'; read -ra ELS <<<"$eval_languages"; IFS=' '
-      echo "${ELS[@]}"
-
       modeldir="$HOME/models/$bootleg_model"
       mkdir -p "$modeldir"
-
-      if test "{s3_database_dir}" != None ; then
-        aws s3 sync --no-progress ${s3_database_dir}/bootleg/ ./database/
-      fi
-
       mkdir -p cache
 
       if test "${dataset_subfolder}" = "None" ; then
@@ -65,21 +50,18 @@ implementation:
       fi
 
       case $task_name in
-        *"multilingual"*)
-          for lang in "${TLS[@]}" "${ELS[@]}" ; do
-            aws s3 sync --no-progress ${s3_datadir}${dataset_subfolder} dataset/almond --exclude "*/*" --include "*$lang*"
-          done
-        ;;
-
         "almond"*)
-          aws s3 sync --no-progress --exclude "synthetic*.txt" --exclude "*bootleg*" ${s3_datadir}${dataset_subfolder} dataset/almond
+          dataset_dir=dataset/almond/
         ;;
-
         *)
-        aws s3 sync --no-progress --exclude "synthetic*.txt" --exclude "*bootleg*" ${s3_datadir}${dataset_subfolder} dataset
-      ;;
-
+           dataset_dir=dataset/
+        ;;
       esac
+
+      mkdir -p $dataset_dir
+      ln -s ${s3_datadir}${dataset_subfolder}* $dataset_dir
+
+      S3_BOOTLEG_PREPPED_DATA=${s3_datadir%/}/${dataset_subfolder}/bootleg/${bootleg_model}/prepped_files/`date +%s`/${s3_bootleg_subfolder}
 
       genienlp bootleg-dump-features \
           --data "dataset" \
@@ -89,17 +71,14 @@ implementation:
           --exist_ok \
           --train_languages $train_languages \
           --eval_languages $eval_languages \
-          --database_dir ./database/ \
+          --database_dir ${s3_database_dir}/bootleg/ \
           --bootleg_model ${bootleg_model} \
           --bootleg_data_splits ${data_splits} \
+          --bootleg_output_dir ${S3_BOOTLEG_PREPPED_DATA} \
           $@
 
       rm -fr "$modeldir/cache"
       rm -fr "$modeldir/dataset"
-
-      timestamp=`date +%s`
-      S3_BOOTLEG_PREPPED_DATA=${s3_datadir%/}/${dataset_subfolder}/bootleg/${bootleg_model}/prepped_files/${timestamp}/${s3_bootleg_subfolder}
-      aws s3 sync --no-progress results_temp ${S3_BOOTLEG_PREPPED_DATA}
 
       mkdir -p `dirname $s3_bootleg_prepped_data`
       echo ${S3_BOOTLEG_PREPPED_DATA} > $s3_bootleg_prepped_data
