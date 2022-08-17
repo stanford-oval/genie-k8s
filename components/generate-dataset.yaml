@@ -30,11 +30,6 @@ implementation:
       /opt/genie-toolkit/sync-repos.sh
       MAKEDIR=`get_make_dir ${project}`
 
-      set +x
-      aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
-      aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
-      set -x
-
       cat >> workdir/config.mk <<EOF
       developer_key = ${THINGPEDIA_DEVELOPER_KEY}
       EOF
@@ -53,8 +48,8 @@ implementation:
           $@ \
           datadir
 
-      S3_DATADIR=s3://${s3_bucket}/${owner}/dataset/${project}/${experiment}/${dataset}/`date +%s`/
-      aws s3 sync --no-progress datadir/ ${S3_DATADIR}
+      S3_DATADIR=/shared/data/${owner}/dataset/${project}/${experiment}/${dataset}/`date +%s`/
+      rsync -rv datadir/ ${S3_DATADIR}
       mkdir -p `dirname $s3_datadir`
       echo ${S3_DATADIR}  > $s3_datadir
 
