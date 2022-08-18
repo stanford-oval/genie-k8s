@@ -65,7 +65,7 @@ implementation:
           fi
 
           for ((i=0;i<$num_chunks;i++)); do
-            mkdir -p "$S3_OUTPUT_DATADIR"$i/$dir/${split}.${file_extension}
+            mkdir -p "$S3_OUTPUT_DATADIR"$i/$dir
             cp $dir/chunked/${split}"$i".${file_extension} "$S3_OUTPUT_DATADIR"$i/$dir/${split}.${file_extension}
 
           done
