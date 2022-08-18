@@ -32,8 +32,8 @@ implementation:
 
 
       for s3_folder in ${s3_bootleg_prepped_data}; do
+        cp -r ${s3_folder} .
         for split in ${data_splits} ; do
-          ln -s ${s3_folder} ./
           cat ${split}_bootleg/bootleg_wiki/bootleg_labels.jsonl >> merged/${split}_bootleg_labels.jsonl
         done
       done

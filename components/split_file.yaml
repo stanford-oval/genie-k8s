@@ -30,7 +30,7 @@ implementation:
 
       S3_OUTPUT_DATADIR=${s3_datadir%/}/chunked/
 
-      ln -s ${s3_datadir} dataset/
+      ln -s ${s3_datadir} dataset
 
       cd dataset/
 
