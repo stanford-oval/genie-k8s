@@ -63,8 +63,6 @@ implementation:
 
       S3_BOOTLEG_PREPPED_DATA=${s3_datadir%/}/${dataset_subfolder%/}/bootleg/${bootleg_model}/prepped_files/`date +%s`/${s3_bootleg_subfolder}
 
-      rsync -rv ${s3_database_dir}/bootleg/ ./database/
-
       genienlp bootleg-dump-features \
           --data "dataset" \
           --save "$modeldir" \
@@ -73,7 +71,7 @@ implementation:
           --exist_ok \
           --train_languages $train_languages \
           --eval_languages $eval_languages \
-          --database_dir ./database/ \
+          --database_dir ${s3_database_dir}/bootleg/ \
           --bootleg_model ${bootleg_model} \
           --bootleg_data_splits ${data_splits} \
           --bootleg_output_dir ${S3_BOOTLEG_PREPPED_DATA} \
