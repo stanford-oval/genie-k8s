@@ -41,6 +41,14 @@ implementation:
       modeldir=/shared/data/${owner}/models/${project}/${experiment}/${model}/`date +%s`/
       mkdir -p "$modeldir"
 
+      if test "${s3_database_dir}" != None ; then
+        ln -s ${s3_database_dir}/train/ ./database
+      fi
+
+      if test "${s3_bootleg_prepped_data}" != None ; then
+        ln -s ${s3_bootleg_prepped_data} results_temp
+      fi
+
       load_args=
       if test "${load_from}" != None ; then
         ln -s ${load_from}* "$modeldir"/

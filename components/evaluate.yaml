@@ -40,6 +40,10 @@ implementation:
       EOF
       cd workdir/${MAKEDIR}
 
+      if test "${s3_database_dir}" != None ; then
+        ln -s ${s3_database_dir}/train/ ./database
+      fi
+
       ls -al
       mkdir tmp
       MODEL_DIR=${model_owner}/${model}
