@@ -25,6 +25,7 @@ from kubernetes.client.models import V1EmptyDirVolumeSource
 
 from .common import *
 
+
 @dsl.pipeline(name='Bootleg', description='Run a Bootleg model to extract and dump candidate features')
 def bootleg_pipeline(
     owner,
@@ -63,19 +64,20 @@ def bootleg_pipeline(
         bootleg_additional_args=bootleg_additional_args,
     )
 
+
 @dsl.pipeline(name='Bootleg only', description='Run a Bootleg component only')
 def bootleg_only_pipeline(
-    owner,
-    project,
-    experiment,
-    task_name,
-    s3_datadir,
+    owner='silei',
+    project='qald',
+    experiment='qald7',
+    task_name='almond',
+    s3_datadir='/shared/data/silei/dataset/qald/qald7/15/1660644373/chunked/',
     s3_bucket='geniehai',
-    s3_database_dir=S3_DATABASE_DIR,
+    s3_database_dir='https://nfs009a5d03c43b4e7e8ec2.blob.core.windows.net/pvc-a8853620-9ac7-4885-a30e-0ec357f17bb6/mehrad/extras/bootleg_files_v1.0.0/',
     s3_bootleg_subfolder='None',
-    image='',
-    genienlp_version='',
-    bootleg_model='',
+    image='stanfordoval.azurecr.io/genie/kubeflow:20220822',
+    genienlp_version='bb67952ee4125d0b25a47d48577fe9ac3e1ea76f',
+    bootleg_model='bootleg_uncased_mini',
     train_languages='en',
     eval_languages='en',
     data_splits='train eval',
@@ -83,23 +85,23 @@ def bootleg_only_pipeline(
     bootleg_additional_args='',
 ):
     bootleg_step(
-            owner=owner,
-            project=project,
-            experiment=experiment,
-            task_name=task_name,
-            s3_datadir=s3_datadir,
-            s3_bucket=s3_bucket,
-            s3_database_dir=s3_database_dir,
-            s3_bootleg_subfolder=s3_bootleg_subfolder,
-            image=image,
-            genienlp_version=genienlp_version,
-            bootleg_model=bootleg_model,
-            train_languages=train_languages,
-            eval_languages=eval_languages,
-            data_splits=data_splits,
-            dataset_subfolder=dataset_subfolder,
-            bootleg_additional_args=bootleg_additional_args,
-        )
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        task_name=task_name,
+        s3_datadir=s3_datadir,
+        s3_bucket=s3_bucket,
+        s3_database_dir=s3_database_dir,
+        s3_bootleg_subfolder=s3_bootleg_subfolder,
+        image=image,
+        genienlp_version=genienlp_version,
+        bootleg_model=bootleg_model,
+        train_languages=train_languages,
+        eval_languages=eval_languages,
+        data_splits=data_splits,
+        dataset_subfolder=dataset_subfolder,
+        bootleg_additional_args=bootleg_additional_args,
+    )
 
 
 def split_bootleg_merge_step(
