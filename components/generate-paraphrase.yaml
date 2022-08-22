@@ -34,9 +34,9 @@ implementation:
       /opt/genie-toolkit/sync-repos.sh
 
       mkdir -p input_dataset/
-      ln -s ${s3_input_datadir}* input_dataset/
+      rsync -rv --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*" ${s3_input_datadir}* input_dataset/
       mkdir -p paraphraser/
-      ln -s ${paraphrasing_model}* paraphraser/
+      rsync -rv --exclude '*checkpoint* ${paraphrasing_model}* paraphraser/
 
       mkdir -p output_dataset
       cp -r input_dataset/* output_dataset
