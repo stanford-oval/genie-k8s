@@ -33,7 +33,9 @@ implementation:
 
       /opt/genie-toolkit/sync-repos.sh
 
+      mkdir -p output_dataset/
       ln -s ${s3_input_datadir}* input_dataset/
+      mkdir -p paraphraser/
       ln -s ${paraphrasing_model}* paraphraser/
 
       mkdir -p output_dataset
