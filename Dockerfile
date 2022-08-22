@@ -57,6 +57,7 @@ RUN rm -f /usr/local/bin/genie && \
 
 RUN dnf -y install rsync
 RUN dnf -y install wget
+RUN git clone https://github.com/auristor/keyutils.git ; cd keyutils ; make ; make install
 RUN wget https://aka.ms/downloadazcopy-v10-linux ; tar -xvf downloadazcopy-v10-linux ; cp ./azcopy_linux_amd64_*/azcopy /usr/bin/
 
 

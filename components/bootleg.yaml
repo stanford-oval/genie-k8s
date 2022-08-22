@@ -63,7 +63,8 @@ implementation:
 
       S3_BOOTLEG_PREPPED_DATA=${s3_datadir%/}/${dataset_subfolder%/}/bootleg/${bootleg_model}/prepped_files/`date +%s`/${s3_bootleg_subfolder}
 
-      azcopy login --identity
+      keyctl session
+      export AZCOPY_SPA_CLIENT_SECRET=OsI8Q~-InHejGYA-k00QUqjDjcWHDF14YMt1QaC~ ; azcopy login --service-principal --application-id 93a73043-f808-49d2-b941-9a717034f604
       azcopy sync --recursive ${s3_database_dir}/bootleg/ ./database/
 
       genienlp bootleg-dump-features \
