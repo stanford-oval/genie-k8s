@@ -60,10 +60,10 @@ def generate_dataset_step(
         additional_args=additional_args,
     )
     (
-        generate_dataset_op.container.set_memory_limit('28Gi')
-        .set_memory_request('28Gi')
-        .set_cpu_limit('5')
-        .set_cpu_request('5')
+        generate_dataset_op.container.set_memory_limit('100Gi')
+        .set_memory_request('100Gi')
+        .set_cpu_limit('8')
+        .set_cpu_request('8')
     )
     (add_env(add_ssh_volume(generate_dataset_op), gen_dataset_env))
 
