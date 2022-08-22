@@ -66,8 +66,7 @@ implementation:
 
           for ((i=0;i<$num_chunks;i++)); do
             mkdir -p "$S3_OUTPUT_DATADIR"$i/$dir
-            cp $dir/chunked/${split}"$i".${file_extension} "$S3_OUTPUT_DATADIR"$i/$dir/${split}.${file_extension}
-            sleep 300
+            rsync -rv $dir/chunked/${split}"$i".${file_extension} "$S3_OUTPUT_DATADIR"$i/$dir/${split}.${file_extension}
             wc -l $dir/chunked/${split}"$i".${file_extension}
             wc -l "$S3_OUTPUT_DATADIR"$i/$dir/${split}.${file_extension}
 
