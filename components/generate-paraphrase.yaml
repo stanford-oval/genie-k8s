@@ -33,18 +33,13 @@ implementation:
 
       /opt/genie-toolkit/sync-repos.sh
 
-      set +x
-      aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
-      aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
-      set -x
-
-      aws s3 sync --no-progress --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*" "${s3_input_datadir}" input_dataset/
-      aws s3 sync --no-progress --exclude '*checkpoint*' "${paraphrasing_model}" paraphraser/
+      ln -s ${s3_input_datadir}* input_dataset/
+      ln -s ${paraphrasing_model}* paraphraser/
 
       mkdir -p output_dataset
       cp -r input_dataset/* output_dataset
 
-      s3_output_dir="s3://${s3_bucket}/${owner}/dataset/${project}/${experiment}/${dataset}-gen/`date +%s`/"
+      s3_output_dir="/shared/data/${owner}/dataset/${project}/${experiment}/${dataset}-gen/`date +%s`/"
 
       mkdir -p `dirname $s3_output_datadir`
       echo ${s3_output_dir} > $s3_output_datadir
@@ -120,7 +115,8 @@ implementation:
       rm ${output_dir}/almond_paraphrase.tsv
 
       # upload the new dataset to S3
-      aws s3 sync --no-progress output_dataset/ "${s3_output_dir}"
+      mkdir -p ${s3_output_dir}
+      rsync -rv output_dataset/ ${s3_output_dir}
 
     args: [
       'cmd',
