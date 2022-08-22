@@ -25,7 +25,6 @@ from kubernetes.client.models import V1EmptyDirVolumeSource
 
 from .common import *
 
-
 @dsl.pipeline(name='Bootleg', description='Run a Bootleg model to extract and dump candidate features')
 def bootleg_pipeline(
     owner,
@@ -63,6 +62,44 @@ def bootleg_pipeline(
         file_extension=file_extension,
         bootleg_additional_args=bootleg_additional_args,
     )
+
+@dsl.pipeline(name='Bootleg only', description='Run a Bootleg component only')
+def bootleg_only_pipeline(
+    owner,
+    project,
+    experiment,
+    task_name,
+    s3_datadir,
+    s3_bucket='geniehai',
+    s3_database_dir=S3_DATABASE_DIR,
+    s3_bootleg_subfolder='None',
+    image='',
+    genienlp_version='',
+    bootleg_model='',
+    train_languages='en',
+    eval_languages='en',
+    data_splits='train eval',
+    dataset_subfolder='0',
+    bootleg_additional_args='',
+):
+    bootleg_step(
+            owner=owner,
+            project=project,
+            experiment=experiment,
+            task_name=task_name,
+            s3_datadir=s3_datadir,
+            s3_bucket=s3_bucket,
+            s3_database_dir=s3_database_dir,
+            s3_bootleg_subfolder=s3_bootleg_subfolder,
+            image=image,
+            genienlp_version=genienlp_version,
+            bootleg_model=bootleg_model,
+            train_languages=train_languages,
+            eval_languages=eval_languages,
+            data_splits=data_splits,
+            dataset_subfolder=dataset_subfolder,
+            bootleg_additional_args=bootleg_additional_args,
+        )
 
 
 def split_bootleg_merge_step(
