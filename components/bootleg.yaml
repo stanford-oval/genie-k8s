@@ -64,7 +64,8 @@ implementation:
       esac
 
       mkdir -p $dataset_dir
-      azcopy sync --recursive=true https://nfs009a5d03c43b4e7e8ec2.blob.core.windows.net/pvc-a8853620-9ac7-4885-a30e-0ec357f17bb6/${s3_datadir:13}${dataset_subfolder%/}/ $dataset_dir
+      s3_datadir = https://nfs009a5d03c43b4e7e8ec2.blob.core.windows.net/pvc-a8853620-9ac7-4885-a30e-0ec357f17bb6/${s3_datadir:13}
+      azcopy sync --recursive=true ${s3_datadir%/}/${dataset_subfolder%/}/ $dataset_dir
 
       genienlp bootleg-dump-features \
           --data "dataset" \
@@ -84,7 +85,6 @@ implementation:
       rm -fr "$modeldir/dataset"
 
       S3_BOOTLEG_PREPPED_DATA=${s3_datadir%/}/${dataset_subfolder%/}/bootleg/${bootleg_model}/prepped_files/`date +%s`/${s3_bootleg_subfolder%/}/
-      mkdir -p ${S3_BOOTLEG_PREPPED_DATA}
       azcopy sync --recursive=true results_temp ${S3_BOOTLEG_PREPPED_DATA}
 
       mkdir -p `dirname $s3_bootleg_prepped_data`
