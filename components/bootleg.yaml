@@ -42,7 +42,7 @@ implementation:
       keyctl session ; export AZCOPY_SPA_CLIENT_SECRET=${AZURE_SP_PASSWORD} ; azcopy login --service-principal --application-id ${AZURE_SP_APP_ID} --tenant-id ${AZURE_SP_TENANT_ID}
 
       mkdir -p ./database/
-      azcopy sync --recursive=true https://nfs009a5d03c43b4e7e8ec2.blob.core.windows.net/pvc-a8853620-9ac7-4885-a30e-0ec357f17bb6/${s3_database_dir:13}bootleg/ ./database/
+      azcopy sync --recursive=true ${s3_database_dir%/}/bootleg/ ./database/
 
       if test "${dataset_subfolder}" = "None" ; then
         dataset_subfolder="/"
