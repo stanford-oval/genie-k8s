@@ -31,6 +31,10 @@ default_developer_key = os.getenv('THINGPEDIA_DEVELOPER_KEY')
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
 
+AZURE_SP_APP_ID = os.getenv('AZURE_SP_APP_ID')
+AZURE_SP_TENANT_ID = os.getenv('AZURE_SP_TENANT_ID')
+AZURE_SP_PASSWORD = os.getenv('AZURE_SP_PASSWORD')
+
 default_image = 'stanfordoval.azurecr.io/genie/kubeflow:20220725'
 GENIENLP_VERSION = '861aac1fec9fb7246d0a5f7dcb79e57921bf3ada'
 GENIE_VERSION = '681b21d161e35a65f2dec29fde6967c012fa024b'
@@ -72,5 +76,9 @@ def add_env(op, envs):
 
     op.container.add_env_variable(V1EnvVar(name='AWS_ACCESS_KEY_ID', value=AWS_ACCESS_KEY_ID))
     op.container.add_env_variable(V1EnvVar(name='AWS_SECRET_ACCESS_KEY', value=AWS_SECRET_ACCESS_KEY))
+
+    op.container.add_env_variable(V1EnvVar(name='AZURE_SP_APP_ID', value=AZURE_SP_APP_ID))
+    op.container.add_env_variable(V1EnvVar(name='AZURE_SP_TENANT_ID', value=AZURE_SP_TENANT_ID))
+    op.container.add_env_variable(V1EnvVar(name='AZURE_SP_PASSWORD', value=AZURE_SP_PASSWORD))
 
     return op
