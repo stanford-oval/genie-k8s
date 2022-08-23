@@ -22,6 +22,8 @@ implementation:
       parse_args "$0" "image s3_datadir s3_bootleg_prepped_data data_splits s3_output_datadir" "$@"
       shift $n
       cd $HOME
+      
+      keyctl session ; export AZCOPY_SPA_CLIENT_SECRET=${AZURE_SP_PASSWORD} ; azcopy login --service-principal --application-id ${AZURE_SP_APP_ID} --tenant-id ${AZURE_SP_TENANT_ID}
 
       /opt/genie-toolkit/sync-repos.sh
 
