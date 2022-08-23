@@ -59,12 +59,10 @@ implementation:
       esac
 
       mkdir -p $dataset_dir
-      ln -s ${s3_datadir%/}/${dataset_subfolder%/}/* $dataset_dir
+      rsync -rv ${s3_datadir%/}/${dataset_subfolder%/}/ $dataset_dir
+      rsync -rv ${s3_database_dir%/}/bootleg/ ./database/
 
       S3_BOOTLEG_PREPPED_DATA=${s3_datadir%/}/${dataset_subfolder%/}/bootleg/${bootleg_model}/prepped_files/`date +%s`/${s3_bootleg_subfolder}
-
-      azcopy login --identity
-      azcopy sync --recursive ${s3_database_dir}/bootleg/ ./database/
 
       genienlp bootleg-dump-features \
           --data "dataset" \
