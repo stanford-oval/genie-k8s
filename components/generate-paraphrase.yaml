@@ -76,7 +76,7 @@ implementation:
         input_dir=${input_dir} \
         output_dir=$}{output_dir} task_name=${task_name} \
         paraphrasing_arguments="${paraphrasing_arguments}" \
-        paraphraser_path=${paraphraser/}
+        paraphraser_path=paraphraser
 
       # upload the new dataset to S3
       mkdir -p ${s3_output_dir}
