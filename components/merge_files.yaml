@@ -32,7 +32,7 @@ implementation:
 
 
       for s3_folder in ${s3_bootleg_prepped_data}; do
-        rsync -rv ${s3_folder} .
+        azcopy sync --recursive=true ${s3_folder} .
         for split in ${data_splits} ; do
           cat ${split}_bootleg/bootleg_wiki/bootleg_labels.jsonl >> merged/${split}_bootleg_labels.jsonl
         done
@@ -43,7 +43,7 @@ implementation:
 
       for split in ${data_splits} ; do
         mkdir -p ${s3_datadir%/}/merged${s3_bootleg_prepped_parsed%/}/${split}_bootleg/bootleg_wiki
-        cp merged/${split}_bootleg_labels.jsonl ${s3_datadir%/}/merged${s3_bootleg_prepped_parsed%/}/${split}_bootleg/bootleg_wiki/bootleg_labels.jsonl
+        rsync -rv merged/${split}_bootleg_labels.jsonl ${s3_datadir%/}/merged${s3_bootleg_prepped_parsed%/}/${split}_bootleg/bootleg_wiki/bootleg_labels.jsonl
       done
 
       mkdir -p `dirname $s3_output_datadir`
