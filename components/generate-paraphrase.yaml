@@ -32,8 +32,8 @@ implementation:
       set -x
 
       # get parapharsing scripts from genie-workdirs
-      WORKDIR_REPO=git@github.com:stanford-oval/genie-workdirs.git
-      WORKDIR_VERSION=master
+      export $WORKDIR_REPO=git@github.com:stanford-oval/genie-workdirs.git
+      export $WORKDIR_VERSION=master
       /opt/genie-toolkit/sync-repos.sh
 
       cd workdir/autoparaphrase/
