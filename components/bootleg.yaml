@@ -84,7 +84,7 @@ implementation:
       rm -fr "$modeldir/cache"
       rm -fr "$modeldir/dataset"
 
-      S3_BOOTLEG_PREPPED_DATA=${s3_datadir%/}/${dataset_subfolder%/}/bootleg/${bootleg_model}/prepped_files/`date +%s`/${s3_bootleg_subfolder%/}/
+      S3_BOOTLEG_PREPPED_DATA=${s3_datadir%/}/${dataset_subfolder%/}/bootleg/${bootleg_model}/prepped_files/`date +%s`/${s3_bootleg_subfolder}
       azcopy sync --recursive=true results_temp ${S3_BOOTLEG_PREPPED_DATA}
 
       mkdir -p `dirname $s3_bootleg_prepped_data`
