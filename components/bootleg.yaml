@@ -51,7 +51,7 @@ implementation:
       if test "${s3_bootleg_subfolder}" != "None" ; then
         s3_bootleg_subfolder=${s3_bootleg_subfolder}/
       else
-        s3_bootleg_subfolder="/"
+        s3_bootleg_subfolder=
       fi
 
       case $task_name in
