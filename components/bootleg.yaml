@@ -42,6 +42,8 @@ implementation:
       keyctl session
       export AZCOPY_SPA_CLIENT_SECRET=OsI8Q~-InHejGYA-k00QUqjDjcWHDF14YMt1QaC~ ; azcopy login --service-principal --application-id 93a73043-f808-49d2-b941-9a717034f604 --tenant-id 396573cb-f378-4b68-9bc8-15755c0c51f3
 
+      mkdir -p ./database/
+      azcopy sync --recursive=true ${s3_database_dir%/}/bootleg/ ./database/
 
       if test "${dataset_subfolder}" = "None" ; then
         dataset_subfolder="/"
@@ -63,16 +65,7 @@ implementation:
       esac
 
       mkdir -p $dataset_dir
-      ln -s ${s3_datadir%/}/${dataset_subfolder%/}/* $dataset_dir
-
-      S3_BOOTLEG_PREPPED_DATA=${s3_datadir%/}/${dataset_subfolder%/}/bootleg/${bootleg_model}/prepped_files/`date +%s`/${s3_bootleg_subfolder}
-
-      mkdir -p ./database/
-      azcopy sync --recursive=true ${s3_database_dir%/}/bootleg/ ./database/ || true
-
-      for file in /root/.azcopy/* ; do
-        cat $file || true
-      done
+      azcopy sync --recursive=true ${s3_datadir%/}/${dataset_subfolder%/}/ $dataset_dir
 
       genienlp bootleg-dump-features \
           --data "dataset" \
@@ -85,11 +78,15 @@ implementation:
           --database_dir ./database/ \
           --bootleg_model ${bootleg_model} \
           --bootleg_data_splits ${data_splits} \
-          --bootleg_output_dir ${S3_BOOTLEG_PREPPED_DATA} \
+          --bootleg_output_dir results_temp \
           $@
 
       rm -fr "$modeldir/cache"
       rm -fr "$modeldir/dataset"
+
+      S3_BOOTLEG_PREPPED_DATA=${s3_datadir%/}/${dataset_subfolder%/}/bootleg/${bootleg_model}/prepped_files/`date +%s`/${s3_bootleg_subfolder%/}/
+      mkdir -p ${S3_BOOTLEG_PREPPED_DATA}
+      azcopy sync --recursive=true results_temp ${S3_BOOTLEG_PREPPED_DATA}
 
       mkdir -p `dirname $s3_bootleg_prepped_data`
       echo ${S3_BOOTLEG_PREPPED_DATA} > $s3_bootleg_prepped_data
