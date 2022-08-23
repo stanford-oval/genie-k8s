@@ -32,7 +32,6 @@ implementation:
       set -x
 
       /opt/genie-toolkit/sync-repos.sh
-      keyctl session ; export AZCOPY_SPA_CLIENT_SECRET=${AZURE_SP_PASSWORD} ; azcopy login --service-principal --application-id ${AZURE_SP_APP_ID} --tenant-id ${AZURE_SP_TENANT_ID}
 
       # get parapharsing scripts from genie-workdirs
       git clone git@github.com:stanford-oval/genie-workdirs.git workdir
@@ -40,10 +39,9 @@ implementation:
       git checkout master
 
       mkdir -p input_dataset/
-      
-      azcopy sync --recursive=true --exclude-pattern="synthetic*.txt;*bootleg*;*chunked*" ${s3_input_datadir} input_dataset/
+      rsync -rv --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*" ${s3_input_datadir} input_dataset/
       mkdir -p paraphraser/
-      azcopy sync --recursive=true --exclude-pattern="*checkpoint*" ${paraphrasing_model} paraphraser/
+      rsync -rv --exclude "*checkpoint*" ${paraphrasing_model} paraphraser/
 
       mkdir -p output_dataset
       cp -r input_dataset/* output_dataset
@@ -80,9 +78,9 @@ implementation:
         paraphrasing_arguments="${paraphrasing_arguments}" \
         paraphraser_path=paraphraser
 
-      # upload the new dataset to S3
+      # upload the new dataset to storage
       mkdir -p ${s3_output_dir}
-      azcopy sync --recursive=true output_dataset/ ${s3_output_dir}
+      rsync -rv output_dataset/ ${s3_output_dir}
 
     args: [
       'cmd',

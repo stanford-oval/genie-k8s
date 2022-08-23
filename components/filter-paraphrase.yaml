@@ -36,25 +36,20 @@ implementation:
 
       /opt/genie-toolkit/sync-repos.sh
 
-      set +x
-      aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
-      aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
-      set -x
-
       if test "${s3_database_dir}" != None ; then
-        aws s3 sync --no-progress ${s3_database_dir}/train/ ./database/
+        rsync -rv ${s3_database_dir}/train/ ./database/
       fi
 
       if test "${s3_bootleg_prepped_data}" != None ; then
-        aws s3 sync --no-progress ${s3_bootleg_prepped_data} results_temp --exclude '*' --include '*bootleg_labels.jsonl'
+        rsync -rv ${s3_bootleg_prepped_data} results_temp --exclude '*' --include '*bootleg_labels.jsonl'
       fi
 
       if test "${s3_original_bootleg_prepped_data}" != None ; then
-        aws s3 sync --no-progress ${s3_original_bootleg_prepped_data} results_temp --exclude '*' --include '*bootleg_labels.jsonl'
+        rsync -rv ${s3_original_bootleg_prepped_data} results_temp --exclude '*' --include '*bootleg_labels.jsonl'
       fi
 
-      aws s3 sync --no-progress  --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*" "${s3_input_datadir}" input_dataset/
-      aws s3 sync --no-progress --exclude '*/dataset/*' --exclude '*/cache/*' --exclude 'iteration_*.pth' --exclude '*_optim.pth' "${filtering_model}" filtering_model/
+      rsync -rv --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*" "${s3_input_datadir}" input_dataset/
+      rsync -rv --exclude '*/dataset/*' --exclude '*/cache/*' --exclude 'iteration_*.pth' --exclude '*_optim.pth' "${filtering_model}" filtering_model/
 
       mkdir -p output_dataset
       cp -r input_dataset/* output_dataset
@@ -86,76 +81,23 @@ implementation:
           ;;
       esac
 
-      run_parser() {
-        # get parser output for paraphrased utterances
-        mkdir -p filtering_dataset/${filtering_dir}
-        cp ${output_dir}/unfiltered.tsv filtering_dataset/${filtering_dir}/unfiltered.tsv
-        genienlp predict \
-          --data ./filtering_dataset \
-          --path filtering_model \
-          --eval_dir ./eval_dir \
-          --evaluate valid \
-          --pred_set_name unfiltered \
-          --task ${task_name} \
-          --overwrite \
-          --silent \
-          --main_metric_only \
-          --val_batch_size ${filtering_batch_size} \
-          $filtering_arguments
-        cp ./eval_dir/valid/${task_name}.results.json ${output_dir}/
-        # cp ./eval_dir/valid/${task_name}.tsv ${output_dir}/ # useful for debugging the paraphraser
-      }
-
-      filter() {
-        # remove paraphrases that do not preserve the meaning according to the parser
-        mkdir -p results_temp/filtered_bootleg/bootleg_wiki/
-        genienlp transform-dataset \
-          ${output_dir}/unfiltered.tsv \
-          ${output_dir}/filtered.tsv \
-          --bootleg_file results_temp/unfiltered_bootleg/bootleg_wiki/bootleg_labels.jsonl \
-          --bootleg_output_file results_temp/filtered_bootleg/bootleg_wiki/bootleg_labels.jsonl \
-          --thrown_away ${output_dir}/thrown_away.tsv \
-          --thingtalk_gold_file eval_dir/valid/${task_name}.tsv \
-          --transformation remove_wrong_thingtalk \
-          --task ${task_name}
-      }
-
-      append_to_original() {
-        # append paraphrases to the end of the original training file and remove duplicates
-        cp ${input_dir}/train.tsv ${output_dir}/train.tsv
-        cp ${output_dir}/filtered.tsv ${output_dir}/temp.tsv
-        mkdir -p results_temp/temp_bootleg/bootleg_wiki/
-        genienlp transform-dataset \
-          ${output_dir}/temp.tsv \
-          ${output_dir}/filtered.tsv \
-          --bootleg_file results_temp/filtered_bootleg/bootleg_wiki/bootleg_labels.jsonl \
-          --bootleg_output_file results_temp/temp_bootleg/bootleg_wiki/bootleg_labels.jsonl \
-          --remove_duplicates \
-          --task ${task_name}
-        rm ${output_dir}/temp.tsv
-        cat ${output_dir}/filtered.tsv >> ${output_dir}/train.tsv
-        cat results_temp/temp_bootleg/bootleg_wiki/bootleg_labels.jsonl >> results_temp/train_bootleg/bootleg_wiki/bootleg_labels.jsonl
-        if test `cat ${output_dir}/train.tsv | wc -l` != `cat results_temp/train_bootleg/bootleg_wiki/bootleg_labels.jsonl | wc -l` ; then
-          echo 'Error: number of examples in final train and bootleg files should be the same' ; exit 1
-        fi
-      }
-
-
       if ! test -f ${input_dir}/unfiltered.tsv ; then
         echo "Error: unfiltered.tsv does not exist."
         exit 1
       fi
 
-      run_parser
-      filter
-      append_to_original
+      make append-to-original \
+        task_name=${task_name} \
+        filtering_dir=${filtering_dir} \
+        filtering_batch_size=${filtering_batch_size} \
+        filtering_output_dir=${output_dir} \
+        filtering_model=filter_model \
+        filtering_arguments=${filtering_arguments}
 
-      rm ${output_dir}/unfiltered.tsv
-      rm ${output_dir}/almond_paraphrase.results.json
 
-      # upload the new dataset to S3
-      aws s3 sync --no-progress output_dataset/ "${s3_output_dir}"
-      aws s3 sync --no-progress results_temp/ ${s3_original_bootleg_prepped_data} --exclude '*' --include '*bootleg_labels.jsonl'
+      # upload the new dataset to storage
+      rsync -rv output_dataset/ "${s3_output_dir}"
+      rsync -rv results_temp/ ${s3_original_bootleg_prepped_data} --exclude '*' --include '*bootleg_labels.jsonl'
 
 
     args: [
