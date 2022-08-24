@@ -36,6 +36,11 @@ implementation:
 
       /opt/genie-toolkit/sync-repos.sh
 
+      # get parapharsing scripts from genie-workdirs
+      git clone git@github.com:stanford-oval/genie-workdirs.git workdir
+      cd workdir/autoparaphrase/
+      git checkout master
+
       if test "${s3_database_dir}" != None ; then
         rsync -rv ${s3_database_dir}/train/ ./database/
       fi
