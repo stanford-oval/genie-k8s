@@ -78,7 +78,8 @@ implementation:
       make join-results \
         keep_original_duplicates=${keep_original_duplicates} \
         input_dir=${input_dir} \
-        output_dir=$}{output_dir} task_name=${task_name} \
+        output_dir=${output_dir} \
+        task_name=${task_name} \
         paraphrasing_arguments="${paraphrasing_arguments}" \
         paraphraser_path=paraphraser
 
