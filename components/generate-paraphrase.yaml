@@ -38,12 +38,12 @@ implementation:
       cd workdir/autoparaphrase/
       git checkout master
 
+      keyctl session ; export AZCOPY_SPA_CLIENT_SECRET=${AZURE_SP_PASSWORD} ; azcopy login --service-principal --application-id ${AZURE_SP_APP_ID} --tenant-id ${AZURE_SP_TENANT_ID}
       mkdir -p input_dataset/
       # rsync -rv --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*" ${s3_input_datadir} input_dataset/
       azcopy sync --recursive=true https://nfs009a5d03c43b4e7e8ec2.blob.core.windows.net/pvc-a8853620-9ac7-4885-a30e-0ec357f17bb6/sinaj/dataset/schema2qa2.0/movies/fewshot-small input_dataset/
       mkdir -p paraphraser/
       # rsync -rv --exclude "*checkpoint*" ${paraphrasing_model} paraphraser/
-      keyctl session ; export AZCOPY_SPA_CLIENT_SECRET=${AZURE_SP_PASSWORD} ; azcopy login --service-principal --application-id ${AZURE_SP_APP_ID} --tenant-id ${AZURE_SP_TENANT_ID}
       
       azcopy sync --recursive=true https://nfs009a5d03c43b4e7e8ec2.blob.core.windows.net/pvc-a8853620-9ac7-4885-a30e-0ec357f17bb6/sinaj/models/schemaorg/paraphrase/bart-large-speedup-megabatch-5m/ paraphraser/
 
