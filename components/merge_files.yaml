@@ -37,6 +37,7 @@ implementation:
         azcopy sync --recursive=true ${s3_folder} .
         for split in ${data_splits} ; do
           cat ${split}_bootleg/bootleg_wiki/bootleg_labels.jsonl >> merged/${split}_bootleg_labels.jsonl
+          rm -rf ${split}_bootleg
         done
       done
 
