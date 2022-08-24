@@ -32,8 +32,10 @@ implementation:
       shift $n
       cd $HOME
 
+      set +x
       keyctl session ; export AZCOPY_SPA_CLIENT_SECRET=${AZURE_SP_PASSWORD} ; azcopy login --service-principal --application-id ${AZURE_SP_APP_ID} --tenant-id ${AZURE_SP_TENANT_ID}
-
+      set -x
+      
       /opt/genie-toolkit/sync-repos.sh
 
       MAKEDIR=`get_make_dir ${project}`
