@@ -70,7 +70,7 @@ implementation:
       fi
 
       # if not an s3 path assume pretrained model name and save it in genienlp format
-      if [[ "${model_name_or_path}" != "s3://"* ]] ; then
+      if [[ "${model_type}" != None ]] ; then
         genienlp train --train_tasks ${task_name} --train_iterations 0 --save "$modeldir" --model ${model_type} --pretrained_model ${model_name_or_path} --exist_ok
         s3_output=${s3_bucket}/${owner}/workdir/prediction/${task_name}/${model_type}/${model_name_or_path}
       else
