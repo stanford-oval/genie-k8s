@@ -57,16 +57,16 @@ implementation:
       set -x
 
       mkdir -p $dataset_dir
-      azcopy sync --recursive ${s3_input_datadir}${dataset_subfolder} $dataset_dir --exclude-pattern "synthetic*.txt" --exclude-path "bootleg/;chunked/"
+      azcopy sync --recursive ${s3_bucket}/${s3_input_datadir}${dataset_subfolder} $dataset_dir --exclude-pattern "synthetic*.txt" --exclude-path "bootleg/;chunked/"
 
       if test "${s3_database_dir}" != None ; then
         mkdir -p ./database/
-        azcopy sync --recursive ${s3_database_dir}/bootleg/ ./database/
+        azcopy sync --recursive ${s3_bucket}/${s3_database_dir}/bootleg/ ./database/
       fi
 
       if test "${s3_bootleg_prepped_data}" != None ; then
         mkdir -p results_temp
-        azcopy sync --recursive ${s3_bootleg_prepped_data} results_temp --exclude '*' --include '*bootleg_labels.jsonl'
+        azcopy sync --recursive ${s3_bucket}/${s3_bootleg_prepped_data} results_temp --exclude '*' --include '*bootleg_labels.jsonl'
       fi
 
       # if not an s3 path assume pretrained model name and save it in genienlp format
@@ -75,11 +75,11 @@ implementation:
         s3_output=${s3_bucket}/${owner}/workdir/prediction/${task_name}/${model_type}/${model_name_or_path}
       else
         if [[ "$@" == *"--checkpoint_name"* ]] ; then
-          azcopy sync --recursive "${model_name_or_path}" "$modeldir"/ --exclude-pattern "*_optim.pth;*.log" --exclude-path "eval/;pred/"
+          azcopy sync --recursive "${s3_bucket}/${model_name_or_path}" "$modeldir"/ --exclude-pattern "*_optim.pth;*.log" --exclude-path "eval/;pred/"
         else
-          azcopy sync --recursive "${model_name_or_path}" "$modeldir"/ --exclude-pattern "iteration_*.pth;*_optim.pth;*.log" --exclude-path "eval/;pred/"
+          azcopy sync --recursive "${s3_bucket}/${model_name_or_path}" "$modeldir"/ --exclude-pattern "iteration_*.pth;*_optim.pth;*.log" --exclude-path "eval/;pred/"
         fi
-        s3_output=${model_name_or_path%/}
+        s3_output=${s3_bucket}/${model_name_or_path%/}
       fi
 
       S3_METRIC_OUTPUT="$s3_output"/pred/`date +%s`/
