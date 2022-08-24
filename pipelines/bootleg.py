@@ -86,6 +86,7 @@ def split_bootleg_merge_step(
     num_chunks = 2
     split_op = split_step(
         image=image,
+        s3_bucket=s3_bucket,
         task_name=task_name,
         s3_datadir=s3_datadir,
         num_chunks=num_chunks,
@@ -117,6 +118,7 @@ def split_bootleg_merge_step(
 
     merge_op = merge_step(
         image=image,
+        s3_bucket=s3_bucket,
         s3_datadir=split_op.outputs['s3_output_datadir'],
         s3_bootleg_prepped_data=' '.join(s3_bootleg_outputs),
         data_splits=data_splits,
@@ -127,11 +129,12 @@ def split_bootleg_merge_step(
     return s3_bootleg_prepped_data
 
 
-def split_step(image, task_name, s3_datadir, num_chunks, data_splits, file_extension):
+def split_step(image, s3_bucket, task_name, s3_datadir, num_chunks, data_splits, file_extension):
     split_env = {}
 
     split_op = components.load_component_from_file('components/split_file.yaml')(
         image=image,
+        s3_bucket=s3_bucket,
         task_name=task_name,
         s3_datadir=s3_datadir,
         num_chunks=num_chunks,
@@ -144,11 +147,12 @@ def split_step(image, task_name, s3_datadir, num_chunks, data_splits, file_exten
     return split_op
 
 
-def merge_step(image, s3_datadir, s3_bootleg_prepped_data, data_splits):
+def merge_step(image, s3_bucket, s3_datadir, s3_bootleg_prepped_data, data_splits):
     merge_env = {}
 
     merge_op = components.load_component_from_file('components/merge_files.yaml')(
         image=image,
+        s3_bucket=s3_bucket,
         s3_datadir=s3_datadir,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
         data_splits=data_splits,

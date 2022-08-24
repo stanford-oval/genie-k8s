@@ -35,7 +35,7 @@ implementation:
       echo ${s3_bootleg_prepped_data}
 
       for s3_folder in ${s3_bootleg_prepped_data}; do
-        azcopy sync --recursive=true ${s3_folder} .
+        azcopy sync --recursive=true ${s3_bucket%/}/${s3_folder} .
         for split in ${data_splits} ; do
           cat ${split}_bootleg/bootleg_wiki/bootleg_labels.jsonl >> merged/${split}_bootleg_labels.jsonl
           rm -rf ${split}_bootleg
@@ -46,7 +46,7 @@ implementation:
       s3_bootleg_prepped_parsed=`echo ${s3_folder} | sed 's/^.*\/bootleg\//\/bootleg\//'`
 
       for split in ${data_splits} ; do
-        azcopy cp merged/${split}_bootleg_labels.jsonl ${s3_datadir%/}/merged${s3_bootleg_prepped_parsed%/}/${split}_bootleg/bootleg_wiki/bootleg_labels.jsonl
+        azcopy cp merged/${split}_bootleg_labels.jsonl ${s3_bucket%/}/${s3_datadir%/}/merged${s3_bootleg_prepped_parsed%/}/${split}_bootleg/bootleg_wiki/bootleg_labels.jsonl
       done
 
       mkdir -p `dirname $s3_output_datadir`

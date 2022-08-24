@@ -22,7 +22,7 @@ implementation:
     - -c
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image task_name s3_datadir num_chunks data_splits file_extension s3_output_datadir" "$@"
+      parse_args "$0" "image s3_bucket task_name s3_datadir num_chunks data_splits file_extension s3_output_datadir" "$@"
       shift $n
       cd $HOME
 
@@ -35,7 +35,7 @@ implementation:
       set -x
 
       mkdir -p dataset
-      azcopy sync --recursive --exclude-pattern "*bootleg*;*chunked*" ${s3_datadir} dataset/
+      azcopy sync --recursive --exclude-pattern "*bootleg*;*chunked*" ${s3_bucket%/}/${s3_datadir} dataset/
 
       cd dataset/
 
@@ -70,7 +70,7 @@ implementation:
           fi
 
           for ((i=0;i<$num_chunks;i++)); do
-            azcopy cp $dir/chunked/${split}"$i".${file_extension} "$S3_OUTPUT_DATADIR"$i/$dir/${split}.${file_extension}
+            azcopy cp $dir/chunked/${split}"$i".${file_extension} ${s3_bucket%/}/"$S3_OUTPUT_DATADIR"$i/$dir/${split}.${file_extension}
 
           done
         done
