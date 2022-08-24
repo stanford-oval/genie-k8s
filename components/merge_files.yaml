@@ -3,6 +3,7 @@ description: |
   Merge files
 inputs:
   - {name: image, description: '', default: ''}
+  - {name: s3_bucket, description: ''}
   - {name: s3_datadir, description: '', default: ''}
   - {name: s3_bootleg_prepped_data, description: ''}
   - {name: data_splits, description: '', default: ''}
