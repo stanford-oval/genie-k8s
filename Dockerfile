@@ -55,6 +55,10 @@ RUN rm -f /usr/local/bin/genie && \
    ln -s /opt/genie-toolkit/dist/tool/genie.js /usr/local/bin/genie && \
    chmod +x /usr/local/bin/genie
 
+RUN dnf -y install rsync wget
+RUN git clone https://github.com/auristor/keyutils.git ; cd keyutils ; make ; make install
+RUN wget https://aka.ms/downloadazcopy-v10-linux ; tar -xvf downloadazcopy-v10-linux ; cp ./azcopy_linux_amd64_*/azcopy /usr/bin/
+
 USER genie-toolkit
 COPY lib.sh sync-repos.sh ./
 
