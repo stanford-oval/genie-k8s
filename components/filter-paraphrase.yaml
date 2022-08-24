@@ -37,7 +37,7 @@ implementation:
       /opt/genie-toolkit/sync-repos.sh
 
       # get parapharsing scripts from genie-workdirs
-      git clone git@github.com:stanford-oval/genie-workdirs.git workdir
+      git clone --quiet git@github.com:stanford-oval/genie-workdirs.git workdir
       cd workdir/autoparaphrase/
       git checkout master
 
