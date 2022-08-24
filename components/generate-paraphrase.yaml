@@ -44,7 +44,7 @@ implementation:
       # rsync -rv --exclude "*checkpoint*" ${paraphrasing_model} paraphraser/
       keyctl session ; export AZCOPY_SPA_CLIENT_SECRET=${AZURE_SP_PASSWORD} ; azcopy login --service-principal --application-id ${AZURE_SP_APP_ID} --tenant-id ${AZURE_SP_TENANT_ID}
       
-      azcopy sync --recursive=true https://nfs009a5d03c43b4e7e8ec2.blob.core.windows.net/pvc-a8853620-9ac7-4885-a30e-0ec357f17bb6/sinaj/models/schemaorg/paraphrase/bart-large-speedup-megabatch-5/ paraphraser/
+      azcopy sync --recursive=true https://nfs009a5d03c43b4e7e8ec2.blob.core.windows.net/pvc-a8853620-9ac7-4885-a30e-0ec357f17bb6/sinaj/models/schemaorg/paraphrase/bart-large-speedup-megabatch-5m/ paraphraser/
 
       mkdir -p output_dataset
       cp -r input_dataset/* output_dataset
