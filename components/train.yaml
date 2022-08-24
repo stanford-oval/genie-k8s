@@ -118,8 +118,8 @@ implementation:
       rm -fr "$modeldir/cache"
       rm -fr "$modeldir/dataset"
 
-      S3_MODEL_DIR=${s3_bucket}/${owner}/models/${project}/${experiment}/${model}/`date +%s`/
-      azcopy sync --recursive ${modeldir}/ ${S3_MODEL_DIR}
+      S3_MODEL_DIR=${owner}/models/${project}/${experiment}/${model}/`date +%s`/
+      azcopy sync --recursive ${modeldir}/ ${s3_bucket}/${S3_MODEL_DIR}
 
       mkdir -p `dirname $s3_model_dir`
       echo ${S3_MODEL_DIR} > $s3_model_dir
