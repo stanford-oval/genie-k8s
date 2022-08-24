@@ -50,7 +50,7 @@ def generate_dataset_step(
     }
     generate_dataset_op = components.load_component_from_file('components/generate-dataset.yaml')(
         image=image,
-        s3_bucket='geniehai',
+        s3_bucket=AZURE_BUCKET,
         owner=owner,
         project=project,
         experiment=experiment,
@@ -88,7 +88,7 @@ def generate_dataset_step_w_gpu(
     num_gpus = 1
     generate_dataset_op = components.load_component_from_file('components/generate-dataset.yaml')(
         image=image,
-        s3_bucket='geniehai',
+        s3_bucket=AZURE_BUCKET,
         owner=owner,
         project=project,
         experiment=experiment,
@@ -298,7 +298,7 @@ def train_step_4gpus(
     s3_database_dir='None',
     train_languages='en',
     eval_languages='en',
-    s3_bucket='geniehai',
+    s3_bucket=AZURE_BUCKET,
     s3_bootleg_prepped_data='None',
     additional_args='',
 ):
@@ -707,7 +707,7 @@ def everything(
     workdir_repo=WORKDIR_REPO,
     workdir_version=WORKDIR_VERSION,
     thingpedia_developer_key=default_developer_key,
-    s3_bucket='geniehai',
+    s3_bucket=AZURE_BUCKET,
     s3_database_dir='None',
     s3_bootleg_subfolder='None',
     bootleg_data_splits='train eval',
