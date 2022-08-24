@@ -62,19 +62,19 @@ def prediction_4gpu_step(
 
 
 def prediction_step(
-    image,
-    owner,
-    genienlp_version,
-    task_name,
-    eval_sets,
-    model_name_or_path,
-    s3_input_datadir,
-    s3_database_dir,
-    s3_bootleg_prepped_data,
-    model_type,
-    dataset_subfolder,
-    val_batch_size,
-    additional_args,
+    image='stanfordoval.azurecr.io/genie/kubeflow:20220822',
+    owner='mehrad',
+    genienlp_version='561937cb50b84b1ebc5eda5c00e82a861cf56814',
+    task_name='almond',
+    eval_sets='eval',
+    model_name_or_path='mehrad/models/sqa/restaurants/bart_1/1661376874/',
+    s3_input_datadir='mehrad/dataset/sqa/restaurants/',
+    s3_database_dir='None',
+    s3_bootleg_prepped_data='None',
+    model_type='None',
+    dataset_subfolder='None',
+    val_batch_size='4000',
+    additional_args='',
 ):
 
     predict_env = {'GENIENLP_VERSION': genienlp_version}
@@ -241,7 +241,7 @@ def train_predict_pipeline(
     s3_datadir='mehrad/dataset/sqa/restaurants/',
     s3_bucket=AZURE_BUCKET,
     s3_database_dir='None',
-    model_type='',
+    model_type='None',
     image='stanfordoval.azurecr.io/genie/kubeflow:20220822',
     genienlp_version='561937cb50b84b1ebc5eda5c00e82a861cf56814',
     load_from='None',
