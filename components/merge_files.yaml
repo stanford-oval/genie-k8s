@@ -26,21 +26,19 @@ implementation:
       /opt/genie-toolkit/sync-repos.sh
 
       set +x
-      aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
-      aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
+      keyctl session ; export AZCOPY_SPA_CLIENT_SECRET=${AZURE_SP_PASSWORD} ; azcopy login --service-principal --application-id ${AZURE_SP_APP_ID} --tenant-id ${AZURE_SP_TENANT_ID}
       set -x
-
 
       mkdir -p dataset/merged
       cd dataset/
 
       echo ${s3_bootleg_prepped_data}
 
-
       for s3_folder in ${s3_bootleg_prepped_data}; do
+        azcopy sync --recursive=true ${s3_folder} .
         for split in ${data_splits} ; do
-          aws s3 sync --no-progress ${s3_folder} ./
           cat ${split}_bootleg/bootleg_wiki/bootleg_labels.jsonl >> merged/${split}_bootleg_labels.jsonl
+          rm -rf ${split}_bootleg
         done
       done
 
@@ -48,7 +46,7 @@ implementation:
       s3_bootleg_prepped_parsed=`echo ${s3_folder} | sed 's/^.*\/bootleg\//\/bootleg\//'`
 
       for split in ${data_splits} ; do
-        aws s3 cp --no-progress merged/${split}_bootleg_labels.jsonl ${s3_datadir%/}/merged${s3_bootleg_prepped_parsed%/}/${split}_bootleg/bootleg_wiki/bootleg_labels.jsonl
+        azcopy cp merged/${split}_bootleg_labels.jsonl ${s3_datadir%/}/merged${s3_bootleg_prepped_parsed%/}/${split}_bootleg/bootleg_wiki/bootleg_labels.jsonl
       done
 
       mkdir -p `dirname $s3_output_datadir`
