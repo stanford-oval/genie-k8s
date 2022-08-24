@@ -85,6 +85,7 @@ def prediction_step(
         eval_sets=eval_sets,
         task_name=task_name,
         model_name_or_path=model_name_or_path,
+        s3_bukcet=AZURE_BUCKET,
         s3_input_datadir=s3_input_datadir,
         s3_database_dir=s3_database_dir,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,

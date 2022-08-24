@@ -59,12 +59,7 @@ def generate_dataset_step(
         valid_set=valid_set,
         additional_args=additional_args,
     )
-    (
-        generate_dataset_op.container.set_memory_limit('28Gi')
-        .set_memory_request('28Gi')
-        .set_cpu_limit('5')
-        .set_cpu_request('5')
-    )
+    (generate_dataset_op.container.set_memory_limit('28Gi').set_memory_request('28Gi').set_cpu_limit('5').set_cpu_request('5'))
     (add_env(add_ssh_volume(generate_dataset_op), gen_dataset_env))
 
     return generate_dataset_op
@@ -136,7 +131,7 @@ def train_step(
     s3_database_dir='None',
     train_languages='en',
     eval_languages='en',
-    s3_bucket='geniehai',
+    s3_bucket=AZURE_BUCKET,
     s3_bootleg_prepped_data='None',
     additional_args='',
 ):
