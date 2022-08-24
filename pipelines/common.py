@@ -36,14 +36,14 @@ AZURE_SP_TENANT_ID = os.getenv('AZURE_SP_TENANT_ID')
 AZURE_SP_PASSWORD = os.getenv('AZURE_SP_PASSWORD')
 
 default_image = 'stanfordoval.azurecr.io/genie/kubeflow:20220725'
-GENIENLP_VERSION = '861aac1fec9fb7246d0a5f7dcb79e57921bf3ada'
+GENIENLP_VERSION = '554ec076107774febcc40c110e176734c311a160'
 GENIE_VERSION = '681b21d161e35a65f2dec29fde6967c012fa024b'
 WORKDIR_REPO = 'git@github.com:stanford-oval/thingpedia-common-devices.git'
 WORKDIR_VERSION = '35592e1f22f9318d1f26ca79f0ab86e50e55ae87'
 GENIE_WORKDIR_REPO = 'git@github.com:stanford-oval/genie-workdirs.git'
 GENIE_WORKDIR_VERSION = 'master'
-PARAPHRASING_MODEL = 's3://geniehai/sinaj/models/schemaorg/paraphrase/bart-large-speedup-megabatch-5m/'
-S3_DATABASE_DIR = 's3://geniehai/mehrad/extras/bootleg_files_v1.0.0'
+PARAPHRASING_MODEL = '/shared/data/sinaj/models/schemaorg/paraphrase/bart-large-speedup-megabatch-5m/'
+S3_DATABASE_DIR = 'https://nfs009a5d03c43b4e7e8ec2.blob.core.windows.net/pvc-a8853620-9ac7-4885-a30e-0ec357f17bb6/mehrad/extras/bootleg_files_v1.0.0/'
 
 # name of a secret in Kubernetes containing the SSH credentials (GitHub deploy key for genie-workdirs)
 SSH_VOLUME = 'ssh-secrets-7fdcbg96c4'
