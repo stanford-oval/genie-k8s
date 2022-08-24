@@ -96,7 +96,7 @@ implementation:
         filtering_dir=${filtering_dir} \
         filtering_batch_size=${filtering_batch_size} \
         filtering_output_dir=${output_dir} \
-        filtering_model=filter_model \
+        filtering_model=filtering_model \
         filtering_arguments="${filtering_arguments}"
 
 
