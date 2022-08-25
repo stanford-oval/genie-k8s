@@ -56,6 +56,7 @@ implementation:
     args: [
       'cmd',
       --image, {inputValue: image},
+      --s3_bucket, {inputValue: s3_bucket},
       --s3_datadir, {inputValue: s3_datadir},
       --s3_bootleg_prepped_data, {inputValue: s3_bootleg_prepped_data},
       --data_splits, {inputValue: data_splits},

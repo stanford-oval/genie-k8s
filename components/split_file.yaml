@@ -84,6 +84,7 @@ implementation:
     args: [
       'cmd',
       --image, {inputValue: image},
+      --s3_bucket, {inputValue: s3_bucket},
       --task_name, {inputValue: task_name},
       --s3_datadir, {inputValue: s3_datadir},
       --num_chunks, {inputValue: num_chunks},
