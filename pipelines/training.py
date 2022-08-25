@@ -20,7 +20,7 @@
 # OR OTHER DEALINGS IN THE SOFTWARE.
 
 from kfp import components, dsl
-from kubernetes.client import V1Toleration
+from kubernetes.client import V1EmptyDirVolumeSource, V1Toleration
 from kubernetes.client.models import V1PersistentVolumeClaimVolumeSource
 
 from . import predicting, split_bootleg_merge_step, translation
@@ -59,7 +59,7 @@ def generate_dataset_step(
         valid_set=valid_set,
         additional_args=additional_args,
     )
-    (generate_dataset_op.container.set_memory_limit('28Gi').set_memory_request('28Gi').set_cpu_limit('5').set_cpu_request('5'))
+    (generate_dataset_op.container.set_memory_limit('100Gi').set_memory_request('100Gi').set_cpu_limit('8').set_cpu_request('8'))
     (add_env(add_ssh_volume(generate_dataset_op), gen_dataset_env))
 
     return generate_dataset_op
@@ -395,6 +395,7 @@ def eval_step(
         add_env(add_ssh_volume(eval_op), eval_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
         .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC6s_v3')
+        .add_volume(V1Volume(name='shm', empty_dir=V1EmptyDirVolumeSource(medium='Memory')))
     )
 
     return eval_op
