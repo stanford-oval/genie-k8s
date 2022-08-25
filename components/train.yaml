@@ -52,17 +52,17 @@ implementation:
 
       if test "${s3_database_dir}" != None ; then
         mkdir -p ./database/
-        azcopy sync --recursive ${s3_bucket}/${s3_database_dir}/train/ ./database/
+        azcopy sync --recursive ${s3_bucket%/}/${s3_database_dir%/}/train/ ./database/
       fi
 
       if test "${s3_bootleg_prepped_data}" != None ; then
         mkdir -p results_temp
-        azcopy sync --recursive ${s3_bucket}/${s3_bootleg_prepped_data} results_temp --include-pattern "*bootleg_labels.jsonl"
+        azcopy sync --recursive ${s3_bucket%/}/${s3_bootleg_prepped_data} results_temp --include-pattern "*bootleg_labels.jsonl"
       fi
 
       load_args=
       if test "${load_from}" != None ; then
-        azcopy sync --recursive "${s3_bucket}/${load_from}" "$modeldir"/ --exclude-pattern "iteration_*.pth;*.log" --exclude-path "eval/;pred/"
+        azcopy sync --recursive "${s3_bucket%/}/${load_from}" "$modeldir"/ --exclude-pattern "iteration_*.pth;*.log" --exclude-path "eval/;pred/"
         load_args="--load best.pth"
       fi
 
@@ -74,18 +74,18 @@ implementation:
         *"multilingual"*)
           for lang in "${TLS[@]}" "${ELS[@]}" ; do
             mkdir -p "$lang/"
-            azcopy sync --recursive ${s3_bucket}/${s3_datadir}${dataset_subfolder} dataset/almond --include-path "$lang/"
+            azcopy sync --recursive ${s3_bucket%/}/${s3_datadir%/}/${dataset_subfolder} dataset/almond --include-path "$lang/"
           done
         ;;
 
         "almond"*)
           mkdir -p dataset/almond
-          azcopy sync --recursive ${s3_bucket}/${s3_datadir}${dataset_subfolder} dataset/almond --exclude-pattern "synthetic*.txt" --exclude-path "bootleg/;chunked/"
+          azcopy sync --recursive ${s3_bucket%/}/${s3_datadir%/}/${dataset_subfolder} dataset/almond --exclude-pattern "synthetic*.txt" --exclude-path "bootleg/;chunked/"
         ;;
 
         *)
           mkdir -p dataset
-          azcopy sync --recursive ${s3_bucket}/${s3_datadir}${dataset_subfolder} dataset --exclude-pattern "synthetic*.txt" --exclude-path "bootleg/;chunked/"
+          azcopy sync --recursive ${s3_bucket%/}/${s3_datadir%/}/${dataset_subfolder} dataset --exclude-pattern "synthetic*.txt" --exclude-path "bootleg/;chunked/"
         ;;
       esac
 
@@ -119,7 +119,7 @@ implementation:
       rm -fr "$modeldir/dataset"
 
       S3_MODEL_DIR=${owner}/models/${project}/${experiment}/${model}/`date +%s`/
-      azcopy sync --recursive ${modeldir}/ ${s3_bucket}/${S3_MODEL_DIR}
+      azcopy sync --recursive ${modeldir}/ ${s3_bucket%/}/${S3_MODEL_DIR}
 
       mkdir -p `dirname $s3_model_dir`
       echo ${S3_MODEL_DIR} > $s3_model_dir
