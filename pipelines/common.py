@@ -34,7 +34,7 @@ AZURE_SP_APP_ID = os.getenv('AZURE_SP_APP_ID')
 AZURE_SP_TENANT_ID = os.getenv('AZURE_SP_TENANT_ID')
 AZURE_SP_PASSWORD = os.getenv('AZURE_SP_PASSWORD')
 
-default_image = 'stanfordoval.azurecr.io/genie/kubeflow:20220725'
+default_image = 'stanfordoval.azurecr.io/genie/kubeflow:20220822'
 GENIENLP_VERSION = '861aac1fec9fb7246d0a5f7dcb79e57921bf3ada'
 GENIE_VERSION = '681b21d161e35a65f2dec29fde6967c012fa024b'
 WORKDIR_REPO = 'git@github.com:stanford-oval/thingpedia-common-devices.git'
