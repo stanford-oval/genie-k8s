@@ -350,6 +350,7 @@ def train_step_4gpus(
 
 def eval_step(
     image,
+    s3_bucket,
     owner,
     project,
     experiment,
@@ -376,6 +377,7 @@ def eval_step(
 
     eval_op = components.load_component_from_file('components/evaluate.yaml')(
         image=image,
+        s3_bucket=s3_bucket,
         owner=owner,
         project=project,
         experiment=experiment,
@@ -895,6 +897,7 @@ def everything(
 
     eval_op = eval_step(
         image=image,
+        s3_bucket=s3_bucket,
         owner=owner,
         project=project,
         experiment=experiment,
