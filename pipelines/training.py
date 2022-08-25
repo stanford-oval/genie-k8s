@@ -2015,6 +2015,7 @@ def eval_pipeline(
     model,
     s3_model_dir,
     image=default_image,
+    s3_bucket=AZURE_BUCKET,
     genienlp_version=GENIENLP_VERSION,
     genie_version=GENIE_VERSION,
     workdir_repo=WORKDIR_REPO,
@@ -2027,6 +2028,7 @@ def eval_pipeline(
     additional_args='',
 ):
     eval_step(
+        s3_bucket=s3_bucket,
         owner=owner,
         project=project,
         experiment=experiment,
