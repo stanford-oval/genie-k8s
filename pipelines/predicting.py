@@ -127,6 +127,7 @@ def prediction_e2e_step(
         eval_lang=eval_lang,
         task_name=task_name,
         model_name_or_path=model_name_or_path,
+        s3_bucket=AZURE_BUCKET,
         s3_input_datadir=s3_input_datadir,
         model_type=model_type,
         dataset_subfolder=dataset_subfolder,
