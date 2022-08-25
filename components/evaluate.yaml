@@ -36,10 +36,8 @@ implementation:
       /opt/genie-toolkit/sync-repos.sh
 
       set +x
-      aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
-      aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
+      keyctl session ; export AZCOPY_SPA_CLIENT_SECRET=${AZURE_SP_PASSWORD} ; azcopy login --service-principal --application-id ${AZURE_SP_APP_ID} --tenant-id ${AZURE_SP_TENANT_ID}
       set -x
-
 
       MAKEDIR=`get_make_dir ${project}`
       cat >> workdir/config.mk <<EOF
@@ -47,8 +45,9 @@ implementation:
       EOF
       cd workdir/${MAKEDIR}
 
-      if test "${s3_database_dir}" != None ; then
-          aws s3 sync --no-progress ${s3_database_dir}/bootleg/ ./database/
+      if test "{s3_database_dir}" != None ; then
+        mkdir -p ./database
+        azcopy sync --recursive ${s3_bucket%/}/${s3_database_dir%/}/bootleg/ ./database/
       fi
 
       ls -al
