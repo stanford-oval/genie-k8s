@@ -20,7 +20,7 @@ implementation:
     - -c
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image s3_datadir s3_bootleg_prepped_data data_splits s3_output_datadir" "$@"
+      parse_args "$0" "image s3_bucket s3_datadir s3_bootleg_prepped_data data_splits s3_output_datadir" "$@"
       shift $n
       cd $HOME
 
