@@ -41,8 +41,8 @@ WORKDIR_REPO = 'git@github.com:stanford-oval/thingpedia-common-devices.git'
 WORKDIR_VERSION = '35592e1f22f9318d1f26ca79f0ab86e50e55ae87'
 GENIE_WORKDIR_REPO = 'git@github.com:stanford-oval/genie-workdirs.git'
 GENIE_WORKDIR_VERSION = 'master'
-PARAPHRASING_MODEL = 's3://geniehai/sinaj/models/schemaorg/paraphrase/bart-large-speedup-megabatch-5m/'
-S3_DATABASE_DIR = 's3://geniehai/mehrad/extras/bootleg_files_v1.0.0'
+PARAPHRASING_MODEL = 'sinaj/models/schemaorg/paraphrase/bart-large-speedup-megabatch-5m/'
+S3_DATABASE_DIR = 'mehrad/extras/bootleg_files_v1.0.0'
 
 AZURE_BUCKET = 'https://nfs009a5d03c43b4e7e8ec2.blob.core.windows.net/pvc-a8853620-9ac7-4885-a30e-0ec357f17bb6'
 
