@@ -45,12 +45,15 @@ implementation:
         rsync -rv ${s3_database_dir}/train/ ./database/
       fi
 
+      has_bootleg=false
       if test "${s3_bootleg_prepped_data}" != None ; then
         rsync -rv ${s3_bootleg_prepped_data} results_temp --exclude '*' --include '*bootleg_labels.jsonl'
+        has_bootleg=true
       fi
 
       if test "${s3_original_bootleg_prepped_data}" != None ; then
         rsync -rv ${s3_original_bootleg_prepped_data} results_temp --exclude '*' --include '*bootleg_labels.jsonl'
+        has_bootleg=true
       fi
 
       rsync -rv --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*" "${s3_input_datadir}" input_dataset/
@@ -91,18 +94,31 @@ implementation:
         exit 1
       fi
 
-      make append-to-original \
-        task_name=${task_name} \
-        filtering_dir=${filtering_dir} \
-        filtering_batch_size=${filtering_batch_size} \
-        filtering_output_dir=${output_dir} \
-        filtering_model=filtering_model \
-        filtering_arguments="${filtering_arguments}"
+      if test "${has_bootleg}" = true ; then
+        make append-to-original-w-bootleg \
+          task_name=${task_name} \
+          filtering_dir=${filtering_dir} \
+          filtering_batch_size=${filtering_batch_size} \
+          filtering_output_dir=${output_dir} \
+          filtering_model=filtering_model \
+          filtering_arguments="${filtering_arguments}"
+      else
+        make append-to-original \
+          task_name=${task_name} \
+          filtering_dir=${filtering_dir} \
+          filtering_batch_size=${filtering_batch_size} \
+          filtering_output_dir=${output_dir} \
+          filtering_model=filtering_model \
+          filtering_arguments="${filtering_arguments}"
+      fi
 
 
       # upload the new dataset to storage
       rsync -rv output_dataset/ "${s3_output_dir}"
-      rsync -rv results_temp/ ${s3_original_bootleg_prepped_data} --exclude '*' --include '*bootleg_labels.jsonl'
+
+      if test "${has_bootleg}" = true ; then
+        rsync -rv results_temp/ ${s3_original_bootleg_prepped_data} --exclude '*' --include '*bootleg_labels.jsonl'
+      fi
 
 
     args: [
