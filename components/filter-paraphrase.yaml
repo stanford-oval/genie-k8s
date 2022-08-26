@@ -37,29 +37,33 @@ implementation:
       /opt/genie-toolkit/sync-repos.sh
 
       set +x
-      aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
-      aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
+      keyctl session ; export AZCOPY_SPA_CLIENT_SECRET=${AZURE_SP_PASSWORD} ; azcopy login --service-principal --application-id ${AZURE_SP_APP_ID} --tenant-id ${AZURE_SP_TENANT_ID}
       set -x
 
       if test "${s3_database_dir}" != None ; then
-        aws s3 sync --no-progress ${s3_database_dir}/train/ ./database/
+        mkdir -p ./database
+        azcopy sync --recursive ${s3_bucket%/}/${s3_database_dir%/}/bootleg/ ./database/
       fi
 
       if test "${s3_bootleg_prepped_data}" != None ; then
-        aws s3 sync --no-progress ${s3_bootleg_prepped_data} results_temp --exclude '*' --include '*bootleg_labels.jsonl'
+        mkdir -p results_temp
+        azcopy sync --recursive ${s3_bucket%/}/${s3_bootleg_prepped_data} results_temp --include-pattern "*bootleg_labels.jsonl"
       fi
 
       if test "${s3_original_bootleg_prepped_data}" != None ; then
-        aws s3 sync --no-progress ${s3_original_bootleg_prepped_data} results_temp --exclude '*' --include '*bootleg_labels.jsonl'
+        mkdir -p results_temp
+        azcopy sync --recursive ${s3_bucket%/}/${s3_original_bootleg_prepped_data} results_temp --include-pattern "*bootleg_labels.jsonl"
       fi
 
-      aws s3 sync --no-progress  --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*" "${s3_input_datadir}" input_dataset/
-      aws s3 sync --no-progress --exclude '*/dataset/*' --exclude '*/cache/*' --exclude 'iteration_*.pth' --exclude '*_optim.pth' "${filtering_model}" filtering_model/
+      mkdir -p input_dataset
+      azcopy sync --recursive --exclude-pattern "synthetic*.txt;*bootleg*;*chunked*" "${s3_bucket%/}${s3_input_datadir}" input_dataset/
+      mkdir -p filtering_model
+      azcopy sync --recursive --exclude-pattern "*/dataset/*;*/cache/*;iteration_*.pth;*_optim.pth" "${s3_bucket%/}${filtering_model}" filtering_model/
 
       mkdir -p output_dataset
       cp -r input_dataset/* output_dataset
 
-      s3_output_dir="s3://${s3_bucket}/${owner}/dataset/${project}/${experiment}/${dataset}-gen-filt/`date +%s`/"
+      s3_output_dir="${owner}/dataset/${project}/${experiment}/${dataset}-gen-filt/`date +%s`/"
 
       mkdir -p `dirname $s3_output_datadir`
       echo ${s3_output_dir} > $s3_output_datadir
@@ -154,8 +158,8 @@ implementation:
       rm ${output_dir}/almond_paraphrase.results.json
 
       # upload the new dataset to S3
-      aws s3 sync --no-progress output_dataset/ "${s3_output_dir}"
-      aws s3 sync --no-progress results_temp/ ${s3_original_bootleg_prepped_data} --exclude '*' --include '*bootleg_labels.jsonl'
+      azcopy sync --recursive output_dataset/ "${s3_bucket%/}${s3_output_dir}"
+      azcopy sync --recursive results_temp/ ${s3_bucket%/}${s3_original_bootleg_prepped_data} --include-pattern "*bootleg_labels.jsonl"
 
 
     args: [
