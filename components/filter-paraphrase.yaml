@@ -56,9 +56,9 @@ implementation:
       fi
 
       mkdir -p input_dataset
-      azcopy sync --recursive --exclude-pattern "synthetic*.txt;*bootleg*;*chunked*" "${s3_bucket%/}${s3_input_datadir}" input_dataset/
+      azcopy sync --recursive --exclude-pattern "synthetic*.txt;*bootleg*;*chunked*" "${s3_bucket%/}/${s3_input_datadir}" input_dataset/
       mkdir -p filtering_model
-      azcopy sync --recursive --exclude-pattern "*/dataset/*;*/cache/*;iteration_*.pth;*_optim.pth" "${s3_bucket%/}${filtering_model}" filtering_model/
+      azcopy sync --recursive --exclude-pattern "*/dataset/*;*/cache/*;iteration_*.pth;*_optim.pth" "${s3_bucket%/}/${filtering_model}" filtering_model/
 
       mkdir -p output_dataset
       cp -r input_dataset/* output_dataset
@@ -158,8 +158,8 @@ implementation:
       rm ${output_dir}/almond_paraphrase.results.json
 
       # upload the new dataset to S3
-      azcopy sync --recursive output_dataset/ "${s3_bucket%/}${s3_output_dir}"
-      azcopy sync --recursive results_temp/ ${s3_bucket%/}${s3_original_bootleg_prepped_data} --include-pattern "*bootleg_labels.jsonl"
+      azcopy sync --recursive output_dataset/ "${s3_bucket%/}/${s3_output_dir}"
+      azcopy sync --recursive results_temp/ ${s3_bucket%/}/${s3_original_bootleg_prepped_data} --include-pattern "*bootleg_labels.jsonl"
 
 
     args: [

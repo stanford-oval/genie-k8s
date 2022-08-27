@@ -38,9 +38,9 @@ implementation:
       set -x
 
       mkdir -p input_dataset
-      azcopy sync --recursive --exclude-pattern "synthetic*.txt;*bootleg*;*chunked*" ${s3_bucket%/}"${s3_input_datadir}" input_dataset/
+      azcopy sync --recursive --exclude-pattern "synthetic*.txt;*bootleg*;*chunked*" ${s3_bucket%/}/"${s3_input_datadir}" input_dataset/
       mkdir -p paraphraser
-      azcopy sync --recursive --exclude-pattern "*checkpoint*" ${s3_bucket%/}"${paraphrasing_model}" paraphraser/
+      azcopy sync --recursive --exclude-pattern "*checkpoint*" ${s3_bucket%/}/"${paraphrasing_model}" paraphraser/
 
       mkdir -p output_dataset
       cp -r input_dataset/* output_dataset
