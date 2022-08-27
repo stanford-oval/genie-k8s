@@ -47,7 +47,7 @@ def paraphrase_generation_step(
     paraphrase_num_gpus = 4
     paraphrase_op = components.load_component_from_file('components/generate-paraphrase.yaml')(
         image=image,
-        s3_bucket='geniehai',
+        s3_bucket=AZURE_BUCKET,
         owner=owner,
         task_name=train_task_name,
         project=project,
@@ -102,7 +102,7 @@ def paraphrase_filtering_step(
     paraphrase_num_gpus = 4
     paraphrase_op = components.load_component_from_file('components/filter-paraphrase.yaml')(
         image=image,
-        s3_bucket='geniehai',
+        s3_bucket=AZURE_BUCKET,
         owner=owner,
         task_name=train_task_name,
         project=project,
