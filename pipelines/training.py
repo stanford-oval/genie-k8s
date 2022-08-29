@@ -165,6 +165,8 @@ def train_step(
             .set_memory_limit('100G')
             .set_cpu_request('5')
             .set_cpu_limit('5')
+            .set_ephemeral_storage_request('75G')
+            .set_ephemeral_storage_limit('75G')
             .set_gpu_limit(str(train_num_gpus))
             .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
         )
