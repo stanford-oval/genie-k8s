@@ -70,55 +70,13 @@ implementation:
           ;;
       esac
 
-      make_input_ready() {
-          if [ "$keep_original_duplicates" = false ] ; then
-            # remove duplicates before paraphrasing to avoid wasting effort
-            genienlp transform-dataset \
-              ${input_dir}/train.tsv \
-              ${input_dir}/train_no_duplicate.tsv \
-              --remove_duplicates \
-              --task ${task_name}
-              cp ${input_dir}/train_no_duplicate.tsv ${input_dir}/train.tsv
-          fi
-      }
-
-      run_paraphrase() {
-        echo $paraphrasing_arguments
-
-        mkdir -p ${input_dir}/almond/
-        cp ${input_dir}/train.tsv ${input_dir}/almond/train.tsv
-
-        # run paraphrase generation
-        genienlp predict \
-        --task almond_paraphrase \
-        --path paraphraser \
-        --data ${input_dir} \
-        --eval_dir eval_dir \
-        --evaluate train \
-        --overwrite \
-        --silent \
-        $paraphrasing_arguments
-
-        mv eval_dir/train/* ${output_dir}/
-      }
-
-      join() {
-        # join the original file and the paraphrasing output
-        genienlp transform-dataset \
-          ${input_dir}/train.tsv \
-          ${output_dir}/unfiltered.tsv \
-          --query_file ${output_dir}/almond_paraphrase.tsv \
-          --transformation replace_queries \
-          --remove_with_heuristics \
-          --task ${task_name}
-      }
-
-      make_input_ready
-      run_paraphrase
-      join
-
-      # Delete intermediate files that don't help debugging
-      rm ${output_dir}/almond_paraphrase.tsv
+      make join-results \
+        keep_original_duplicates=${keep_original_duplicates} \
+        input_dir=${input_dir} \
+        output_dir=${output_dir} \
+        task_name=${task_name} \
+        paraphrasing_arguments="${paraphrasing_arguments}" \
+        paraphraser_path=paraphraser
 
       # upload the new dataset to S3
       azcopy sync --recursive output_dataset/ "${s3_bucket%/}/${s3_output_dir}"
