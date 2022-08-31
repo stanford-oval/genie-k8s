@@ -108,6 +108,7 @@ implementation:
           task_name=${task_name} \
           filtering_dir=${filtering_dir} \
           filtering_batch_size=${filtering_batch_size} \
+          filtering_input_dir=${input_dir} \
           filtering_output_dir=${output_dir} \
           filtering_model=filtering_model \
           filtering_arguments="${filtering_arguments}"
@@ -116,6 +117,7 @@ implementation:
           task_name=${task_name} \
           filtering_dir=${filtering_dir} \
           filtering_batch_size=${filtering_batch_size} \
+          filtering_input_dir=${input_dir} \
           filtering_output_dir=${output_dir} \
           filtering_model=filtering_model \
           filtering_arguments="${filtering_arguments}"
