@@ -64,9 +64,8 @@ def paraphrase_generation_step(
         .set_memory_limit('400G')
         .set_cpu_request('60')
         .set_cpu_limit('60')
-        # not supported yet in the version of kfp we're using
-        # .set_ephemeral_storage_request('75G')
-        # .set_ephemeral_storage_limit('75G')
+        .set_ephemeral_storage_request('75G')
+        .set_ephemeral_storage_limit('75G')
         .set_gpu_limit(str(paraphrase_num_gpus))
     )
     (
@@ -122,9 +121,8 @@ def paraphrase_filtering_step(
         .set_memory_limit('400G')
         .set_cpu_request('60')
         .set_cpu_limit('60')
-        # not supported yet in the version of kfp we're using
-        # .set_ephemeral_storage_request('75G')
-        # .set_ephemeral_storage_limit('75G')
+        .set_ephemeral_storage_request('75G')
+        .set_ephemeral_storage_limit('75G')
         .set_gpu_limit(str(paraphrase_num_gpus))
     )
     (
