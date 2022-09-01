@@ -37,8 +37,7 @@ implementation:
       . /opt/genie-toolkit/sync-repos.sh
 
       set +x
-      aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
-      aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
+      keyctl session ; export AZCOPY_SPA_CLIENT_SECRET=${AZURE_SP_PASSWORD} ; azcopy login --service-principal --application-id ${AZURE_SP_APP_ID} --tenant-id ${AZURE_SP_TENANT_ID}
       set -x
 
       cd $HOME
@@ -52,11 +51,11 @@ implementation:
       if [[ "${project}" == *"mario"*  ]] ; then
         output_folder=eval/${experiment}/
         source_folder=datadir/
-        S3_OUTPUT_DATADIR=${s3_datadir}translated/${source}/${nmt_id}/${tgt_lang}/final/
+        S3_OUTPUT_DATADIR=${s3_bucket%/}/${s3_datadir}translated/${source}/${nmt_id}/${tgt_lang}/final/
       elif [[ "${project}" == *"zeroshot"*  ]] ; then
         output_folder=${experiment}/${source}/
         source_folder=dataset/${source}/${experiment}/
-        S3_OUTPUT_DATADIR=${s3_datadir}translated/${nmt_id}/${tgt_lang}/final/
+        S3_OUTPUT_DATADIR=${s3_bucket%/}/${s3_datadir}translated/${nmt_id}/${tgt_lang}/final/
       fi
 
       cat >> workdir/config.mk <<EOF
@@ -67,7 +66,7 @@ implementation:
       mkdir -p `dirname $s3_output_datadir`
       echo ${S3_OUTPUT_DATADIR} > $s3_output_datadir
 
-      aws s3 sync --no-progress ${s3_datadir} ${source_folder} --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*"
+      azcopy sync --recursive ${s3_bucket%/}/${s3_datadir} ${source_folder} --exclude-pattern "synthetic*.txt" --exclude-path "bootleg/;chunked/"
 
       # prepare for translation
       if ${prepare_for_translation}; then
@@ -80,7 +79,7 @@ implementation:
           tgt_lang=${tgt_lang} \
           $@ \
           process_data
-        aws s3 sync --no-progress ${output_folder} ${s3_datadir}translated/
+        azcopy sync --recursive ${output_folder} ${s3_bucket%/}/${s3_datadir}translated/
       fi
 
       # translate
@@ -97,7 +96,7 @@ implementation:
           model_name_or_path=${translation_model} \
           $@ \
           translate_data
-        aws s3 sync --no-progress ${output_folder} ${s3_datadir}translated/
+        azcopy sync --recursive ${output_folder} ${s3_bucket%/}/${s3_datadir}translated/
       fi
 
       # further process the translated files
@@ -113,10 +112,10 @@ implementation:
           skip_translation=true \
           $@ \
           postprocess_data
-        aws s3 sync --no-progress ${output_folder} ${s3_datadir}translated/
+        azcopy sync --recursive ${output_folder} ${s3_bucket%/}/${s3_datadir}translated/
 
       # sync final data to main directory since almond_dialogue_* task expects the data there
-      aws s3 sync --no-progress ${s3_datadir}translated/${source}/${nmt_id}/${tgt_lang}/final/ ${s3_datadir}translated/${source}/${nmt_id}/${tgt_lang}/final/${source}/
+      azcopy sync --recursive ${s3_bucket%/}/${s3_datadir}translated/${source}/${nmt_id}/${tgt_lang}/final/ ${s3_bucket%/}/${s3_datadir}translated/${source}/${nmt_id}/${tgt_lang}/final/${source}/
       fi
 
 
