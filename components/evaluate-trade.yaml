@@ -24,10 +24,13 @@ implementation:
 
       parse_args "$0" "owner project experiment s3_datadir s3_model_dir metrics_output" "$@"
       shift $n
-      set -x
 
-      aws s3 sync --no-progress ${s3_datadir} data/
-      aws s3 sync --no-progress ${s3_model_dir} save/
+      set +x
+      keyctl session ; export AZCOPY_SPA_CLIENT_SECRET=${AZURE_SP_PASSWORD} ; azcopy login --service-principal --application-id ${AZURE_SP_APP_ID} --tenant-id ${AZURE_SP_TENANT_ID}
+      set -x
+      
+      azcopy sync --recursive ${s3_datadir} data/
+      azcopy sync --recursive ${s3_model_dir} save/
       ls -d save/TRADE*/ || ln -s . save/TRADE
       (cd save ; ls lang-all.pkl || ln -s TRADE*/lang-all.pkl lang-all.pkl )
       (cd save ; ls mem-lang-all.pkl || ln -s TRADE*/mem-lang-all.pkl mem-lang-all.pkl )

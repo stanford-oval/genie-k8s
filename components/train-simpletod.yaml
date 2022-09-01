@@ -24,16 +24,19 @@ implementation:
 
       parse_args "$0" "image owner project experiment model train_batch_size s3_datadir s3_model_dir" "$@"
       shift $n
+
+      set +x
+      keyctl session ; export AZCOPY_SPA_CLIENT_SECRET=${AZURE_SP_PASSWORD} ; azcopy login --service-principal --application-id ${AZURE_SP_APP_ID} --tenant-id ${AZURE_SP_TENANT_ID}
       set -x
 
-      aws s3 sync --no-progress ${s3_datadir} resources/
+      azcopy sync --recursive ${s3_datadir} resources/
       mkdir -p "/shared/tensorboard/${project}/${experiment}/${owner}/${model}"
       ln -s "/shared/tensorboard/${project}/${experiment}/${owner}/${model}" "./runs"
 
       ./train_dst.sh 0 gpt2 distilgpt2 ${train_batch_size} $@
 
-      S3_MODEL_DIR=s3://geniehai/${owner}/models/${project}/${experiment}/${model}/`date +%s`/
-      aws s3 sync --no-progress output/ ${S3_MODEL_DIR}
+      S3_MODEL_DIR=https://nfs009a5d03c43b4e7e8ec2.blob.core.windows.net/pvc-a8853620-9ac7-4885-a30e-0ec357f17bb6/${owner}/models/${project}/${experiment}/${model}/`date +%s`/
+      azcopy sync --recursive output/ ${S3_MODEL_DIR}
 
       mkdir -p `dirname $s3_model_dir`
       echo ${S3_MODEL_DIR} > $s3_model_dir
@@ -41,7 +44,7 @@ implementation:
       checkpoint=$(ls output/distilgpt2/ | grep -o '[0-9]*' | sort -nr | head -n1)
       python3 generate_dialogue.py --checkpoint ./output/distilgpt2/checkpoint-${checkpoint} --split_set test
       ls -al
-      aws s3 cp --no-progress *.json ${S3_MODEL_DIR}
+      azcopy cp *.json ${S3_MODEL_DIR}
 
     args: [
       'cmd',
