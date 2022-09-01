@@ -392,11 +392,19 @@ def eval_step(
         is_oracle=is_oracle,
         additional_args=additional_args,
     )
-    (eval_op.container.set_memory_limit('100G').set_memory_request('100G').set_cpu_limit('5').set_cpu_request('5'))
+    (
+        eval_op.container.set_memory_request('50G')
+        .set_memory_limit('50G')
+        .set_cpu_request('7.5')
+        .set_cpu_limit('7.5')
+        .set_ephemeral_storage_request('100G')
+        .set_ephemeral_storage_limit('100G')
+        .add_volume_mount(V1VolumeMount(name='shm', mount_path='/dev/shm'))
+    )
     (
         add_env(add_ssh_volume(eval_op), eval_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC6s_v3')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC8as_T4_v3')
         .add_volume(V1Volume(name='shm', empty_dir=V1EmptyDirVolumeSource(medium='Memory')))
     )
 
