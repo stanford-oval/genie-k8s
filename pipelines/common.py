@@ -26,10 +26,6 @@ from kubernetes.client.models import V1EnvVar, V1SecretVolumeSource, V1Volume, V
 # Get the Thingpedia key from environment variable
 default_developer_key = os.getenv('THINGPEDIA_DEVELOPER_KEY')
 
-# For AWS access on Azure machines
-AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-
 AZURE_SP_APP_ID = os.getenv('AZURE_SP_APP_ID')
 AZURE_SP_TENANT_ID = os.getenv('AZURE_SP_TENANT_ID')
 AZURE_SP_PASSWORD = os.getenv('AZURE_SP_PASSWORD')
@@ -69,9 +65,6 @@ def add_env(op, envs):
     """Add a dict of environments to container"""
     for k, v in envs.items():
         op.container.add_env_variable(V1EnvVar(name=k, value=v))
-
-    op.container.add_env_variable(V1EnvVar(name='AWS_ACCESS_KEY_ID', value=AWS_ACCESS_KEY_ID))
-    op.container.add_env_variable(V1EnvVar(name='AWS_SECRET_ACCESS_KEY', value=AWS_SECRET_ACCESS_KEY))
 
     op.container.add_env_variable(V1EnvVar(name='AZURE_SP_APP_ID', value=AZURE_SP_APP_ID))
     op.container.add_env_variable(V1EnvVar(name='AZURE_SP_TENANT_ID', value=AZURE_SP_TENANT_ID))

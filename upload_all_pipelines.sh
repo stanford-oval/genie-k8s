@@ -8,9 +8,6 @@
 export THINGPEDIA_DEVELOPER_KEY= # paste your developer key here
 
 # Make sure you set the following before uploading any pipeline.
-# To authenticate access to AWS S3 (needed for aws commands).
-export AWS_ACCESS_KEY_ID= # paste access key for kubeflow account
-export AWS_SECRET_ACCESS_KEY= # paste secret key for kubeflow account
 # To authenticate access to Azure Blob Storage (needed for azcopy commands)
 export AZURE_SP_APP_ID= # paste application id
 export AZURE_SP_TENANT_ID= # paste tenant id

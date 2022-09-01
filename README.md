@@ -36,7 +36,7 @@ to upload a pipeline to your Kubeflow cluster. `${pipeline_function}` should be
 the name of a Python function in `pipelines.py`.
 
 You can also upload all pipelines at the same time via `upload_all_pipelines.sh`.
-You need to set the following keys before running the script: `THINGPEDIA_DEVELOPER_KEY`, `AWS_ACCESS_KEY_ID`, and `AWS_SECRET_ACCESS_KEY`.
+You need to set the following keys before running the script: `THINGPEDIA_DEVELOPER_KEY`, `AZURE_SP_APP_ID`, `AZURE_SP_TENANT_ID `, and `AZURE_SP_PASSWORD`.
 
 ## Running jobs
 
