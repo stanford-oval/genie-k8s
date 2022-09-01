@@ -90,11 +90,11 @@ implementation:
             --e2e_dialogue_evaluation \
             $@
 
-        python3 genie-workdirs/zeroshot/scripts/compute_e2e.py \
-          --reference_file_path genie-workdirs/zeroshot/${test_folder}/data/"$eval_lang"_"$e_set".json \
-          --prediction_file_path ./eval/valid/e2e_dialogue_preds.json \
-          --experiment ${task_name} \
-          --setting ${eval_lang}
+        #python3 genie-workdirs/zeroshot/scripts/compute_e2e.py \
+        #  --reference_file_path genie-workdirs/zeroshot/${test_folder}/data/"$eval_lang"_"$e_set".json \
+        #  --prediction_file_path ./eval/valid/e2e_dialogue_preds.json \
+        #  --experiment ${task_name} \
+        #  --setting ${eval_lang}
 
         # rename valid subfolder; if e_set is valid move it to a temp directory
         if test "${e_set}" != "valid" ; then
@@ -112,7 +112,7 @@ implementation:
 
       cp -r ./eval/* $metrics_output/
 
-      genienlp write-kf-metrics --eval_results `for e_set in ${eval_sets} ; do echo ./eval/$e_set/e2e_dialogue_results.json ; done`
+      #genienlp write-kf-metrics --eval_results `for e_set in ${eval_sets} ; do echo ./eval/$e_set/e2e_dialogue_results.json ; done`
 
       azcopy sync --recursive "./eval" $S3_METRIC_OUTPUT
 
