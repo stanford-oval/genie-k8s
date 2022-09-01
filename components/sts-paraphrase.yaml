@@ -41,6 +41,10 @@ implementation:
       parse_args "$0" "image owner project experiment s3_bucket model_name_or_path input_splits train_output_per_example nmt pivot_langs marian_group_langs do_alignment tgt_lang do_paraphrasing prepare_paraphrases filter_paraphrases paraphrasing_method s3_datadir sts_batch_size sts_model filtering_metric filtering_threshold train_fewshot s3_output_datadir" "$@"
       shift $n
 
+      set +x
+      keyctl session ; export AZCOPY_SPA_CLIENT_SECRET=${AZURE_SP_PASSWORD} ; azcopy login --service-principal --application-id ${AZURE_SP_APP_ID} --tenant-id ${AZURE_SP_TENANT_ID}
+      set -x
+
       . /opt/genie-toolkit/sync-repos.sh
 
       cd $HOME
@@ -53,15 +57,15 @@ implementation:
 
       cd workdir/${MAKEDIR}
 
-      s3_output_dir="${s3_datadir}translated/${nmt}/${tgt_lang}/sts/${pivot_langs}/s3-data-final-merged-${filtering_metric}-${filtering_threshold}`if ${train_fewshot} ; then echo "-fewshot" ; fi`"
-      output_dir="${s3_datadir}translated/${nmt}/${tgt_lang}/sts/${pivot_langs}/data-final-merged-${filtering_metric}-${filtering_threshold}`if ${train_fewshot} ; then echo "-fewshot" ; fi`"
+      s3_output_dir="${s3_bucket%/}/${s3_datadir}translated/${nmt}/${tgt_lang}/sts/${pivot_langs}/s3-data-final-merged-${filtering_metric}-${filtering_threshold}`if ${train_fewshot} ; then echo "-fewshot" ; fi`"
+      output_dir="${s3_bucket%/}/${s3_datadir}translated/${nmt}/${tgt_lang}/sts/${pivot_langs}/data-final-merged-${filtering_metric}-${filtering_threshold}`if ${train_fewshot} ; then echo "-fewshot" ; fi`"
 
       mkdir -p `dirname $s3_output_datadir`
       echo ${s3_output_dir} > $s3_output_datadir
 
       export paraphrase_arguments="$@"
 
-      aws s3 sync --no-progress ${s3_datadir} ${experiment}/ --exclude '*' --include 'translated/en/*' --include "translated/marian/${tgt_lang}/*" --include "translated/gt/${tgt_lang}/*"
+      azcopy sync --recursive ${s3_bucket%/}/${s3_datadir} ${experiment}/ --include-path "translated/en/;translated/marian/${tgt_lang}/translated/gt/${tgt_lang}"
 
       mv ${experiment}/translated/* ${experiment}/
       rm -rf ${experiment}/translated
@@ -100,7 +104,7 @@ implementation:
           ;;
           esac
 
-        aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${s3_datadir}translated/${nmt}/${tgt_lang}
+        azcopy sync --recursive ./${experiment}/${nmt}/${tgt_lang} ${s3_bucket%/}/${s3_datadir}translated/${nmt}/${tgt_lang}
       fi
 
       # prepare paraphrases for filtering
@@ -110,7 +114,7 @@ implementation:
           paraphrase_sts_hparams="--batch_size ${sts_batch_size} --model_name ${sts_model}"
           make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true pivot_lang=$pivot_lang nmt_model=${nmt} para_method=${paraphrasing_method}  paraphrase_sts_hparams="${paraphrase_sts_hparams}" prepare_paraphrases_${tgt_lang}
 
-          aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${s3_datadir}translated/${nmt}/${tgt_lang}
+          azcopy sync --recursive ./${experiment}/${nmt}/${tgt_lang} ${s3_bucket%/}/${s3_datadir}translated/${nmt}/${tgt_lang}
 
         done
       fi
@@ -122,7 +126,7 @@ implementation:
           # filtering_sts_hparams="--filtering_metric ${filtering_metric} --filtering_threshold ${filtering_threshold}"
           make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true pivot_lang=$pivot_lang nmt_model=${nmt} para_method=${paraphrasing_method} sts_filtering_metric=${filtering_metric} sts_filtering_threshold=${filtering_threshold} filter_paraphrase_${tgt_lang}
 
-          aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${s3_datadir}translated/${nmt}/${tgt_lang}
+          azcopy sync --recursive ./${experiment}/${nmt}/${tgt_lang} ${s3_bucket%/}/${s3_datadir}translated/${nmt}/${tgt_lang}
         done
       fi
 
@@ -130,13 +134,13 @@ implementation:
       make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} skip_translation=true all_pivot_langs=$pivot_langs  nmt_model=${nmt} para_method=${paraphrasing_method} sts_filtering_metric=${filtering_metric} sts_filtering_threshold=${filtering_threshold} join_para_data_${tgt_lang}
 
       # sync local files
-      aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${s3_datadir}translated/${nmt}/${tgt_lang}
+      azcopy sync --recursive ./${experiment}/${nmt}/${tgt_lang} ${s3_bucket%/}/${s3_datadir}translated/${nmt}/${tgt_lang}
 
       # sync all original input splits to s3_output_dir that is passed to training step
-      aws s3 sync --no-progress ${experiment}/${nmt}/${tgt_lang}/final/ ${s3_output_dir}
+      azcopy sync --recursive ${experiment}/${nmt}/${tgt_lang}/final/ ${s3_output_dir}
 
       # overwrite splits with new original+paraphrase data
-      aws s3 sync --no-progress ${output_dir} ${s3_output_dir}
+      azcopy sync --recursive ${output_dir} ${s3_output_dir}
 
     args: [
       'cmd',
