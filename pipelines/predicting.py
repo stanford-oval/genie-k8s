@@ -98,8 +98,8 @@ def prediction_step(
         .set_memory_limit('48G')
         .set_cpu_request('7')
         .set_cpu_limit('7')
-        .set_ephemeral_storage_request('100G')
-        .set_ephemeral_storage_limit('100G')
+        .set_ephemeral_storage_request('50G')
+        .set_ephemeral_storage_limit('50G')
     )
     (
         add_env(add_ssh_volume(predict_op), predict_env)
@@ -139,11 +139,18 @@ def prediction_e2e_step(
         dataset_subfolder=dataset_subfolder,
         additional_args=additional_args,
     )
-    (predict_op.container.set_memory_limit('100G').set_memory_request('100G').set_cpu_limit('5').set_cpu_request('5'))
+    (
+        predict_op.container.set_memory_limit('48G')
+        .set_memory_request('48G')
+        .set_cpu_limit('7')
+        .set_cpu_request('7')
+        .set_ephemeral_storage_request('50G')
+        .set_ephemeral_storage_limit('50G')
+    )
     (
         add_env(add_ssh_volume(predict_op), predict_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC6s_v3')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC8as_T4_v3')
     )
 
     return predict_op
