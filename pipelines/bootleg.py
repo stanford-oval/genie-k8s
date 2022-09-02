@@ -201,10 +201,10 @@ def bootleg_step(
         additional_args=bootleg_additional_args,
     )
     (
-        bootleg_op.container.set_memory_request('50G')
-        .set_memory_limit('50G')
-        .set_cpu_request('7.5')
-        .set_cpu_limit('7.5')
+        bootleg_op.container.set_memory_request('48G')
+        .set_memory_limit('48G')
+        .set_cpu_request('7')
+        .set_cpu_limit('7')
         .set_ephemeral_storage_request('100G')
         .set_ephemeral_storage_limit('100G')
         .add_volume_mount(V1VolumeMount(name='shm', mount_path='/dev/shm'))
