@@ -1142,6 +1142,7 @@ def train_eval_pipeline(
     s3_bootleg_prepped_data='None',
     eval_additional_args='',
     bootleg_additional_args='',
+    is_oracle='false'
 ):
     everything(
         do_generate=False,
@@ -1176,6 +1177,7 @@ def train_eval_pipeline(
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
         eval_additional_args=eval_additional_args,
         bootleg_additional_args=bootleg_additional_args,
+        is_oracle=is_oracle,
     )
 
 
