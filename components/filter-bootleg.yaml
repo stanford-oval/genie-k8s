@@ -40,12 +40,12 @@ implementation:
       EOF
       cd workdir/${MAKEDIR}
 
-      aws s3 sync --no-progress ${s3_datadir} datadir --exclude "chunked"
-      aws s3 sync --no-progress ${s3_bootleg_prepped_data} bootlegdir 
+      set +x
+      keyctl session ; export AZCOPY_SPA_CLIENT_SECRET=${AZURE_SP_PASSWORD} ; azcopy login --service-principal --application-id ${AZURE_SP_APP_ID} --tenant-id ${AZURE_SP_TENANT_ID}
+      set -x
 
-      mkdir -p ${experiment}
-      mv datadir/${experiment}/manifest.tt ${experiment}/manifest.tt
-      mv datadir/${experiment}/entities.json ${experiment}/entities.json
+      azcopy sync --recursive ${s3_bucket%/}/${s3_datadir%/ datadir --exclude-path "chunked/"
+      azcopy sync --recursive ${s3_bucket%/}/${s3_bootleg_prepped_data} bootlegdir 
 
       export TZ=America/Los_Angeles
       make "-j${parallel}" \
@@ -58,16 +58,14 @@ implementation:
           "experiment=${experiment}" \
           "valid_set=${valid_set}"\
           $@ \
-          datadir_postprocessed
+          datadir-postprocessed
 
       hash=`date +%s`
-      S3_DATADIR=s3://${s3_bucket}/${owner}/dataset/${project}/${experiment}/${dataset}/${hash}/
-      aws s3 sync --no-progress datadir_postprocessed/ ${S3_DATADIR}
-      aws s3 cp --no-progress ${experiment}/manifest.tt ${S3_DATADIR%/}/${experiment}/manifest.tt
-      aws s3 cp --no-progress ${experiment}/entities.json ${S3_DATADIR%/}/${experiment}/entities.json
+      S3_DATADIR=${s3_bucket%/}/${owner}/dataset/${project}/${experiment}/${dataset}/${hash}/
+      azcopy sync --recursive datadir-postprocessed/ ${S3_DATADIR}
 
       S3_BOOTLEG_PREPPED_DATA=${S3_DATADIR%/}/bootleg/${bootleg_model}/prepped_files/
-      aws s3 sync bootlegdir_postprocessed ${S3_BOOTLEG_PREPPED_DATA}
+      azcopy sync --recursive bootlegdir-postprocessed/ ${S3_BOOTLEG_PREPPED_DATA}
 
       mkdir -p `dirname $s3_output_datadir`
       echo ${S3_DATADIR} > $s3_output_datadir
