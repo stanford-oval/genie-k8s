@@ -94,7 +94,7 @@ implementation:
           --reference_file_path genie-workdirs/zeroshot/${test_folder}/data/"$eval_lang"_"$e_set".json \
           --prediction_file_path ./eval/valid/e2e_dialogue_preds.json \
           --experiment ${task_name} \
-          --setting ${eval_lang}
+          --setting ${eval_lang} || true
 
         # rename valid subfolder; if e_set is valid move it to a temp directory
         if test "${e_set}" != "valid" ; then
