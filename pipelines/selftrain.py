@@ -50,7 +50,7 @@ def auto_annotate_step(
     }
     auto_annotate_op = components.load_component_from_file('components/auto-annotate-selftrain.yaml')(
         image=image,
-        s3_bucket='geniehai',
+        s3_bucket=AZURE_BUCKET,
         owner=owner,
         project=project,
         experiment=experiment,
@@ -59,17 +59,12 @@ def auto_annotate_step(
         agent_model=agent_model,
         additional_args=additional_args,
     )
-    (
-        auto_annotate_op.container.set_memory_limit('12Gi')
-        .set_memory_request('12Gi')
-        .set_cpu_limit('7.5')
-        .set_cpu_request('7.5')
-    )
+    (auto_annotate_op.container.set_memory_limit('12Gi').set_memory_request('12Gi').set_cpu_limit('3').set_cpu_request('3'))
 
     (
         add_env(add_ssh_volume(auto_annotate_op), auto_annotate_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.2xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC4as_T4_v3')
     )
 
     return auto_annotate_op
@@ -79,7 +74,7 @@ def auto_annotate_step(
     name='Selftrain',
     description='Runs the whole training pipeline, including two parallel autoparaphrasing and finetuning (for user and agent), auto annotation, and selftrain finetuning',
 )
-def selftrain_pipeline(
+def selftrain_full_pipeline(
     owner,
     project,
     experiment,
@@ -91,7 +86,7 @@ def selftrain_pipeline(
     workdir_repo=WORKDIR_REPO,
     workdir_version=WORKDIR_VERSION,
     thingpedia_developer_key=default_developer_key,
-    s3_bucket='geniehai',
+    s3_bucket=AZURE_BUCKET,
     s3_database_dir='None',
     train_languages='en',
     eval_languages='en',
@@ -293,7 +288,7 @@ def selftrain_nopara_pipeline(
     workdir_repo=WORKDIR_REPO,
     workdir_version=WORKDIR_VERSION,
     thingpedia_developer_key=default_developer_key,
-    s3_bucket='geniehai',
+    s3_bucket=AZURE_BUCKET,
     s3_database_dir='None',
     train_languages='en',
     eval_languages='en',
@@ -474,7 +469,7 @@ def selftrain_nopara_pipeline(
 
 
 @dsl.pipeline(name='Selftrain Only', description='Runs the self-training pipeline starting from auto annotation')
-def selftrain_only_pipeline(
+def selftrain_pipeline(
     owner,
     project,
     experiment,
@@ -488,7 +483,7 @@ def selftrain_only_pipeline(
     workdir_repo=WORKDIR_REPO,
     workdir_version=WORKDIR_VERSION,
     thingpedia_developer_key=default_developer_key,
-    s3_bucket='geniehai',
+    s3_bucket=AZURE_BUCKET,
     s3_database_dir='None',
     train_languages='en',
     eval_languages='en',

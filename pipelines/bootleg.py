@@ -27,13 +27,13 @@ from .common import *
 
 
 @dsl.pipeline(name='Bootleg', description='Run a Bootleg model to extract and dump candidate features')
-def bootleg_only_pipeline(
+def bootleg_pipeline(
     owner,
     project,
     experiment,
     task_name,
     s3_datadir,
-    s3_bucket='geniehai',
+    s3_bucket=AZURE_BUCKET,
     s3_database_dir=S3_DATABASE_DIR,
     s3_bootleg_subfolder='None',
     image='',
@@ -72,7 +72,7 @@ def split_bootleg_merge_step(
     experiment,
     task_name,
     s3_datadir,
-    s3_bucket='geniehai',
+    s3_bucket=AZURE_BUCKET,
     s3_database_dir=S3_DATABASE_DIR,
     s3_bootleg_subfolder='None',
     genienlp_version='',
@@ -86,6 +86,7 @@ def split_bootleg_merge_step(
     num_chunks = 2
     split_op = split_step(
         image=image,
+        s3_bucket=s3_bucket,
         task_name=task_name,
         s3_datadir=s3_datadir,
         num_chunks=num_chunks,
@@ -117,6 +118,7 @@ def split_bootleg_merge_step(
 
     merge_op = merge_step(
         image=image,
+        s3_bucket=s3_bucket,
         s3_datadir=split_op.outputs['s3_output_datadir'],
         s3_bootleg_prepped_data=' '.join(s3_bootleg_outputs),
         data_splits=data_splits,
@@ -127,11 +129,12 @@ def split_bootleg_merge_step(
     return s3_bootleg_prepped_data
 
 
-def split_step(image, task_name, s3_datadir, num_chunks, data_splits, file_extension):
+def split_step(image, s3_bucket, task_name, s3_datadir, num_chunks, data_splits, file_extension):
     split_env = {}
 
     split_op = components.load_component_from_file('components/split_file.yaml')(
         image=image,
+        s3_bucket=s3_bucket,
         task_name=task_name,
         s3_datadir=s3_datadir,
         num_chunks=num_chunks,
@@ -144,11 +147,12 @@ def split_step(image, task_name, s3_datadir, num_chunks, data_splits, file_exten
     return split_op
 
 
-def merge_step(image, s3_datadir, s3_bootleg_prepped_data, data_splits):
+def merge_step(image, s3_bucket, s3_datadir, s3_bootleg_prepped_data, data_splits):
     merge_env = {}
 
     merge_op = components.load_component_from_file('components/merge_files.yaml')(
         image=image,
+        s3_bucket=s3_bucket,
         s3_datadir=s3_datadir,
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
         data_splits=data_splits,
@@ -165,7 +169,7 @@ def bootleg_step(
     experiment,
     task_name,
     s3_datadir,
-    s3_bucket='geniehai',
+    s3_bucket=AZURE_BUCKET,
     s3_database_dir=S3_DATABASE_DIR,
     s3_bootleg_subfolder='None',
     image='',
@@ -197,16 +201,18 @@ def bootleg_step(
         additional_args=bootleg_additional_args,
     )
     (
-        bootleg_op.container.set_memory_request('60G')
-        .set_memory_limit('60G')
-        .set_cpu_request('15')
-        .set_cpu_limit('15')
+        bootleg_op.container.set_memory_request('48G')
+        .set_memory_limit('48G')
+        .set_cpu_request('7')
+        .set_cpu_limit('7')
+        .set_ephemeral_storage_request('100G')
+        .set_ephemeral_storage_limit('100G')
         .add_volume_mount(V1VolumeMount(name='shm', mount_path='/dev/shm'))
     )
     (
         add_env(add_ssh_volume(bootleg_op), bootleg_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.4xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC8as_T4_v3')
         .add_volume(V1Volume(name='shm', empty_dir=V1EmptyDirVolumeSource(medium='Memory')))
     )
 

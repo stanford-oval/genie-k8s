@@ -24,12 +24,12 @@ implementation:
       shift $n
       set -x
 
-      aws s3 sync --no-progress ${s3_datadir} data/
+      azcopy sync --recursive ${s3_datadir} data/
 
       python3 myTrain.py -dec=TRADE -bsz=8 -dr=0.2 -lr=0.001 -le=1 $@
 
-      S3_MODEL_DIR=s3://geniehai/${owner}/models/${project}/${experiment}/${model}/`date +%s`/
-      aws s3 sync --no-progress save/ ${S3_MODEL_DIR}
+      S3_MODEL_DIR=https://nfs009a5d03c43b4e7e8ec2.blob.core.windows.net/pvc-a8853620-9ac7-4885-a30e-0ec357f17bb6/${owner}/models/${project}/${experiment}/${model}/`date +%s`/
+      azcopy sync --recursive save/ ${S3_MODEL_DIR}
 
       mkdir -p `dirname $s3_model_dir`
       echo ${S3_MODEL_DIR} > $s3_model_dir

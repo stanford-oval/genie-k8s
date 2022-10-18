@@ -4,12 +4,11 @@
 . config
 
 check_config "COMMON_IMAGE genie_version genienlp_version"
-export AWS_PROFILE
 
 parse_args "$0" "image jupyter_image=None add_apex=false" "$@"
 shift $n
 
-aws ecr get-login --no-include-email | bash
+az acr login --name stanfordoval.azurecr.io
 
 set -ex
 

@@ -40,17 +40,17 @@ def train_eval_trade(owner, project, experiment, model, s3_datadir, train_additi
         additional_args=train_additional_args,
     )
     (
-        train_op.container.set_memory_request('56Gi')
-        .set_memory_limit('56Gi')
-        .set_cpu_request('7.5')
-        .set_cpu_limit('7.5')
+        train_op.container.set_memory_request('100G')
+        .set_memory_limit('100G')
+        .set_cpu_request('5')
+        .set_cpu_limit('5')
         .set_gpu_limit(str(train_num_gpus))
         .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
     )
     (
         add_env(add_ssh_volume(train_op), train_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*train_num_gpus}xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'Standard_NC{6 * train_num_gpus}s_v3')
         .add_volume(
             V1Volume(
                 name='tensorboard', persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf')
@@ -86,17 +86,17 @@ def train_eval_simpletod(owner, project, experiment, model, s3_datadir, train_ad
         additional_args=train_additional_args,
     )
     (
-        train_op.container.set_memory_request('56Gi')
-        .set_memory_limit('56Gi')
-        .set_cpu_request('7.5')
-        .set_cpu_limit('7.5')
+        train_op.container.set_memory_request('100G')
+        .set_memory_limit('100G')
+        .set_cpu_request('5')
+        .set_cpu_limit('5')
         .set_gpu_limit(str(train_num_gpus))
         .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
     )
     (
         add_env(add_ssh_volume(train_op), train_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*train_num_gpus}xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'Standard_NC{6 * train_num_gpus}s_v3')
         .add_volume(
             V1Volume(
                 name='tensorboard', persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf')
@@ -132,17 +132,17 @@ def train_eval_sumbt(owner, project, experiment, model, s3_datadir, train_additi
         additional_args=train_additional_args,
     )
     (
-        train_op.container.set_memory_request('56Gi')
-        .set_memory_limit('56Gi')
-        .set_cpu_request('7.5')
-        .set_cpu_limit('7.5')
+        train_op.container.set_memory_request('100G')
+        .set_memory_limit('100G')
+        .set_cpu_request('5')
+        .set_cpu_limit('5')
         .set_gpu_limit(str(train_num_gpus))
         .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
     )
     (
         add_env(add_ssh_volume(train_op), train_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*train_num_gpus}xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'Standard_NC{6 * train_num_gpus}s_v3')
         .add_volume(
             V1Volume(
                 name='tensorboard', persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf')
@@ -186,9 +186,9 @@ def eval_sumbt(
         image=image,
         additional_args=eval_additional_args,
     )
-    (eval_op.container.set_memory_limit('12Gi').set_memory_request('12Gi').set_cpu_limit('7.5').set_cpu_request('7.5'))
+    (eval_op.container.set_memory_limit('12G').set_memory_request('12G').set_cpu_limit('3').set_cpu_request('3'))
     (
         add_env(add_ssh_volume(eval_op), eval_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.2xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC4as_T4_v3')
     )

@@ -30,14 +30,18 @@ implementation:
       MAKEDIR=`get_make_dir ${project}`
       GENIE=/opt/genie-toolkit/dist/tool/genie.js
 
+      set +x
+      keyctl session ; export AZCOPY_SPA_CLIENT_SECRET=${AZURE_SP_PASSWORD} ; azcopy login --service-principal --application-id ${AZURE_SP_APP_ID} --tenant-id ${AZURE_SP_TENANT_ID}
+      set -x
+
       cat >> workdir/config.mk <<EOF
       developer_key = ${THINGPEDIA_DEVELOPER_KEY}
       EOF
       cd workdir/${MAKEDIR}
 
-      aws s3 cp --no-progress s3://geniehai/gcampax/dataset/multiwoz/baseline21/train_dials.json train_dials.json
-      aws s3 sync --no-progress --exclude '*/dataset/*' --exclude '*/cache/*' --exclude 'iteration_*.pth' --exclude '*_optim.pth' "${user_model}" ${experiment}/models/nlu-user
-      aws s3 sync --no-progress --exclude '*/dataset/*' --exclude '*/cache/*' --exclude 'iteration_*.pth' --exclude '*_optim.pth' "${agent_model}" ${experiment}/models/nlu-agent
+      azcopy cp ${s3_bucket%/}/gcampax/dataset/multiwoz/baseline21/train_dials.json train_dials.json
+      azcopy sync --recursive "${user_model}" ${experiment}/models/nlu-user --exclude-pattern "iteration_*.pth;*_optim.pth;*/cache/*;*/dataset/*"
+      azcopy sync --recursive "${agent_model}" ${experiment}/models/nlu-agent --exclude-pattern "iteration_*.pth;*_optim.pth;*/cache/*;*/dataset/*"
 
       make \
         geniedir=/opt/genie-toolkit \
@@ -49,8 +53,8 @@ implementation:
         experiment="${experiment}" \
         datadir/selftrain $@
 
-      S3_DATADIR=s3://${s3_bucket}/${owner}/dataset/${project}/${experiment}/${dataset}-selftrain/`date +%s`/
-      aws s3 sync --no-progress datadir/selftrain ${S3_DATADIR}user/
+      S3_DATADIR=${s3_bucket%/}/${owner}/dataset/${project}/${experiment}/${dataset}-selftrain/`date +%s`/
+      azcopy sync --recursive datadir/selftrain ${S3_DATADIR}user/
       mkdir -p `dirname $s3_datadir`
       echo ${S3_DATADIR}  > $s3_datadir
 

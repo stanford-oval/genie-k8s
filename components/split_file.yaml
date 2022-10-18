@@ -3,6 +3,7 @@ description: |
   Split datasets
 inputs:
   - {name: image, description: '', default: ''}
+  - {name: s3_bucket, description: ''}
   - {name: task_name, description: '', default: ''}
   - {name: s3_datadir, description: '', default: ''}
   - {name: num_chunks, description: '', default: '', type: Integer}
@@ -22,7 +23,7 @@ implementation:
     - -c
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image task_name s3_datadir num_chunks data_splits file_extension s3_output_datadir" "$@"
+      parse_args "$0" "image s3_bucket task_name s3_datadir num_chunks data_splits file_extension s3_output_datadir" "$@"
       shift $n
       cd $HOME
 
@@ -30,7 +31,12 @@ implementation:
 
       S3_OUTPUT_DATADIR=${s3_datadir%/}/chunked/
 
-      aws s3 sync --no-progress  --exclude "*bootleg*" --exclude "*chunked*" ${s3_datadir} dataset/
+      set +x
+      keyctl session ; export AZCOPY_SPA_CLIENT_SECRET=${AZURE_SP_PASSWORD} ; azcopy login --service-principal --application-id ${AZURE_SP_APP_ID} --tenant-id ${AZURE_SP_TENANT_ID}
+      set -x
+
+      mkdir -p dataset
+      azcopy sync --recursive --exclude-pattern "*bootleg*;*chunked*" ${s3_bucket%/}/${s3_datadir} dataset/
 
       cd dataset/
 
@@ -53,7 +59,7 @@ implementation:
       for dir in ${all_dirs[*]} ; do
         mkdir -p $dir/chunked/
         for split in ${data_splits} ; do
-          if [ "$file_extension" == "txt"] ; then
+          if [ "$file_extension" == "txt" ] ; then
             awk -vRS= -v "n=$(awk -vRS= 'END {print NR}' $dir/${split}."$file_extension")" '{printf "%s", $0 RT > "$dir/chunked/${split}" int((NR-1)*"$num_chunks"/n) ."$file_extension"}' $dir/${split}."$file_extension"
           else
             dataset_size=`wc -l < $dir/${split}.${file_extension}`
@@ -65,7 +71,7 @@ implementation:
           fi
 
           for ((i=0;i<$num_chunks;i++)); do
-            aws s3 cp --no-progress $dir/chunked/${split}"$i".${file_extension} "$S3_OUTPUT_DATADIR"$i/$dir/${split}.${file_extension}
+            azcopy cp $dir/chunked/${split}"$i".${file_extension} ${s3_bucket%/}/"$S3_OUTPUT_DATADIR"$i/$dir/${split}.${file_extension}
 
           done
         done
@@ -78,6 +84,7 @@ implementation:
     args: [
       'cmd',
       --image, {inputValue: image},
+      --s3_bucket, {inputValue: s3_bucket},
       --task_name, {inputValue: task_name},
       --s3_datadir, {inputValue: s3_datadir},
       --num_chunks, {inputValue: num_chunks},

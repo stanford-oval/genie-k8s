@@ -37,6 +37,10 @@ implementation:
 
       /opt/genie-toolkit/sync-repos.sh
 
+      set +x
+      keyctl session ; export AZCOPY_SPA_CLIENT_SECRET=${AZURE_SP_PASSWORD} ; azcopy login --service-principal --application-id ${AZURE_SP_APP_ID} --tenant-id ${AZURE_SP_TENANT_ID}
+      set -x
+
       IFS='+' ; read -ra TLS <<<"$train_languages"; IFS=' '
       echo "${TLS[@]}"
       IFS='+'; read -ra ELS <<<"$eval_languages"; IFS=' '
@@ -46,14 +50,14 @@ implementation:
       mkdir -p "$modeldir"
 
       if test "${s3_database_dir}" != None ; then
-        aws s3 sync --no-progress ${s3_database_dir}/bootleg/ ./database/
+        azcopy sync --recursive ${s3_bucket%/}/${s3_database_dir%/}/bootleg/ ./database/
       fi
 
       if test "${s3_bootleg_prepped_data}" != None ; then
-        aws s3 sync --no-progress ${s3_bootleg_prepped_data} results_temp --exclude '*' --include '*bootleg_labels.jsonl'
+        azcopy sync --recursive ${s3_bootleg_prepped_data} results_temp --include-pattern '*bootleg_labels.jsonl'
       fi
 
-      aws s3 sync --no-progress "${s3_model_dir}" "$modeldir"/ --exclude "iteration_*.pth" --exclude "*_optim.pth" --exclude "*eval/*"  --exclude "*.log"
+      azcopy sync --recursive "${s3_model_dir}" "$modeldir"/ --exclude-pattern "iteration_*.pth;*_optim.pth;*.log" --exclude-path "eval/"
 
       mkdir -p cache
 
@@ -64,16 +68,16 @@ implementation:
       case $task_name in
         *"multilingual"*)
           for lang in "${TLS[@]}" "${ELS[@]}" ; do
-            aws s3 sync --no-progress ${s3_datadir}${dataset_subfolder} dataset/almond --exclude "*/*" --include "*$lang*"
+            azcopy sync --recursive ${s3_bucket%/}/${s3_datadir%/}/${dataset_subfolder} dataset/almond --include-pattern "*$lang*"
           done
         ;;
 
         "almond"*)
-          aws s3 sync --no-progress --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*" ${s3_datadir}${dataset_subfolder} dataset/almond
+          azcopy sync --recursive ${s3_bucket%/}/${s3_datadir%/}/${dataset_subfolder} dataset/almond --exclude-pattern "synthetic*.txt;" --exclude-path "bootleg/;chunked/"
         ;;
 
         *)
-          aws s3 sync --no-progress --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*" ${s3_datadir}${dataset_subfolder} dataset
+          azcopy sync --recursive ${s3_bucket%/}/${s3_datadir%/}/${dataset_subfolder} dataset --exclude-pattern "synthetic*.txt;" --exclude-path "bootleg/;chunked/"
         ;;
       esac
 
@@ -94,7 +98,7 @@ implementation:
       genienlp calibrate --save "$modeldir" --confidence_path "$modeldir/is_correct_confidence_feature_file.pkl" --plot --name_prefix "is_correct" ${is_correct_params}
 
       if test "${calibration_ood_file}" != None ; then
-        aws s3 cp ${calibration_ood_file} dataset/calibration-ood.tsv
+        azcopy cp ${calibration_ood_file} dataset/calibration-ood.tsv
         cp dataset/almond/user/eval.tsv dataset/almond/user/test.tsv
         cat dataset/calibration-ood.tsv >> dataset/almond/user/test.tsv
 
@@ -119,8 +123,8 @@ implementation:
       rm -fr "$modeldir/cache"
       rm -fr "$modeldir/dataset"
 
-      S3_MODEL_DIR=s3://${s3_bucket}/${owner}/models/${project}/${experiment}/${model}/`date +%s`/
-      aws s3 sync --no-progress ${modeldir}/ ${S3_MODEL_DIR}
+      S3_MODEL_DIR=${s3_bucket%/}/${owner}/models/${project}/${experiment}/${model}/`date +%s`/
+      azcopy sync --recursive ${modeldir}/ ${S3_MODEL_DIR}
 
       mkdir -p `dirname $s3_model_output_dir`
       echo ${S3_MODEL_DIR} > $s3_model_output_dir

@@ -1,8 +1,3 @@
-# S3 bucket to use
-S3_BUCKET=
-# profile to use for AWS operations
-AWS_PROFILE=
-
 # base image on top of which the actual Kubeflow image is built
 # (to speed up rebuilds)
 COMMON_IMAGE=

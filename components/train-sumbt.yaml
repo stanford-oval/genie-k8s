@@ -22,9 +22,12 @@ implementation:
 
       parse_args "$0" "owner project experiment model s3_datadir s3_model_dir" "$@"
       shift $n
+
+      set +x
+      keyctl session ; export AZCOPY_SPA_CLIENT_SECRET=${AZURE_SP_PASSWORD} ; azcopy login --service-principal --application-id ${AZURE_SP_APP_ID} --tenant-id ${AZURE_SP_TENANT_ID}
       set -x
 
-      aws s3 sync --no-progress ${s3_datadir} data/
+      azcopy sync --recursive ${s3_datadir} data/
 
       python3 code/main-multislot.py --do_train --do_eval --data_dir "data/" --output_dir "save/" \
           --target_slot all --experiment multiwoz2.1 \
@@ -34,8 +37,8 @@ implementation:
           --patience 15 --tf_dir tensorboard --hidden_dim 300 --max_label_length 32 --max_seq_length 64 \
           --max_turn_length 22 $@
 
-      S3_MODEL_DIR=s3://geniehai/${owner}/models/${project}/${experiment}/${model}/`date +%s`/
-      aws s3 sync --no-progress save/ ${S3_MODEL_DIR}
+      S3_MODEL_DIR=https://nfs009a5d03c43b4e7e8ec2.blob.core.windows.net/pvc-a8853620-9ac7-4885-a30e-0ec357f17bb6/${owner}/models/${project}/${experiment}/${model}/`date +%s`/
+      azcopy sync --recursive save/ ${S3_MODEL_DIR}
 
       mkdir -p `dirname $s3_model_dir`
       echo ${S3_MODEL_DIR} > $s3_model_dir

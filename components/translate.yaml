@@ -37,6 +37,10 @@ implementation:
 
       . /opt/genie-toolkit/sync-repos.sh
 
+      set +x
+      keyctl session ; export AZCOPY_SPA_CLIENT_SECRET=${AZURE_SP_PASSWORD} ; azcopy login --service-principal --application-id ${AZURE_SP_APP_ID} --tenant-id ${AZURE_SP_TENANT_ID}
+      set -x
+
       cd $HOME
 
       if [ -f workdir/Makefile ] ; then
@@ -47,7 +51,7 @@ implementation:
 
       cd workdir/${MAKEDIR}
 
-      S3_OUTPUT_DATADIR=${s3_datadir}translated/${nmt}/${tgt_lang}
+      S3_OUTPUT_DATADIR=${s3_bucket%/}/${s3_datadir}translated/${nmt}/${tgt_lang}
       mkdir -p `dirname $s3_output_datadir`
       echo ${S3_OUTPUT_DATADIR}/final/ > $s3_output_datadir
 
@@ -56,7 +60,7 @@ implementation:
       # override experiment with dataset path
       experiment=${s3_datadir#*dataset/}
 
-      aws s3 sync --no-progress ${s3_datadir} dataset/${experiment} --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*"
+      azcopy sync --recursive ${s3_bucket%/}/${s3_datadir} dataset/${experiment} --exclude-pattern "synthetic*.txt" --exclude-path "bootleg/;chunked/"
 
       if [ -d dataset/${experiment}/translated/ ] ; then
         mv dataset/${experiment}/translated/* ${experiment}/
@@ -68,7 +72,7 @@ implementation:
       # prepare for translation
       if ${prepare_for_translation}; then
         make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" experiment=${experiment} process_data_en
-        aws s3 sync --no-progress ./${experiment}/en/ ${s3_datadir}translated/en/
+        azcopy sync --recursive ./${experiment}/en/ ${s3_bucket%/}/${s3_datadir}translated/en/
       fi
 
       # translate
@@ -98,7 +102,7 @@ implementation:
           ;;
           esac
 
-        aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${S3_OUTPUT_DATADIR}
+        azcopy sync --recursive ./${experiment}/${nmt}/${tgt_lang} ${S3_OUTPUT_DATADIR}
       fi
 
       # further process the translated files
@@ -109,7 +113,7 @@ implementation:
         elif [ ${nmt} == "gt" ] ; then
           make -B -j2 geniedir=/opt/genie-toolkit all_names="${input_splits_array[*]}" gt_project_id="multilanguage-273819" gt_project_number="211743822806" gt_credential_file="gt-json/multilanguage-a40fe9320f88.json" experiment=${experiment} train_output_per_example=${train_output_per_example} skip_translation=true translate_gt_quoted_${tgt_lang}
         fi
-        aws s3 sync --no-progress ./${experiment}/${nmt}/${tgt_lang} ${S3_OUTPUT_DATADIR}
+        azcopy sync --recursive ./${experiment}/${nmt}/${tgt_lang} ${S3_OUTPUT_DATADIR}
       fi
 
     args: [

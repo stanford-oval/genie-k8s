@@ -25,10 +25,13 @@ implementation:
 
       parse_args "$0" "image owner project experiment s3_datadir s3_model_dir metrics_output" "$@"
       shift $n
+
+      set +x
+      keyctl session ; export AZCOPY_SPA_CLIENT_SECRET=${AZURE_SP_PASSWORD} ; azcopy login --service-principal --application-id ${AZURE_SP_APP_ID} --tenant-id ${AZURE_SP_TENANT_ID}
       set -x
 
-      aws s3 sync --no-progress ${s3_datadir} data/
-      aws s3 sync --no-progress ${s3_model_dir} save/
+      azcopy sync --recursive ${s3_datadir} data/
+      azcopy sync --recursive ${s3_model_dir} save/
       python3 code/main-multislot.py --data_dir "data/" --output_dir "save/" \
          --target_slot all --experiment multiwoz2.1 --bert_model bert-base-uncased --task_name bert-gru-sumbt --nbt rnn \
          --num_train_epochs 300 --do_lower_case --task_name bert-gru-sumbt --warmup_proportion 0.1 --learning_rate 1e-4 \

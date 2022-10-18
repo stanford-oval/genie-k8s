@@ -7,6 +7,7 @@ inputs:
   - {name: eval_sets, description: '', default: ''}
   - {name: task_name, description: '', default: ''}
   - {name: model_name_or_path, description: '', default: ''}
+  - {name: s3_bucket, description: '', default: ''}
   - {name: s3_input_datadir, description: '', default: ''}
   - {name: model_type, description: '', default: ''}
   - {name: eval_lang, description: '', default: ''}
@@ -26,7 +27,7 @@ implementation:
     - -c
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image owner eval_sets task_name model_name_or_path s3_input_datadir model_type eval_lang dataset_subfolder metrics_output s3_metrics_output" "$@"
+      parse_args "$0" "image owner eval_sets task_name model_name_or_path s3_bucket s3_input_datadir model_type eval_lang dataset_subfolder metrics_output s3_metrics_output" "$@"
       shift $n
       cd $HOME
 
@@ -49,22 +50,27 @@ implementation:
         test_folder=RiSAWOZ
       fi
 
-      aws s3 sync --no-progress ${s3_input_datadir}${dataset_subfolder} $dataset_dir --exclude "synthetic*.txt" --exclude "*bootleg*" --exclude "*chunked*"
+      set +x
+      keyctl session ; export AZCOPY_SPA_CLIENT_SECRET=${AZURE_SP_PASSWORD} ; azcopy login --service-principal --application-id ${AZURE_SP_APP_ID} --tenant-id ${AZURE_SP_TENANT_ID}
+      set -x
+
+      mkdir -p $dataset_dir
+      azcopy sync --recursive ${s3_bucket%/}/${s3_input_datadir%/}/${dataset_subfolder} $dataset_dir --exclude-pattern "synthetic*.txt" --exclude-path "bootleg/;chunked/"
 
       # if not an s3 path assume pretrained model name and save it in genienlp format
-      if [[ "${model_name_or_path}" != "s3://"* ]] ; then
+      if [[ "${model_type}" != None ]] ; then
         genienlp train --train_tasks ${task_name} --train_iterations 0 --save "$modeldir" --model ${model_type} --pretrained_model ${model_name_or_path} --exist_ok
-        s3_output=s3://geniehai/${owner}/workdir/prediction/${task_name}/${model_type}/${model_name_or_path}
+        s3_output=${s3_bucket%/}/${owner}/workdir/prediction/${task_name}/${model_type}/${model_name_or_path}
       else
         if [[ "$@" == *"--checkpoint_name"* ]] ; then
-          aws s3 sync --no-progress "${model_name_or_path}" "$modeldir"/ --exclude "*_optim.pth" --exclude "*eval/*" --exclude '*pred/*' --exclude "*.log"
+          azcopy sync --recursive "${s3_bucket%/}/${model_name_or_path}" "$modeldir"/ --exclude-pattern "*_optim.pth;*.log" --exclude-path "eval/;pred/"
         else
-          aws s3 sync --no-progress "${model_name_or_path}" "$modeldir"/ --exclude "iteration_*.pth" --exclude "*_optim.pth" --exclude "*eval/*" --exclude '*pred/*' --exclude "*.log"
+          azcopy sync --recursive "${s3_bucket%/}/${model_name_or_path}" "$modeldir"/ --exclude-pattern "iteration_*.pth;*_optim.pth;*.log" --exclude-path "eval/;pred/"
         fi
-        s3_output=${model_name_or_path%/}
+        s3_output=${s3_bucket%/}/${model_name_or_path%/}
       fi
 
-      S3_METRIC_OUTPUT="$s3_output"/pred/`date +%s`/
+      S3_METRIC_OUTPUT="$s3_output"/pred_e2e/`date +%s`/
 
       mkdir -p `dirname $s3_metrics_output`
       mkdir -p $metrics_output
@@ -88,7 +94,7 @@ implementation:
           --reference_file_path genie-workdirs/zeroshot/${test_folder}/data/"$eval_lang"_"$e_set".json \
           --prediction_file_path ./eval/valid/e2e_dialogue_preds.json \
           --experiment ${task_name} \
-          --setting ${eval_lang}
+          --setting ${eval_lang} || true
 
         # rename valid subfolder; if e_set is valid move it to a temp directory
         if test "${e_set}" != "valid" ; then
@@ -108,7 +114,7 @@ implementation:
 
       genienlp write-kf-metrics --eval_results `for e_set in ${eval_sets} ; do echo ./eval/$e_set/e2e_dialogue_results.json ; done`
 
-      aws s3 sync --no-progress "./eval" $S3_METRIC_OUTPUT
+      azcopy sync --recursive "./eval" $S3_METRIC_OUTPUT
 
     args: [
       'cmd',
@@ -117,6 +123,7 @@ implementation:
       --eval_sets, {inputValue: eval_sets},
       --task_name, {inputValue: task_name},
       --model_name_or_path, {inputValue: model_name_or_path},
+      --s3_bucket, {inputValue: s3_bucket},
       --s3_input_datadir, {inputValue: s3_input_datadir},
       --model_type, {inputValue: model_type},
       --eval_lang, {inputValue: eval_lang},

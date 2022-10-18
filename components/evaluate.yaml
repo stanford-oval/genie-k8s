@@ -3,6 +3,7 @@ description: |
   Evaluate
 inputs:
   - {name: image, description: '', default: ''}
+  - {name: s3_bucket, description: ''}
   - {name: project, description: '', default: ''}
   - {name: owner, description: '', default: ''}
   - {name: experiment, description: '', default: ''}
@@ -28,19 +29,26 @@ implementation:
     - -c
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image project owner experiment model model_owner eval_set parallel_jobs s3_model_dir s3_database_dir is_oracle s3_metrics_output metrics_output" "$@"
+      parse_args "$0" "image s3_bucket project owner experiment model model_owner eval_set parallel_jobs s3_model_dir s3_database_dir is_oracle s3_metrics_output metrics_output" "$@"
       shift $n
       cd $HOME
 
+
       /opt/genie-toolkit/sync-repos.sh
+
+      set +x
+      keyctl session ; export AZCOPY_SPA_CLIENT_SECRET=${AZURE_SP_PASSWORD} ; azcopy login --service-principal --application-id ${AZURE_SP_APP_ID} --tenant-id ${AZURE_SP_TENANT_ID}
+      set -x
+
       MAKEDIR=`get_make_dir ${project}`
       cat >> workdir/config.mk <<EOF
       developer_key = ${THINGPEDIA_DEVELOPER_KEY}
       EOF
       cd workdir/${MAKEDIR}
 
-      if test "${s3_database_dir}" != None ; then
-          aws s3 sync --no-progress ${s3_database_dir}/bootleg/ ./database/
+      if test "{s3_database_dir}" != None ; then
+        mkdir -p ./database
+        azcopy sync --recursive ${s3_bucket%/}/${s3_database_dir%/}/bootleg/ ./database/
       fi
 
       ls -al
@@ -55,7 +63,7 @@ implementation:
         "owner=${owner}" \
         "genie_k8s_owner=${owner}" \
         "genie_k8s_project=${project}" \
-        "s3_bucket=geniehai" \
+        "s3_bucket=${s3_bucket}" \
         thingpedia_cli=thingpedia \
         "experiment=$experiment" \
         "eval_set=${eval_set}" \
@@ -70,7 +78,7 @@ implementation:
         "owner=${owner}" \
         "genie_k8s_owner=${owner}" \
         "genie_k8s_project=${project}" \
-        "s3_bucket=geniehai" \
+        "s3_bucket=${s3_bucket}" \
         thingpedia_cli=thingpedia \
         "experiment=$experiment" \
         "eval_set=${eval_set}" \
@@ -83,6 +91,7 @@ implementation:
     args: [
       'cmd',
       --image, {inputValue: image},
+      --s3_bucket, {inputValue: s3_bucket},
       --owner, {inputValue: owner},
       --project, {inputValue: project},
       --experiment, {inputValue: experiment},

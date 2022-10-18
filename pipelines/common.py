@@ -26,18 +26,24 @@ from kubernetes.client.models import V1EnvVar, V1SecretVolumeSource, V1Volume, V
 # Get the Thingpedia key from environment variable
 default_developer_key = os.getenv('THINGPEDIA_DEVELOPER_KEY')
 
-default_image = '932360549041.dkr.ecr.us-west-2.amazonaws.com/genie-toolkit-kf:20220302'
-GENIENLP_VERSION = '7eef040f0ca995e374ff2c24e1cff3f3f80909ab'
-GENIE_VERSION = '0846db3e01add425856b41db07b9a567e9e6fc31'
+AZURE_SP_APP_ID = os.getenv('AZURE_SP_APP_ID')
+AZURE_SP_TENANT_ID = os.getenv('AZURE_SP_TENANT_ID')
+AZURE_SP_PASSWORD = os.getenv('AZURE_SP_PASSWORD')
+
+default_image = 'stanfordoval.azurecr.io/genie/kubeflow:20220822'
+GENIENLP_VERSION = '861aac1fec9fb7246d0a5f7dcb79e57921bf3ada'
+GENIE_VERSION = '681b21d161e35a65f2dec29fde6967c012fa024b'
 WORKDIR_REPO = 'git@github.com:stanford-oval/thingpedia-common-devices.git'
 WORKDIR_VERSION = '35592e1f22f9318d1f26ca79f0ab86e50e55ae87'
 GENIE_WORKDIR_REPO = 'git@github.com:stanford-oval/genie-workdirs.git'
 GENIE_WORKDIR_VERSION = 'master'
-PARAPHRASING_MODEL = 's3://geniehai/sinaj/models/schemaorg/paraphrase/bart-large-speedup-megabatch-5m/'
-S3_DATABASE_DIR = 's3://geniehai/mehrad/extras/bootleg_files_v1.0.0'
+PARAPHRASING_MODEL = 'sinaj/models/schemaorg/paraphrase/bart-large-speedup-megabatch-5m/'
+S3_DATABASE_DIR = 'mehrad/extras/bootleg_files_v1.0.0'
 
-# name of a secret in Kubernetes containing the SSH credentials (GitHub deploy key)
-SSH_VOLUME = 'ssh-secrets-k425k8d8h8'
+AZURE_BUCKET = 'https://nfs009a5d03c43b4e7e8ec2.blob.core.windows.net/pvc-a8853620-9ac7-4885-a30e-0ec357f17bb6'
+
+# name of a secret in Kubernetes containing the SSH credentials (GitHub deploy key for genie-workdirs)
+SSH_VOLUME = 'ssh-secrets-7fdcbg96c4'
 
 
 def add_ssh_volume(op):
@@ -59,4 +65,9 @@ def add_env(op, envs):
     """Add a dict of environments to container"""
     for k, v in envs.items():
         op.container.add_env_variable(V1EnvVar(name=k, value=v))
+
+    op.container.add_env_variable(V1EnvVar(name='AZURE_SP_APP_ID', value=AZURE_SP_APP_ID))
+    op.container.add_env_variable(V1EnvVar(name='AZURE_SP_TENANT_ID', value=AZURE_SP_TENANT_ID))
+    op.container.add_env_variable(V1EnvVar(name='AZURE_SP_PASSWORD', value=AZURE_SP_PASSWORD))
+
     return op

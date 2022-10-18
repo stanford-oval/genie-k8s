@@ -20,7 +20,7 @@
 # OR OTHER DEALINGS IN THE SOFTWARE.
 
 from kfp import components, dsl
-from kubernetes.client import V1Toleration
+from kubernetes.client import V1EmptyDirVolumeSource, V1Toleration
 from kubernetes.client.models import V1PersistentVolumeClaimVolumeSource
 
 from . import predicting, split_bootleg_merge_step, translation
@@ -50,7 +50,7 @@ def generate_dataset_step(
     }
     generate_dataset_op = components.load_component_from_file('components/generate-dataset.yaml')(
         image=image,
-        s3_bucket='geniehai',
+        s3_bucket=AZURE_BUCKET,
         owner=owner,
         project=project,
         experiment=experiment,
@@ -59,12 +59,7 @@ def generate_dataset_step(
         valid_set=valid_set,
         additional_args=additional_args,
     )
-    (
-        generate_dataset_op.container.set_memory_limit('55Gi')
-        .set_memory_request('55Gi')
-        .set_cpu_limit('15.5')
-        .set_cpu_request('15.5')
-    )
+    (generate_dataset_op.container.set_memory_limit('100Gi').set_memory_request('100Gi').set_cpu_limit('8').set_cpu_request('8'))
     (add_env(add_ssh_volume(generate_dataset_op), gen_dataset_env))
 
     return generate_dataset_op
@@ -93,7 +88,7 @@ def generate_dataset_step_w_gpu(
     num_gpus = 1
     generate_dataset_op = components.load_component_from_file('components/generate-dataset.yaml')(
         image=image,
-        s3_bucket='geniehai',
+        s3_bucket=AZURE_BUCKET,
         owner=owner,
         project=project,
         experiment=experiment,
@@ -103,16 +98,16 @@ def generate_dataset_step_w_gpu(
         additional_args=additional_args,
     )
     (
-        generate_dataset_op.container.set_memory_limit('55Gi')
-        .set_memory_request('55Gi')
-        .set_cpu_request('7.5')
-        .set_cpu_limit('7.5')
+        generate_dataset_op.container.set_memory_limit('28Gi')
+        .set_memory_request('28Gi')
+        .set_cpu_request('5')
+        .set_cpu_limit('5')
         .set_gpu_limit(str(num_gpus))
     )
     (
         add_env(add_ssh_volume(generate_dataset_op), gen_dataset_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.12xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC8as_T4_v3')
     )
 
     return generate_dataset_op
@@ -136,7 +131,7 @@ def train_step(
     s3_database_dir='None',
     train_languages='en',
     eval_languages='en',
-    s3_bucket='geniehai',
+    s3_bucket=AZURE_BUCKET,
     s3_bootleg_prepped_data='None',
     additional_args='',
 ):
@@ -166,17 +161,19 @@ def train_step(
             additional_args=additional_args,
         )
         (
-            train_op.container.set_memory_request('56Gi')
-            .set_memory_limit('56Gi')
-            .set_cpu_request('7.5')
-            .set_cpu_limit('7.5')
+            train_op.container.set_memory_request('100G')
+            .set_memory_limit('100G')
+            .set_cpu_request('5')
+            .set_cpu_limit('5')
+            .set_ephemeral_storage_request('75G')
+            .set_ephemeral_storage_limit('75G')
             .set_gpu_limit(str(train_num_gpus))
             .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
         )
         (
             add_env(add_ssh_volume(train_op), train_env)
             .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-            .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*train_num_gpus}xlarge')
+            .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'Standard_NC{6 * train_num_gpus}s_v3')
             .add_volume(
                 V1Volume(
                     name='tensorboard', persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf')
@@ -206,17 +203,17 @@ def train_step(
             additional_args=additional_args,
         )
         (
-            train_op.container.set_memory_request('56Gi')
-            .set_memory_limit('200G')
-            .set_cpu_request('31')
-            .set_cpu_limit('31')
+            train_op.container.set_memory_request('440G')
+            .set_memory_limit('440G')
+            .set_cpu_request('22')
+            .set_cpu_limit('22')
             .set_gpu_limit(str(train_num_gpus))
             .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
         )
         (
             add_env(add_ssh_volume(train_op), train_env)
             .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-            .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*train_num_gpus}xlarge')
+            .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'Standard_NC{6 * train_num_gpus}s_v3')
             .add_volume(
                 V1Volume(
                     name='tensorboard', persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf')
@@ -271,16 +268,16 @@ def calibrate_step(
         additional_args=additional_args,
     )
     (
-        calibrate_op.container.set_memory_request('56Gi')
-        .set_memory_limit('56Gi')
-        .set_cpu_request('7.5')
-        .set_cpu_limit('7.5')
+        calibrate_op.container.set_memory_request('100G')
+        .set_memory_limit('100G')
+        .set_cpu_request('5')
+        .set_cpu_limit('5')
         .set_gpu_limit(str(calibrate_num_gpus))
     )
     (
         add_env(add_ssh_volume(calibrate_op), calibrate_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2*calibrate_num_gpus}xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'Standard_NC{6 * calibrate_num_gpus}s_v3')
     )
 
     return calibrate_op
@@ -303,7 +300,7 @@ def train_step_4gpus(
     s3_database_dir='None',
     train_languages='en',
     eval_languages='en',
-    s3_bucket='geniehai',
+    s3_bucket=AZURE_BUCKET,
     s3_bootleg_prepped_data='None',
     additional_args='',
 ):
@@ -332,17 +329,17 @@ def train_step_4gpus(
         additional_args=additional_args,
     )
     (
-        train_op.container.set_memory_request('241G')
-        .set_memory_limit('241G')
-        .set_cpu_request('31')
-        .set_cpu_limit('31')
+        train_op.container.set_memory_request('440G')
+        .set_memory_limit('440G')
+        .set_cpu_request('22')
+        .set_cpu_limit('22')
         .set_gpu_limit(str(train_num_gpus))
         .add_volume_mount(V1VolumeMount(name='tensorboard', mount_path='/shared/tensorboard'))
     )
     (
         add_env(add_ssh_volume(train_op), train_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'p3.{2 * train_num_gpus}xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'Standard_NC{6 * train_num_gpus}s_v3')
         .add_volume(
             V1Volume(
                 name='tensorboard', persistent_volume_claim=V1PersistentVolumeClaimVolumeSource('tensorboard-research-kf')
@@ -355,6 +352,7 @@ def train_step_4gpus(
 
 def eval_step(
     image,
+    s3_bucket,
     owner,
     project,
     experiment,
@@ -381,6 +379,7 @@ def eval_step(
 
     eval_op = components.load_component_from_file('components/evaluate.yaml')(
         image=image,
+        s3_bucket=s3_bucket,
         owner=owner,
         project=project,
         experiment=experiment,
@@ -393,11 +392,20 @@ def eval_step(
         is_oracle=is_oracle,
         additional_args=additional_args,
     )
-    (eval_op.container.set_memory_limit('61G').set_memory_request('61G').set_cpu_limit('15').set_cpu_request('15'))
+    (
+        eval_op.container.set_memory_request('50G')
+        .set_memory_limit('50G')
+        .set_cpu_request('7.5')
+        .set_cpu_limit('7.5')
+        .set_ephemeral_storage_request('100G')
+        .set_ephemeral_storage_limit('100G')
+        .add_volume_mount(V1VolumeMount(name='shm', mount_path='/dev/shm'))
+    )
     (
         add_env(add_ssh_volume(eval_op), eval_env)
         .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
-        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'g4dn.4xlarge')
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', 'Standard_NC8as_T4_v3')
+        .add_volume(V1Volume(name='shm', empty_dir=V1EmptyDirVolumeSource(medium='Memory')))
     )
 
     return eval_op
@@ -638,7 +646,7 @@ def paraphrase_train_fewshot_step(
     return train_s3_datadir, eval_model
 
 
-def paraphrase_only(
+def paraphrase_step(
     owner,
     project,
     experiment,
@@ -712,7 +720,7 @@ def everything(
     workdir_repo=WORKDIR_REPO,
     workdir_version=WORKDIR_VERSION,
     thingpedia_developer_key=default_developer_key,
-    s3_bucket='geniehai',
+    s3_bucket=AZURE_BUCKET,
     s3_database_dir='None',
     s3_bootleg_subfolder='None',
     bootleg_data_splits='train eval',
@@ -900,6 +908,7 @@ def everything(
 
     eval_op = eval_step(
         image=image,
+        s3_bucket=s3_bucket,
         owner=owner,
         project=project,
         experiment=experiment,
@@ -1133,6 +1142,7 @@ def train_eval_pipeline(
     s3_bootleg_prepped_data='None',
     eval_additional_args='',
     bootleg_additional_args='',
+    is_oracle='false'
 ):
     everything(
         do_generate=False,
@@ -1167,6 +1177,7 @@ def train_eval_pipeline(
         s3_bootleg_prepped_data=s3_bootleg_prepped_data,
         eval_additional_args=eval_additional_args,
         bootleg_additional_args=bootleg_additional_args,
+        is_oracle=is_oracle,
     )
 
 
@@ -1239,6 +1250,91 @@ def generate_paraphrase_train_eval_pipeline(
         eval_set=eval_set,
         eval_parallel_jobs=eval_parallel_jobs,
         eval_additional_args=eval_additional_args,
+    )
+
+@dsl.pipeline(
+    name='Generate, bootleg, paraphrase, train, and eval',
+    description='Runs the whole training pipeline, including bootleg and autoparaphrasing',
+)
+def generate_bootleg_paraphrase_train_eval_pipeline(
+    owner,
+    project,
+    experiment,
+    model,
+    dataset,
+    image=default_image,
+    genienlp_version=GENIENLP_VERSION,
+    genie_version=GENIE_VERSION,
+    workdir_repo=WORKDIR_REPO,
+    workdir_version=WORKDIR_VERSION,
+    thingpedia_developer_key=default_developer_key,
+    generate_dataset_parallel='6',
+    generate_dataset_additional_args='',
+    train_task_name='',
+    train_load_from='None',
+    train_additional_args='',
+    train_iterations='80000',
+    filtering_train_iterations='10000',
+    filtering_batch_size='4000',
+    keep_original_duplicates='false',
+    paraphrasing_model=PARAPHRASING_MODEL,
+    paraphrase_subfolder='user',
+    paraphrase_additional_args='',
+    filtering_additional_args='',
+    valid_set='eval',
+    eval_set='',
+    eval_parallel_jobs='2',
+    eval_additional_args='',
+    s3_database_dir=S3_DATABASE_DIR,
+    s3_bootleg_prepped_data='None',
+    s3_bootleg_subfolder='None',
+    bootleg_model='',
+    bootleg_data_splits='train eval',
+    bootleg_additional_args='',
+):
+    everything(
+        do_generate=True,
+        do_translate=False,
+        do_bootleg=True,
+        do_paraphrase=True,
+        do_fewshot=False,
+        do_calibrate=False,
+        do_ood=False,
+        owner=owner,
+        project=project,
+        experiment=experiment,
+        model=model,
+        dataset=dataset,
+        image=image,
+        genienlp_version=genienlp_version,
+        genie_version=genie_version,
+        workdir_repo=workdir_repo,
+        workdir_version=workdir_version,
+        thingpedia_developer_key=thingpedia_developer_key,
+        generate_dataset_parallel=generate_dataset_parallel,
+        generate_dataset_additional_args=generate_dataset_additional_args,
+        train_task_name=train_task_name,
+        train_load_from=train_load_from,
+        train_additional_args=train_additional_args,
+        train_iterations=train_iterations,
+        filtering_train_iterations=filtering_train_iterations,
+        filtering_batch_size=filtering_batch_size,
+        keep_original_duplicates=keep_original_duplicates,
+        paraphrasing_model=paraphrasing_model,
+        paraphrase_subfolder=paraphrase_subfolder,
+        paraphrase_additional_args=paraphrase_additional_args,
+        filtering_additional_args=filtering_additional_args,
+        valid_set=valid_set,
+        eval_set=eval_set,
+        eval_parallel_jobs=eval_parallel_jobs,
+        eval_additional_args=eval_additional_args,
+        s3_database_dir=s3_database_dir,
+        s3_bootleg_prepped_data=s3_bootleg_prepped_data,
+        s3_bootleg_subfolder=s3_bootleg_subfolder,
+        bootleg_model=bootleg_model,
+        bootleg_data_splits=bootleg_data_splits,
+        bootleg_additional_args=bootleg_additional_args,
+        generate_w_gpu=False,
     )
 
 
@@ -2010,13 +2106,14 @@ def paraphrase_train_eval_pipeline(
 
 
 @dsl.pipeline(name='Evaluate', description='Evaluate a previously trained model')
-def eval_only_pipeline(
+def eval_pipeline(
     owner,
     project,
     experiment,
     model,
     s3_model_dir,
     image=default_image,
+    s3_bucket=AZURE_BUCKET,
     genienlp_version=GENIENLP_VERSION,
     genie_version=GENIE_VERSION,
     workdir_repo=WORKDIR_REPO,
@@ -2029,6 +2126,7 @@ def eval_only_pipeline(
     additional_args='',
 ):
     eval_step(
+        s3_bucket=s3_bucket,
         owner=owner,
         project=project,
         experiment=experiment,
@@ -2051,7 +2149,7 @@ def eval_only_pipeline(
 @dsl.pipeline(
     name='Paraphrase (and filter) a dataset', description='Runs auto-paraphrasing pipeline on an existing dataset folder'
 )
-def paraphrase_only_pipeline(
+def paraphrase_pipeline(
     owner,
     project,
     experiment,
@@ -2068,7 +2166,7 @@ def paraphrase_only_pipeline(
     paraphrase_additional_args='',
     filtering_additional_args='',
 ):
-    paraphrase_only(
+    paraphrase_step(
         owner,
         project,
         experiment,
