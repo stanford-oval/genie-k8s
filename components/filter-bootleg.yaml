@@ -43,9 +43,11 @@ implementation:
       set +x
       keyctl session ; export AZCOPY_SPA_CLIENT_SECRET=${AZURE_SP_PASSWORD} ; azcopy login --service-principal --application-id ${AZURE_SP_APP_ID} --tenant-id ${AZURE_SP_TENANT_ID}
       set -x
-
-      azcopy sync --recursive ${s3_bucket%/}/${s3_datadir%/} datadir --exclude-path "chunked/"
-      azcopy sync --recursive ${s3_bucket%/}/${s3_bootleg_prepped_data} bootlegdir 
+      
+      mkdir -p ./datadir
+      mkdir -p ./bootlegdir
+      azcopy sync --recursive ${s3_bucket%/}/${s3_datadir%/} ./datadir/ --exclude-path "chunked/"
+      azcopy sync --recursive ${s3_bucket%/}/${s3_bootleg_prepped_data} ./bootlegdir/
 
       export TZ=America/Los_Angeles
       make "-j${parallel}" \
