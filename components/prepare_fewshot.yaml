@@ -1,6 +1,6 @@
-name: Predict E2E
+name: Prepare fewshot data
 description: |
-  End-to-End Prediction for Dialogues
+  Prepare fewshot data
 inputs:
   - {name: image, description: '', default: ''}
   - {name: owner, description: '', default: ''}
@@ -57,17 +57,20 @@ implementation:
       mkdir -p $dataset_dir
       azcopy sync --recursive ${s3_bucket%/}/${s3_input_datadir%/}/${dataset_subfolder} $dataset_dir --exclude-pattern "synthetic*.txt" --exclude-path "bootleg/;chunked/"
 
+
+
+
       # if not an s3 path assume pretrained model name and save it in genienlp format
       if [[ "${model_type}" != None ]] ; then
         genienlp train --train_tasks ${task_name} --train_iterations 0 --save "$modeldir" --model ${model_type} --pretrained_model ${model_name_or_path} --exist_ok
-        s3_output=${owner}/workdir/prediction/${task_name}/${model_type}/${model_name_or_path}
+        s3_output=${s3_bucket%/}/${owner}/workdir/prediction/${task_name}/${model_type}/${model_name_or_path}
       else
         if [[ "$@" == *"--checkpoint_name"* ]] ; then
           azcopy sync --recursive "${s3_bucket%/}/${model_name_or_path}" "$modeldir"/ --exclude-pattern "*_optim.pth;*.log" --exclude-path "eval/;pred/"
         else
           azcopy sync --recursive "${s3_bucket%/}/${model_name_or_path}" "$modeldir"/ --exclude-pattern "iteration_*.pth;*_optim.pth;*.log" --exclude-path "eval/;pred/"
         fi
-        s3_output=${model_name_or_path%/}
+        s3_output=${s3_bucket%/}/${model_name_or_path%/}
       fi
 
       S3_METRIC_OUTPUT="$s3_output"/pred_e2e/`date +%s`/
@@ -114,7 +117,7 @@ implementation:
 
       genienlp write-kf-metrics --eval_results `for e_set in ${eval_sets} ; do echo ./eval/$e_set/e2e_dialogue_results.json ; done`
 
-      azcopy sync --recursive "./eval" ${s3_bucket%/}/${S3_METRIC_OUTPUT}
+      azcopy sync --recursive "./eval" $S3_METRIC_OUTPUT
 
     args: [
       'cmd',
