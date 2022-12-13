@@ -441,9 +441,8 @@ def dialogue_translation_a100_step(
         .set_memory_limit('850G')
         .set_cpu_request('90')
         .set_cpu_limit('90')
-        # not supported yet in the version of kfp we're using
-        # .set_ephemeral_storage_request('75G')
-        # .set_ephemeral_storage_limit('75G')
+        .set_ephemeral_storage_request('150G')
+        .set_ephemeral_storage_limit('150G')
         .set_gpu_limit('8')
     )
     (
@@ -461,29 +460,29 @@ def dialogue_translation_a100_step(
     name='Translate a dialogue dataset on 8 A100 gpus', description='Prepare, Translate, and Postprocess a dialogue dataset'
 )
 def translate_dialogue_a100_pipeline(
-    owner='',
-    project='',
-    experiment='',
+    owner='mehrad',
+    project='zeroshot',
+    experiment='risawoz',
     s3_bucket=AZURE_BUCKET,
-    s3_datadir='',
-    source='',
-    input_splits='train eval',
-    translation_model='Helsinki-NLP/opus-mt-$(src_lang)-$(tgt_lang)',
-    nmt_id='marian',
-    src_lang='en',
-    tgt_lang='',
+    s3_datadir='mehrad/dataset/zeroshot/risawoz/zh2en_v20_full/',
+    source='v1',
+    input_splits='fewshot',
+    translation_model='facebook/m2m100-12B-last-ckpt',
+    nmt_id='m2m100_12B',
+    src_lang='zh',
+    tgt_lang='en',
     image=default_image,
-    genienlp_version=GENIENLP_VERSION,
+    genienlp_version='8c99f20d7f07d60b7d178b262c00f2aac245b9e8',
     genie_version=GENIE_VERSION,
-    workdir_repo=WORKDIR_REPO,
-    workdir_version=WORKDIR_VERSION,
+    workdir_repo='git@github.com:stanford-oval/genie-workdirs.git',
+    workdir_version='master',
     thingpedia_developer_key=default_developer_key,
     prepare_for_translation='true',
     do_translation='true',
-    post_process_translation='true',
-    additional_args='',
+    post_process_translation='false',
+    additional_args='skip_ent_translation=true do_align_help=false',
 ):
-    translation_op = dialogue_translation_4gpu_step(
+    translation_op = dialogue_translation_a100_step(
         owner=owner,
         project=project,
         experiment=experiment,
