@@ -62,8 +62,12 @@ implementation:
 
       load_args=
       if test "${load_from}" != None ; then
-        azcopy sync --recursive "${s3_bucket%/}/${load_from}" "$modeldir"/ --exclude-pattern "iteration_*.pth;*.log" --exclude-path "eval/;pred/"
-        load_args="--load best.pth"
+        if [[ "$@" == *"--checkpoint_name"* ]] ; then
+          azcopy sync --recursive "${s3_bucket%/}/${load_from}" "$modeldir"/ --exclude-path "eval/;pred/"
+        else
+          azcopy sync --recursive "${s3_bucket%/}/${load_from}" "$modeldir"/ --exclude-pattern "iteration_*.pth;*.log" --exclude-path "eval/;pred/"
+          load_args="--load best.pth"
+        fi
       fi
 
       if test "${dataset_subfolder}" = "None" ; then

@@ -66,6 +66,7 @@ implementation:
       mkdir -p `dirname $s3_output_datadir`
       echo ${S3_OUTPUT_DATADIR} > $s3_output_datadir
 
+      mkdir -p ${source_folder}
       azcopy sync --recursive ${s3_bucket%/}/${s3_datadir} ${source_folder} --exclude-pattern "synthetic*.txt" --exclude-path "bootleg/;chunked/"
 
       # prepare for translation
