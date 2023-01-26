@@ -2221,3 +2221,47 @@ def paraphrase_filtering_pipeline(
         s3_original_bootleg_prepped_data=s3_original_bootleg_prepped_data,
         additional_args=additional_args,
     )
+
+@dsl.pipeline(name='Generic Pipeline', description='Runs any script on a GPU VM')
+def generic_pipeline(
+    image,
+    storage_input_folder,
+    project,
+    owner,
+    experiment,
+    genienlp_version=GENIENLP_VERSION,
+    workdir_repo=WORKDIR_REPO,
+    workdir_version=WORKDIR_VERSION,
+    additional_args='',
+):
+
+    env = {
+        'GENIENLP_VERSION': genienlp_version,
+        'WORKDIR_REPO': workdir_repo,
+        'WORKDIR_VERSION': workdir_version,
+    }
+
+    num_gpus = 1
+    generic_op = components.load_component_from_file('components/generic.yaml')(
+        image=image,
+        storage_input_folder=storage_input_folder,
+        project=project,
+        owner=owner,
+        experiment=experiment,
+        s3_bucket=AZURE_BUCKET,
+        additional_args=additional_args,
+    )
+    (
+        generic_op.container.set_memory_request('400G')
+        .set_memory_limit('400G')
+        .set_cpu_request('60')
+        .set_cpu_limit('60')
+        .set_ephemeral_storage_request('100G')
+        .set_ephemeral_storage_limit('100G')
+        .set_gpu_limit(str(num_gpus))
+    )
+    (
+        add_env(add_ssh_volume(generic_op), env)
+        .add_toleration(V1Toleration(key='nvidia.com/gpu', operator='Exists', effect='NoSchedule'))
+        .add_node_selector_constraint('beta.kubernetes.io/instance-type', f'Standard_NC{6 * num_gpus}s_v3')
+    )
