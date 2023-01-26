@@ -10,10 +10,7 @@ inputs:
   - {name: s3_bucket, description: '', default: ''}
   - {name: additional_args, description: '', default: ''}
 outputs:
-  - {name: metrics_output}
-  - {name: s3_metrics_output}
-  - {name: MLPipeline UI metadata, type: UI metadata}
-  - {name: MLPipeline Metrics, type: Metrics}
+  - {name: s3_output_dir}
 implementation:
   container:
     image: '{{inputs.parameters.image}}'
@@ -23,7 +20,7 @@ implementation:
     - -c
     - |
       . /opt/genie-toolkit/lib.sh
-      parse_args "$0" "image s3_bucket project owner experiment model model_owner eval_set parallel_jobs s3_model_dir s3_database_dir is_oracle s3_metrics_output metrics_output" "$@"
+      parse_args "$0" "image storage_input_folder project owner experiment s3_bucket s3_output_dir" "$@"
       shift $n
       cd $HOME
 
@@ -34,73 +31,20 @@ implementation:
       keyctl session ; export AZCOPY_SPA_CLIENT_SECRET=${AZURE_SP_PASSWORD} ; azcopy login --service-principal --application-id ${AZURE_SP_APP_ID} --tenant-id ${AZURE_SP_TENANT_ID}
       set -x
 
-      MAKEDIR=`get_make_dir ${project}`
-      cat >> workdir/config.mk <<EOF
-      developer_key = ${THINGPEDIA_DEVELOPER_KEY}
-      EOF
-      cd workdir/${MAKEDIR}
-
-      if test "{s3_database_dir}" != None ; then
-        mkdir -p ./database
-        azcopy sync --recursive ${s3_bucket%/}/${s3_database_dir%/}/bootleg/ ./database/
+      if test "${storage_input_folder}" != None ; then
+        mkdir -p ./input/
+        azcopy sync --recursive ${s3_bucket%/}/${storage_input_folder%/}/ ./input/
       fi
 
-      ls -al
-      mkdir tmp
-      MODEL_DIR=${model_owner}/${model}
-
-      export TZ=America/Los_Angeles
-      export GENIENLP_DATABASE_DIR=./database/
-
-      make -j ${parallel_jobs} \
-        geniedir=/opt/genie-toolkit \
-        "owner=${owner}" \
-        "genie_k8s_owner=${owner}" \
-        "genie_k8s_project=${project}" \
-        "s3_bucket=${s3_bucket}" \
-        thingpedia_cli=thingpedia \
-        "experiment=$experiment" \
-        "eval_set=${eval_set}" \
-        "model=${MODEL_DIR}" \
-        "s3_model_dir=${s3_model_dir}" \
-        "metrics_output=${metrics_output}" \
-        "s3_metrics_output=${s3_metrics_output}" \
-        `if ${is_oracle} ; then echo "evalflags=--oracle" ; fi` \
-        $@ evaluate
-      make \
-        geniedir=/opt/genie-toolkit \
-        "owner=${owner}" \
-        "genie_k8s_owner=${owner}" \
-        "genie_k8s_project=${project}" \
-        "s3_bucket=${s3_bucket}" \
-        thingpedia_cli=thingpedia \
-        "experiment=$experiment" \
-        "eval_set=${eval_set}" \
-        "model=${MODEL_DIR}" \
-        "s3_model_dir=${s3_model_dir}" \
-        "metrics_output=${metrics_output}" \
-        "s3_metrics_output=${s3_metrics_output}" \
-        $@ evaluate-output-artifacts
 
     args: [
       'cmd',
       --image, {inputValue: image},
-      --s3_bucket, {inputValue: s3_bucket},
-      --owner, {inputValue: owner},
+      --storage_input_folder, {inputValue: storage_input_folder},
       --project, {inputValue: project},
+      --owner, {inputValue: owner},
       --experiment, {inputValue: experiment},
-      --model, {inputValue: model},
-      --model_owner, {inputValue: model_owner},
-      --eval_set, {inputValue: eval_set},
-      --parallel_jobs, {inputValue: parallel_jobs},
-      --s3_model_dir, {inputValue: s3_model_dir},
-      --s3_database_dir, {inputValue: s3_database_dir},
-      --is_oracle, { inputValue: is_oracle },
-      --s3_metrics_output, {outputPath: s3_metrics_output},
-      --metrics_output, {outputPath: metrics_output},
+      --s3_bucket, {inputValue: s3_bucket},
+      --s3_output_dir, {outputPath: s3_output_dir},
       --, {inputValue: additional_args}
     ]
-
-    fileOutputs:
-      MLPipeline UI metadata: /tmp/mlpipeline-ui-metadata.json
-      MLPipeline Metrics: /tmp/mlpipeline-metrics.json
