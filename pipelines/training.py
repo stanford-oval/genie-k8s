@@ -2224,10 +2224,10 @@ def paraphrase_filtering_pipeline(
 
 @dsl.pipeline(name='Generic Pipeline', description='Runs any script on a GPU VM')
 def generic_pipeline(
-    storage_input_folder,
-    project,
-    owner,
-    experiment,
+    storage_input_folder='None',
+    project='',
+    owner='',
+    experiment='',
     image=default_image,
     genienlp_version=GENIENLP_VERSION,
     workdir_repo=WORKDIR_REPO,
