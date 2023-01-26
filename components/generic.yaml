@@ -3,7 +3,7 @@ description: |
   Run any Make command in a GPU VM
 inputs:
   - {name: image, description: '', default: ''}
-  - {name: storage_input_folder, description: 'owner/project/experiment/storage_input_folder will be downloaded to ./input/ before the script starts'}
+  - {name: storage_input_folder, description: 'storage_input_folder will be downloaded to ./input/ before the script starts'}
   - {name: project, description: '', default: ''}
   - {name: owner, description: '', default: ''}
   - {name: experiment, description: '', default: ''}
