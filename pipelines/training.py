@@ -2252,10 +2252,10 @@ def generic_pipeline(
         additional_args=additional_args,
     )
     (
-        generic_op.container.set_memory_request('400G')
-        .set_memory_limit('400G')
-        .set_cpu_request('60')
-        .set_cpu_limit('60')
+        generic_op.container.set_memory_request('100G')
+        .set_memory_limit('100G')
+        .set_cpu_request('5')
+        .set_cpu_limit('5')
         .set_ephemeral_storage_request('100G')
         .set_ephemeral_storage_limit('100G')
         .set_gpu_limit(str(num_gpus))
